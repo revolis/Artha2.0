@@ -1,12 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Plus } from "lucide-react"
-
 import { GoalCard } from "@/components/goals/goal-card"
 import { GoalFormDialog } from "@/components/goals/goal-form-dialog"
 import { AppShell } from "@/components/layout/app-shell"
-import { Button } from "@/components/ui/button"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { useGoals } from "@/lib/use-goals"
 import type { Goal } from "@/lib/types"
 
@@ -93,10 +91,9 @@ export function GoalsPage() {
             Goals &amp; Milestones
           </h1>
         </div>
-        <Button onClick={openCreate}>
-          <Plus data-icon="inline-start" />
+        <InteractiveHoverButton onClick={openCreate}>
           New Goal
-        </Button>
+        </InteractiveHoverButton>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ArrowRight, Plus } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 import { AvgMonthlyIncome } from "@/components/dashboard/avg-monthly-income"
 import { CategoryContribution } from "@/components/dashboard/category-contribution"
@@ -16,8 +16,8 @@ import { YearHeatmap } from "@/components/heatmap/year-heatmap"
 import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { Separator } from "@/components/ui/separator"
-import { ShimmerButton } from "@/components/ui/shimmer-button"
 import {
   formatMoney,
   getAvgMonthlyIncome,
@@ -139,17 +139,9 @@ export function DashboardPage() {
             Financial Dashboard for Year {selectedYear}
           </h1>
         </div>
-        {/* Colours come from theme tokens — the component defaults to a
-            hardcoded black background with white text. */}
-        <ShimmerButton
-          onClick={openCreate}
-          background="var(--primary)"
-          shimmerColor="var(--primary-foreground)"
-          className="h-9 gap-1.5 border-border px-4 py-0 text-sm font-medium text-primary-foreground"
-        >
-          <Plus className="size-4" />
+        <InteractiveHoverButton onClick={openCreate}>
           Add Entry
-        </ShimmerButton>
+        </InteractiveHoverButton>
       </div>
 
       <YearSwitcher

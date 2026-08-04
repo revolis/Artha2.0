@@ -8,7 +8,6 @@ import {
   MoreVertical,
   Paperclip,
   Pencil,
-  Plus,
   Search,
   Trash2,
 } from "lucide-react"
@@ -20,6 +19,7 @@ import {
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -250,10 +250,9 @@ export function EntriesPage() {
           </span>
           <h1 className="text-2xl font-semibold tracking-tight">Entries</h1>
         </div>
-        <Button onClick={openCreate}>
-          <Plus data-icon="inline-start" />
+        <InteractiveHoverButton onClick={openCreate}>
           Add Entry
-        </Button>
+        </InteractiveHoverButton>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

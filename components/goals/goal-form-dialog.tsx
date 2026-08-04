@@ -2,10 +2,9 @@
 
 import * as React from "react"
 
-import { Button } from "@/components/ui/button"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -204,12 +203,19 @@ export function GoalFormDialog({
           ) : null}
         </FieldGroup>
         <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button className="w-full" disabled={!canSave} onClick={handleSave}>
+          <InteractiveHoverButton
+            className="w-full"
+            disabled={!canSave}
+            onClick={handleSave}
+          >
             {goal ? "Save Changes" : "Create Goal"}
-          </Button>
-          <DialogClose render={<Button variant="outline" className="w-full" />}>
+          </InteractiveHoverButton>
+          <InteractiveHoverButton
+            className="w-full"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
-          </DialogClose>
+          </InteractiveHoverButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

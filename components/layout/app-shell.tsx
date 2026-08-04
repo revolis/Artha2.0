@@ -1,10 +1,11 @@
 "use client"
 
-import { Eye, LogOut } from "lucide-react"
+import { Eye } from "lucide-react"
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { ThemeToggler } from "@/components/layout/theme-toggler"
 import { Button } from "@/components/ui/button"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import {
   SidebarInset,
   SidebarProvider,
@@ -30,10 +31,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Button variant="ghost" size="icon-sm" aria-label="Privacy mode">
               <Eye />
             </Button>
-            <Button variant="outline" size="sm">
-              <LogOut data-icon="inline-start" />
+            <InteractiveHoverButton className="px-4 py-1.5">
               Sign Out
-            </Button>
+            </InteractiveHoverButton>
           </div>
         </header>
         <div className="flex flex-col gap-6 p-4 md:p-6">{children}</div>

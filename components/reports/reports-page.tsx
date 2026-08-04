@@ -1,11 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { FileJson, FileSpreadsheet, FileText } from "lucide-react"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import {
   Card,
   CardContent,
@@ -462,26 +461,24 @@ export function ReportsPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button onClick={exportPDF} disabled={filtered.length === 0}>
-              <FileText data-icon="inline-start" />
+            <InteractiveHoverButton
+              onClick={exportPDF}
+              disabled={filtered.length === 0}
+            >
               Download PDF
-            </Button>
-            <Button
-              variant="outline"
+            </InteractiveHoverButton>
+            <InteractiveHoverButton
               onClick={exportCSV}
               disabled={filtered.length === 0}
             >
-              <FileSpreadsheet data-icon="inline-start" />
               Download CSV
-            </Button>
-            <Button
-              variant="outline"
+            </InteractiveHoverButton>
+            <InteractiveHoverButton
               onClick={exportJSON}
               disabled={filtered.length === 0}
             >
-              <FileJson data-icon="inline-start" />
               Download JSON
-            </Button>
+            </InteractiveHoverButton>
           </div>
 
           {notice ? (

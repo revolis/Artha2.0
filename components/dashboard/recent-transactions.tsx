@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Copy, MoreVertical, Pencil, Trash2 } from "lucide-react"
 
 import { entryTypeLabels } from "@/components/entries/entry-form-dialog"
@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { getCategoryIcon } from "@/lib/category-icons"
 import { formatMoney, getNetAmount } from "@/lib/mock-data"
 import type { Entry, Source } from "@/lib/types"
@@ -70,6 +71,7 @@ export function RecentTransactions({
   onDuplicate,
   onDelete,
 }: RecentTransactionsProps) {
+  const router = useRouter()
   const sourceById = new Map(sources.map((source) => [source.id, source.name]))
   const recent = [...entries]
     .sort((a, b) => b.datetime.localeCompare(a.datetime))
@@ -81,14 +83,11 @@ export function RecentTransactions({
         <CardTitle>Recent Transactions</CardTitle>
         <CardDescription>Your latest account activity.</CardDescription>
         <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            render={<Link href="/entries" />}
-            nativeButton={false}
-          >
+          {/* Navigates via the router: this button can't render as an anchor,
+              and nesting one inside a Link would be invalid markup. */}
+          <InteractiveHoverButton onClick={() => router.push("/entries")}>
             View All
-          </Button>
+          </InteractiveHoverButton>
         </CardAction>
       </CardHeader>
       <CardContent>

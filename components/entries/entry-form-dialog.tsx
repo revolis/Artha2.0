@@ -9,9 +9,9 @@ import {
 } from "@/components/entries/creatable-combobox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -444,12 +444,12 @@ export function EntryFormDialog({
           </Field>
         </FieldGroup>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>
+          <InteractiveHoverButton onClick={() => onOpenChange(false)}>
             Cancel
-          </DialogClose>
-          <Button disabled={!canSave} onClick={handleSave}>
+          </InteractiveHoverButton>
+          <InteractiveHoverButton disabled={!canSave} onClick={handleSave}>
             {entry ? "Save Changes" : "Add Entry"}
-          </Button>
+          </InteractiveHoverButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

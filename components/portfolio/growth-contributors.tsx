@@ -4,7 +4,7 @@ import * as React from "react"
 import { Search, TrendingDown, TrendingUp } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import {
   Card,
   CardContent,
@@ -196,13 +196,12 @@ export function GrowthContributors({ items }: { items: Contributor[] }) {
         )}
 
         {remaining > 0 ? (
-          <Button
-            variant="outline"
+          <InteractiveHoverButton
             className="w-full"
             onClick={() => setVisible((prev) => prev + PAGE_SIZE)}
           >
             Load more ({remaining} left)
-          </Button>
+          </InteractiveHoverButton>
         ) : null}
       </CardContent>
     </Card>
