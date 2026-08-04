@@ -78,8 +78,8 @@ interface Settings {
 }
 ```
 
-> Open question: should the USD→NPR rate be typed in manually, or fetched live?
-> The shape supports either.
+> Decided: the USD→NPR rate will be **synced daily** (added later, in the
+> functionality phase). Until then, mock data uses a fixed rate.
 
 ### Entry (the core object)
 
@@ -106,7 +106,8 @@ interface Entry {
 ### AssetPrice
 
 Current market price for each asset you hold, so the portfolio can show today's
-value and profit/loss. Entered manually (or fetched later, if you decide).
+value and profit/loss. **Always entered manually** — no price syncing, ever.
+Only the USD↔NPR exchange rate (in Settings) gets a daily sync, later.
 
 ```ts
 interface AssetPrice {
