@@ -30,6 +30,15 @@ export interface Source {
   campaignUrl?: string // link to the specific campaign/airdrop
 }
 
+// Extra details recorded on 💱Fiat/P2P entries: which way the money moved,
+// what cash currency was involved, and at what rate.
+export interface P2PDetails {
+  direction: "usd-to-cash" | "cash-to-usd" // sold USD vs bought USD
+  cashCurrency: string // e.g. "NPR" (default)
+  rate: number // cash units per 1 USD, entered manually
+  cashAmount: number // amount × rate, auto-calculated
+}
+
 export interface Entry {
   id: string
   datetime: string // ISO date + time, e.g. "2026-08-04T14:30"
@@ -38,6 +47,7 @@ export interface Entry {
   tags: string[]
   sourceId?: string // references a Source
   amount: number // always positive, in USD; sign comes from `type`
+  p2p?: P2PDetails // only on type "p2p"
   note?: string
   attachments?: string[] // image file names (design phase — not uploaded anywhere)
 }

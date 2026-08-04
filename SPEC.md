@@ -97,8 +97,16 @@ interface Entry {
   tags: string[];          // free-form, create-or-pick
   sourceId?: string;       // references a Source
   amount: number;          // always positive, in USD — sign comes from `type`
+  p2p?: P2PDetails;        // only on type "p2p" (shown as 💱Fiat/P2P)
   note?: string;
   attachments?: string[];  // image file names (design phase — not uploaded anywhere)
+}
+
+interface P2PDetails {
+  direction: "usd-to-cash" | "cash-to-usd"; // sold USD vs bought USD
+  cashCurrency: string;    // e.g. "NPR" (default)
+  rate: number;            // cash units per 1 USD, entered manually
+  cashAmount: number;      // amount × rate, auto-calculated
 }
 ```
 

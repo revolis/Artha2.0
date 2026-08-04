@@ -40,11 +40,22 @@ import type { Entry, EntryType, Source } from "@/lib/types"
 export const entryTypeLabels: Record<EntryType, string> = {
   profit: "Profit",
   loss: "Loss",
-  p2p: "P2P",
+  p2p: "💱Fiat/P2P",
   fee: "Fee",
   tax: "Tax",
   transfer: "Transfer",
 }
+
+type P2PDirection = "usd-to-cash" | "cash-to-usd"
+
+const directionItems: { value: P2PDirection; label: string }[] = [
+  { value: "usd-to-cash", label: "USD → Cash (Sold USD)" },
+  { value: "cash-to-usd", label: "Cash → USD (Bought USD)" },
+]
+
+const cashCurrencyItems = ["NPR", "INR", "USD", "EUR", "GBP", "AED"].map(
+  (c) => ({ value: c, label: c })
+)
 
 const typeItems = (
   Object.entries(entryTypeLabels) as [EntryType, string][]
@@ -93,6 +104,15 @@ export function EntryFormDialog({
   const [amountText, setAmountText] = React.useState(
     entry ? String(entry.amount) : ""
   )
+  const [direction, setDirection] = React.useState<P2PDirection>(
+    entry?.p2p?.direction ?? "usd-to-cash"
+  )
+  const [cashCurrency, setCashCurrency] = React.useState(
+    entry?.p2p?.cashCurrency ?? "NPR"
+  )
+  const [rateText, setRateText] = React.useState(
+    entry?.p2p ? String(entry.p2p.rate) : ""
+  )
   const [note, setNote] = React.useState(entry?.note ?? "")
   const [attachments, setAttachments] = React.useState<string[]>(
     entry?.attachments ?? []
@@ -105,7 +125,10 @@ export function EntryFormDialog({
   const isNewSource = !!sourceName && !existingSource
 
   const amount = Number(amountText.replace(/[^0-9.]/g, ""))
-  const canSave = amount > 0 && !!datetime
+  const isP2P = type === "p2p"
+  const rate = Number(rateText.replace(/[^0-9.]/g, ""))
+  const cashAmount = amount > 0 && rate > 0 ? amount * rate : 0
+  const canSave = amount > 0 && !!datetime && (!isP2P || rate > 0)
 
   function handleAttach(event: React.ChangeEvent<HTMLInputElement>) {
     const names = Array.from(event.target.files ?? []).map((f) => f.name)
@@ -126,6 +149,9 @@ export function EntryFormDialog({
         tags,
         sourceId: existingSource?.id, // page fills this in for a new source
         amount,
+        p2p: isP2P
+          ? { direction, cashCurrency, rate, cashAmount }
+          : undefined,
         note: note.trim() ? note.trim() : undefined,
         attachments: attachments.length > 0 ? attachments : undefined,
       },
@@ -258,21 +284,121 @@ export function EntryFormDialog({
               </Field>
             </div>
           ) : null}
-          <Field>
-            <FieldLabel htmlFor="entry-amount">Amount (USD)</FieldLabel>
-            <InputGroup>
-              <InputGroupAddon>
-                <InputGroupText>$</InputGroupText>
-              </InputGroupAddon>
-              <InputGroupInput
-                id="entry-amount"
-                placeholder="0.00"
-                inputMode="decimal"
-                value={amountText}
-                onChange={(e) => setAmountText(e.target.value)}
-              />
-            </InputGroup>
-          </Field>
+          {isP2P ? (
+            <div className="flex flex-col gap-4 rounded-lg border p-4">
+              <p className="text-sm font-medium">💱 Fiat/P2P exchange</p>
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel htmlFor="p2p-direction">Direction</FieldLabel>
+                  <Select
+                    items={directionItems}
+                    value={direction}
+                    onValueChange={(value) =>
+                      setDirection(value as P2PDirection)
+                    }
+                  >
+                    <SelectTrigger id="p2p-direction">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {directionItems.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="p2p-currency">Cash Currency</FieldLabel>
+                  <Select
+                    items={cashCurrencyItems}
+                    value={cashCurrency}
+                    onValueChange={(value) => setCashCurrency(value as string)}
+                  >
+                    <SelectTrigger id="p2p-currency">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {cashCurrencyItems.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <Field>
+                  <FieldLabel htmlFor="p2p-rate">Rate</FieldLabel>
+                  <Input
+                    id="p2p-rate"
+                    placeholder={`${cashCurrency} per $1`}
+                    inputMode="decimal"
+                    value={rateText}
+                    onChange={(e) => setRateText(e.target.value)}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="entry-amount">USD Amount</FieldLabel>
+                  <InputGroup>
+                    <InputGroupAddon>
+                      <InputGroupText>$</InputGroupText>
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      id="entry-amount"
+                      placeholder="0.00"
+                      inputMode="decimal"
+                      value={amountText}
+                      onChange={(e) => setAmountText(e.target.value)}
+                    />
+                  </InputGroup>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="p2p-cash-amount">Cash Amount</FieldLabel>
+                  <InputGroup>
+                    <InputGroupAddon>
+                      <InputGroupText>{cashCurrency}</InputGroupText>
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      id="p2p-cash-amount"
+                      readOnly
+                      tabIndex={-1}
+                      placeholder="Auto"
+                      value={
+                        cashAmount > 0
+                          ? cashAmount.toLocaleString("en-US", {
+                              maximumFractionDigits: 2,
+                            })
+                          : ""
+                      }
+                    />
+                  </InputGroup>
+                </Field>
+              </div>
+            </div>
+          ) : (
+            <Field>
+              <FieldLabel htmlFor="entry-amount">Amount (USD)</FieldLabel>
+              <InputGroup>
+                <InputGroupAddon>
+                  <InputGroupText>$</InputGroupText>
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="entry-amount"
+                  placeholder="0.00"
+                  inputMode="decimal"
+                  value={amountText}
+                  onChange={(e) => setAmountText(e.target.value)}
+                />
+              </InputGroup>
+            </Field>
+          )}
           <Field>
             <FieldLabel htmlFor="entry-note">Note</FieldLabel>
             <Textarea

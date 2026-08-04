@@ -126,6 +126,12 @@ export const mockEntries: Entry[] = [
     tags: ["npr-cashout"],
     sourceId: "s_5",
     amount: 208,
+    p2p: {
+      direction: "usd-to-cash",
+      cashCurrency: "NPR",
+      rate: 139.5,
+      cashAmount: 29016,
+    },
     note: "Sold USDT for NPR cash.",
   },
   {
@@ -220,6 +226,12 @@ export const mockEntries: Entry[] = [
     tags: ["npr-cashout"],
     sourceId: "s_5",
     amount: 120,
+    p2p: {
+      direction: "cash-to-usd",
+      cashCurrency: "NPR",
+      rate: 132.8,
+      cashAmount: 15936,
+    },
   },
 ]
 

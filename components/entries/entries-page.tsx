@@ -57,9 +57,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useEntries, useSources } from "@/lib/local-store"
 import { formatMoney, getNetAmount } from "@/lib/mock-data"
-import type { Entry, Source } from "@/lib/types"
+import { useEntryData } from "@/lib/use-entry-data"
+import type { Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 type RangePreset = "all" | "7d" | "30d" | "month" | "year" | "custom"
@@ -124,8 +124,8 @@ function AmountCell({ entry }: { entry: Entry }) {
 }
 
 export function EntriesPage() {
-  const { items: entries, set: setEntries } = useEntries()
-  const { items: sources, set: setSources } = useSources()
+  const { entries, setEntries, sources, categoryOptions, tagOptions, saveEntry } =
+    useEntryData()
 
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<Entry | null>(null)
@@ -141,17 +141,6 @@ export function EntriesPage() {
   const sourceById = React.useMemo(
     () => new Map(sources.map((s) => [s.id, s])),
     [sources]
-  )
-  const categoryOptions = React.useMemo(
-    () =>
-      Array.from(
-        new Set(entries.map((e) => e.category).filter(Boolean) as string[])
-      ).sort(),
-    [entries]
-  )
-  const tagOptions = React.useMemo(
-    () => Array.from(new Set(entries.flatMap((e) => e.tags))).sort(),
-    [entries]
   )
 
   const hasActiveFilters =
@@ -225,20 +214,6 @@ export function EntriesPage() {
     setDialogOpen(true)
   }
 
-  function handleSave(saved: Entry, newSource?: Omit<Source, "id">) {
-    let entryToSave = saved
-    if (newSource) {
-      const source: Source = { id: `s_${Date.now()}`, ...newSource }
-      setSources((prev) => [...prev, source])
-      entryToSave = { ...saved, sourceId: source.id }
-    }
-    setEntries((prev) =>
-      prev.some((e) => e.id === entryToSave.id)
-        ? prev.map((e) => (e.id === entryToSave.id ? entryToSave : e))
-        : [entryToSave, ...prev]
-    )
-  }
-
   function handleDelete(entry: Entry) {
     setEntries((prev) => prev.filter((e) => e.id !== entry.id))
   }
@@ -275,13 +250,13 @@ export function EntriesPage() {
           </span>
           <h1 className="text-2xl font-semibold tracking-tight">Entries</h1>
         </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
         <Button onClick={openCreate}>
           <Plus data-icon="inline-start" />
           Add Entry
         </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
         <InputGroup className="w-full sm:max-w-56">
           <InputGroupAddon>
             <Search />
@@ -495,7 +470,23 @@ export function EntriesPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <AmountCell entry={entry} />
+                      <div className="flex flex-col items-end">
+                        <AmountCell entry={entry} />
+                        {entry.p2p ? (
+                          <span className="text-xs text-muted-foreground">
+                            {entry.p2p.direction === "usd-to-cash"
+                              ? "Sold USD"
+                              : "Bought USD"}
+                            {" · "}
+                            {entry.p2p.cashCurrency}{" "}
+                            {entry.p2p.cashAmount.toLocaleString("en-US", {
+                              maximumFractionDigits: 2,
+                            })}
+                            {" @ "}
+                            {entry.p2p.rate}
+                          </span>
+                        ) : null}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -555,7 +546,7 @@ export function EntriesPage() {
         sources={sources}
         categoryOptions={categoryOptions}
         tagOptions={tagOptions}
-        onSave={handleSave}
+        onSave={saveEntry}
       />
     </AppShell>
   )

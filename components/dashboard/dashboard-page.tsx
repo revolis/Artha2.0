@@ -6,12 +6,13 @@ import { ArrowRight, Plus } from "lucide-react"
 
 import { AvgMonthlyIncome } from "@/components/dashboard/avg-monthly-income"
 import { YearSwitcher } from "@/components/dashboard/year-switcher"
+import { EntryFormDialog } from "@/components/entries/entry-form-dialog"
 import { GoalCard } from "@/components/goals/goal-card"
 import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { useEntries } from "@/lib/local-store"
 import { getAvgMonthlyIncome, mockSettings } from "@/lib/mock-data"
+import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
 import type { Currency } from "@/lib/types"
 
@@ -30,7 +31,9 @@ export function DashboardPage() {
     setSelectedYear(year)
   }
 
-  const { items: entries } = useEntries()
+  const { entries, sources, categoryOptions, tagOptions, saveEntry } =
+    useEntryData()
+  const [entryDialogOpen, setEntryDialogOpen] = React.useState(false)
   const avgMonthlyIncomeUsd = getAvgMonthlyIncome(entries, selectedYear)
   const { goals } = useGoals()
   const pinnedGoals = goals.filter((goal) => goal.showOnDashboard)
@@ -46,7 +49,7 @@ export function DashboardPage() {
             Financial Dashboard for Year {selectedYear}
           </h1>
         </div>
-        <Button>
+        <Button onClick={() => setEntryDialogOpen(true)}>
           <Plus data-icon="inline-start" />
           Add Entry
         </Button>
@@ -90,7 +93,18 @@ export function DashboardPage() {
       ) : null}
 
       <Separator />
-      {/* Goals card, portfolio value, P/L cards, charts, heatmap — added later */}
+      {/* Portfolio value, P/L cards, charts, heatmap — added later */}
+
+      <EntryFormDialog
+        key={entryDialogOpen ? "create" : "closed"}
+        entry={null}
+        open={entryDialogOpen}
+        onOpenChange={setEntryDialogOpen}
+        sources={sources}
+        categoryOptions={categoryOptions}
+        tagOptions={tagOptions}
+        onSave={saveEntry}
+      />
     </AppShell>
   )
 }
