@@ -8,6 +8,7 @@ import { AvgMonthlyIncome } from "@/components/dashboard/avg-monthly-income"
 import { CategoryContribution } from "@/components/dashboard/category-contribution"
 import { NetPLTrend } from "@/components/dashboard/net-pl-trend"
 import { PortfolioCard } from "@/components/dashboard/portfolio-card"
+import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { YearSwitcher } from "@/components/dashboard/year-switcher"
 import { EntryFormDialog } from "@/components/entries/entry-form-dialog"
 import { GoalCard } from "@/components/goals/goal-card"
@@ -16,7 +17,12 @@ import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { formatMoney, getAvgMonthlyIncome, mockSettings } from "@/lib/mock-data"
+import {
+  formatMoney,
+  getAvgMonthlyIncome,
+  getEntryYear,
+  mockSettings,
+} from "@/lib/mock-data"
 import {
   buildDailySeries,
   getMonthOverMonth,
@@ -24,7 +30,7 @@ import {
 } from "@/lib/portfolio"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
-import type { Currency } from "@/lib/types"
+import type { Currency, Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -74,9 +80,34 @@ export function DashboardPage() {
     setSelectedYear(year)
   }
 
-  const { entries, sources, categoryOptions, tagOptions, saveEntry } =
-    useEntryData()
+  const {
+    entries,
+    setEntries,
+    sources,
+    categoryOptions,
+    tagOptions,
+    saveEntry,
+  } = useEntryData()
   const [entryDialogOpen, setEntryDialogOpen] = React.useState(false)
+  const [editingEntry, setEditingEntry] = React.useState<Entry | null>(null)
+
+  function openCreate() {
+    setEditingEntry(null)
+    setEntryDialogOpen(true)
+  }
+
+  function openEdit(entry: Entry) {
+    setEditingEntry(entry)
+    setEntryDialogOpen(true)
+  }
+
+  function duplicateEntry(entry: Entry) {
+    setEntries((prev) => [{ ...entry, id: `e_${Date.now()}` }, ...prev])
+  }
+
+  function deleteEntry(entry: Entry) {
+    setEntries((prev) => prev.filter((item) => item.id !== entry.id))
+  }
   const avgMonthlyIncomeUsd = getAvgMonthlyIncome(entries, selectedYear)
   const { goals } = useGoals()
   const pinnedGoals = goals.filter((goal) => goal.showOnDashboard)
@@ -91,6 +122,10 @@ export function DashboardPage() {
     [entries, selectedYear]
   )
   const netLoss = stats.loss + stats.fees + stats.taxes
+  const yearEntries = React.useMemo(
+    () => entries.filter((entry) => getEntryYear(entry) === selectedYear),
+    [entries, selectedYear]
+  )
 
   return (
     <AppShell>
@@ -103,7 +138,7 @@ export function DashboardPage() {
             Financial Dashboard for Year {selectedYear}
           </h1>
         </div>
-        <Button onClick={() => setEntryDialogOpen(true)}>
+        <Button onClick={openCreate}>
           <Plus data-icon="inline-start" />
           Add Entry
         </Button>
@@ -180,16 +215,27 @@ export function DashboardPage() {
         <CategoryContribution entries={entries} year={selectedYear} />
       </div>
 
+      <RecentTransactions
+        entries={yearEntries}
+        sources={sources}
+        onEdit={openEdit}
+        onDuplicate={duplicateEntry}
+        onDelete={deleteEntry}
+      />
+
       <YearHeatmap entries={entries} sources={sources} year={selectedYear} />
 
       <Separator />
       {/* Recent entries — added later */}
 
       <EntryFormDialog
-        key={entryDialogOpen ? "create" : "closed"}
-        entry={null}
+        key={entryDialogOpen ? (editingEntry?.id ?? "create") : "closed"}
+        entry={editingEntry}
         open={entryDialogOpen}
-        onOpenChange={setEntryDialogOpen}
+        onOpenChange={(open) => {
+          setEntryDialogOpen(open)
+          if (!open) setEditingEntry(null)
+        }}
         sources={sources}
         categoryOptions={categoryOptions}
         tagOptions={tagOptions}
