@@ -3,6 +3,7 @@
 import { Eye, LogOut } from "lucide-react"
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
+import { ThemeToggler } from "@/components/layout/theme-toggler"
 import { Button } from "@/components/ui/button"
 import {
   SidebarInset,
@@ -25,6 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-sm font-semibold">Financial Overview</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <ThemeToggler />
             <Button variant="ghost" size="icon-sm" aria-label="Privacy mode">
               <Eye />
             </Button>
