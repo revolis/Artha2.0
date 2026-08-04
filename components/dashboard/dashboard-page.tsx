@@ -11,6 +11,7 @@ import { PortfolioCard } from "@/components/dashboard/portfolio-card"
 import { YearSwitcher } from "@/components/dashboard/year-switcher"
 import { EntryFormDialog } from "@/components/entries/entry-form-dialog"
 import { GoalCard } from "@/components/goals/goal-card"
+import { YearHeatmap } from "@/components/heatmap/year-heatmap"
 import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -179,8 +180,10 @@ export function DashboardPage() {
         <CategoryContribution entries={entries} year={selectedYear} />
       </div>
 
+      <YearHeatmap entries={entries} sources={sources} year={selectedYear} />
+
       <Separator />
-      {/* Recent entries and heatmap — added later */}
+      {/* Recent entries — added later */}
 
       <EntryFormDialog
         key={entryDialogOpen ? "create" : "closed"}
