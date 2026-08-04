@@ -25,7 +25,7 @@ import {
   mockSettings,
 } from "@/lib/mock-data"
 import {
-  buildDailySeries,
+  buildDualDailySeries,
   getMonthOverMonth,
   getPortfolioStats,
 } from "@/lib/portfolio"
@@ -114,7 +114,7 @@ export function DashboardPage() {
   const pinnedGoals = goals.filter((goal) => goal.showOnDashboard)
 
   const series = React.useMemo(
-    () => buildDailySeries(entries, selectedYear),
+    () => buildDualDailySeries(entries, selectedYear),
     [entries, selectedYear]
   )
   const momentum = React.useMemo(() => getMonthOverMonth(series), [series])
@@ -181,7 +181,13 @@ export function DashboardPage() {
         </div>
       ) : null}
 
-      <PortfolioCard series={series} momentum={momentum} />
+      <PortfolioCard
+        series={series}
+        momentum={momentum}
+        netIncome={stats.netIncome}
+        cashOut={stats.cashOut}
+        cashIn={stats.cashIn}
+      />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <SummaryCard

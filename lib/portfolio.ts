@@ -28,42 +28,6 @@ function toIso(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
 }
 
-export interface SeriesPoint {
-  date: string
-  value: number
-}
-
-// One point per day of the year, carrying the running balance forward so the
-// line stays continuous between entries.
-export function buildDailySeries(
-  entries: Entry[],
-  year: number,
-  now = new Date()
-): SeriesPoint[] {
-  const byDay = new Map<string, number>()
-  for (const entry of entries) {
-    if (getEntryYear(entry) !== year) continue
-    const day = entry.datetime.slice(0, 10)
-    byDay.set(day, (byDay.get(day) ?? 0) + getPortfolioDelta(entry))
-  }
-
-  const end =
-    year === now.getFullYear()
-      ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      : new Date(year, 11, 31)
-
-  const series: SeriesPoint[] = []
-  const cursor = new Date(year, 0, 1)
-  let running = 0
-  while (cursor <= end) {
-    const iso = toIso(cursor)
-    running += byDay.get(iso) ?? 0
-    series.push({ date: iso, value: running })
-    cursor.setDate(cursor.getDate() + 1)
-  }
-  return series
-}
-
 export interface DualSeriesPoint {
   // Index signature so the array satisfies the chart's Record<string, unknown>.
   [key: string]: Date | number
@@ -122,20 +86,23 @@ export interface MonthOverMonth {
 // Compares the latest balance against where it stood at the end of the
 // previous month. Anchored to the last point in the series, so it reads
 // correctly for past years too (Dec compared against end of Nov).
-export function getMonthOverMonth(series: SeriesPoint[]): MonthOverMonth {
+export function getMonthOverMonth(
+  series: DualSeriesPoint[],
+  key: "portfolio" | "netIncome" = "portfolio"
+): MonthOverMonth {
   if (series.length === 0) {
     return { current: 0, previous: 0, change: 0, percent: null }
   }
   const lastPoint = series[series.length - 1]
-  const monthStart = `${lastPoint.date.slice(0, 7)}-01`
+  const monthStart = `${toIso(lastPoint.date).slice(0, 7)}-01`
 
   let previous = 0
   for (const point of series) {
-    if (point.date >= monthStart) break
-    previous = point.value
+    if (toIso(point.date) >= monthStart) break
+    previous = point[key] as number
   }
 
-  const current = lastPoint.value
+  const current = lastPoint[key] as number
   const change = current - previous
   return {
     current,
