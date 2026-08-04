@@ -79,7 +79,7 @@ export function PortfolioCard({
               the two figures is exactly the P2P movement. */}
           <div className="flex flex-col gap-2">
             <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Before Cash Movements
+              Gross Portfolio Value
             </span>
             <span className="text-4xl font-semibold tabular-nums text-muted-foreground">
               {formatMoney(netIncome, "USD")}
@@ -144,7 +144,7 @@ export function PortfolioCard({
                   className="h-0.5 w-4 rounded-full"
                   style={{ backgroundColor: INCOME_COLOR }}
                 />
-                Before cash movements
+                Gross Portfolio Value
               </span>
             </div>
           </>

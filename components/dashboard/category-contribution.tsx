@@ -1,8 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { Cell, Pie, PieChart } from "recharts"
 
+import {
+  Legend,
+  LegendItem,
+  LegendLabel,
+  LegendMarker,
+  LegendValue,
+} from "@/components/charts/legend"
+import { PieCenter } from "@/components/charts/pie-center"
+import { PieChart } from "@/components/charts/pie-chart"
+import { PieSlice } from "@/components/charts/pie-slice"
 import {
   Card,
   CardContent,
@@ -10,14 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart"
 import { getPerformanceBreakdown } from "@/lib/analytics"
-import { formatMoney } from "@/lib/mock-data"
 import type { Entry } from "@/lib/types"
 
 // Slices cycle through the theme's categorical chart tokens.
@@ -36,6 +38,8 @@ export function CategoryContribution({
   entries: Entry[]
   year: number
 }) {
+  const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null)
+
   const slices = React.useMemo(
     () =>
       getPerformanceBreakdown(entries, year, (entry) => entry.category)
@@ -44,23 +48,17 @@ export function CategoryContribution({
     [entries, year]
   )
 
-  // Give every slice a stable colour and a chart config entry so the shared
-  // tooltip renders the category name rather than the raw data key.
-  const { data, chartConfig } = React.useMemo(() => {
-    const config: ChartConfig = {}
-    const rows = slices.map((slice, index) => {
-      const color = SLICE_COLORS[index % SLICE_COLORS.length]
-      config[slice.name] = { label: slice.name, color }
-      return {
-        name: slice.name,
-        income: slice.income,
-        share: slice.share,
-        fill: color,
-      }
-    })
-    return { data: rows, chartConfig: config }
-  }, [slices])
+  const pieData = React.useMemo(
+    () =>
+      slices.map((slice, index) => ({
+        label: slice.name,
+        value: slice.income,
+        color: SLICE_COLORS[index % SLICE_COLORS.length],
+      })),
+    [slices]
+  )
 
+  const totalIncome = slices.reduce((sum, slice) => sum + slice.income, 0)
   const leader = slices[0]
 
   return (
@@ -73,66 +71,55 @@ export function CategoryContribution({
             : `No income recorded for ${year}`}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-5">
-        {data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+      <CardContent className="flex flex-col items-center gap-6">
+        {pieData.length === 0 ? (
+          <p className="self-start text-sm text-muted-foreground">
             Add entries with a category to see how your income splits up.
           </p>
         ) : (
           <>
-            <ChartContainer
-              config={chartConfig}
-              className="mx-auto aspect-square h-56"
+            {/* Centre value animates: the year total at rest, and the hovered
+                category's earnings while pointing at a slice. */}
+            <PieChart
+              data={pieData}
+              hoveredIndex={hoveredIndex}
+              onHoverChange={setHoveredIndex}
+              size={220}
+              innerRadius={70}
+              padAngle={0.02}
+              cornerRadius={4}
             >
-              <PieChart>
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      nameKey="name"
-                      formatter={(value) => formatMoney(Number(value), "USD")}
-                    />
+              {pieData.map((slice, index) => (
+                <PieSlice index={index} key={slice.label} />
+              ))}
+              <PieCenter
+                defaultLabel="Total income"
+                prefix="$"
+                formatOptions={{
+                  notation: "standard",
+                  maximumFractionDigits: 0,
+                }}
+              />
+            </PieChart>
+
+            <Legend
+              className="w-full"
+              hoveredIndex={hoveredIndex}
+              items={pieData}
+              onHoverChange={setHoveredIndex}
+            >
+              <LegendItem>
+                <LegendMarker />
+                <LegendLabel />
+                <LegendValue
+                  formatValue={(value) =>
+                    totalIncome > 0
+                      ? `${((value / totalIncome) * 100).toFixed(0)}%`
+                      : "0%"
                   }
                 />
-                {/* Animation left on would leave the sectors unrendered. */}
-                <Pie
-                  data={data}
-                  dataKey="income"
-                  nameKey="name"
-                  innerRadius="58%"
-                  outerRadius="88%"
-                  paddingAngle={2}
-                  strokeWidth={0}
-                  isAnimationActive={false}
-                >
-                  {data.map((slice) => (
-                    <Cell key={slice.name} fill={slice.fill} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ChartContainer>
-
-            <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
-              {data.map((slice) => (
-                <div key={slice.name} className="flex items-center gap-2">
-                  <span
-                    aria-hidden
-                    className="size-3 shrink-0 rounded-[3px]"
-                    style={{ backgroundColor: slice.fill }}
-                  />
-                  <span className="truncate text-sm">{slice.name}</span>
-                  <span className="ml-auto text-sm font-medium tabular-nums">
-                    {slice.share.toFixed(0)}%
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {leader ? (
-              <p className="text-sm text-muted-foreground">
-                {leader.name} contributes {leader.share.toFixed(0)}% of income
-                for {year}.
-              </p>
-            ) : null}
+              </LegendItem>
+            </Legend>
           </>
         )}
       </CardContent>

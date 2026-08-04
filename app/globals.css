@@ -69,6 +69,11 @@
     --color-chart-foreground-muted: var(--chart-foreground-muted);
     --color-chart-foreground: var(--chart-foreground);
     --color-chart-background: var(--chart-background);
+    --color-legend-track: var(--legend-track);
+    --color-legend-muted-foreground: var(--legend-muted-foreground);
+    --color-legend-muted: var(--legend-muted);
+    --color-legend-foreground: var(--legend-foreground);
+    --color-legend: var(--legend);
   @keyframes shimmer-slide {
   to {
     transform: translate(calc(100cqw - 100%), 0);
@@ -149,6 +154,11 @@
     --chart-scale-04: oklch(0.68 0.02 106);
     --chart-scale-05: oklch(0.55 0.025 106);
     --chart-scale-pattern-color: oklch(0.96 0.005 106);
+    --legend: oklch(1 0 0);
+    --legend-foreground: oklch(0.141 0.005 285.823);
+    --legend-muted: oklch(0.967 0.001 286.375);
+    --legend-muted-foreground: oklch(0.552 0.016 285.938);
+    --legend-track: oklch(0.92 0.004 286.32);
 }
 
 .dark {
@@ -202,6 +212,11 @@
     --chart-scale-04: oklch(0.58 0.06 270);
     --chart-scale-05: oklch(0.68 0.07 270);
     --chart-scale-pattern-color: oklch(0.145 0 0);
+    --legend: oklch(0.21 0.006 285.885);
+    --legend-foreground: oklch(0.985 0 0);
+    --legend-muted: oklch(0.274 0.006 286.033);
+    --legend-muted-foreground: oklch(0.705 0.015 286.067);
+    --legend-track: oklch(0.274 0.006 286.033);
 }
 
 @layer base {
