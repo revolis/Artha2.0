@@ -31,7 +31,7 @@ const navItems = [
   { title: "💱Fiat/P2P", href: "/p2p", icon: ArrowLeftRight },
   { title: "Portfolio", href: "#", icon: LineChart },
   { title: "Analytics", href: "#", icon: BarChart3 },
-  { title: "Year Heatmap", href: "#", icon: CalendarDays },
+  { title: "Year Heatmap", href: "/heatmap", icon: CalendarDays },
   { title: "Goals", href: "/goals", icon: Target },
   { title: "Reports", href: "#", icon: FileText },
   { title: "Sources", href: "#", icon: Layers },
