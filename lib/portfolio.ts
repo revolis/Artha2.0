@@ -64,6 +64,54 @@ export function buildDailySeries(
   return series
 }
 
+export interface DualSeriesPoint {
+  // Index signature so the array satisfies the chart's Record<string, unknown>.
+  [key: string]: Date | number
+  date: Date
+  /** Net income minus USD sold for cash, plus USD bought with cash. */
+  portfolio: number
+  /** Profit minus loss, fees and tax — ignores money moving to or from cash. */
+  netIncome: number
+}
+
+// Both running totals in one pass, for the two-line portfolio chart.
+export function buildDualDailySeries(
+  entries: Entry[],
+  year: number,
+  now = new Date()
+): DualSeriesPoint[] {
+  const portfolioByDay = new Map<string, number>()
+  const incomeByDay = new Map<string, number>()
+
+  for (const entry of entries) {
+    if (getEntryYear(entry) !== year) continue
+    const day = entry.datetime.slice(0, 10)
+    portfolioByDay.set(
+      day,
+      (portfolioByDay.get(day) ?? 0) + getPortfolioDelta(entry)
+    )
+    incomeByDay.set(day, (incomeByDay.get(day) ?? 0) + getNetAmount(entry))
+  }
+
+  const end =
+    year === now.getFullYear()
+      ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      : new Date(year, 11, 31)
+
+  const series: DualSeriesPoint[] = []
+  const cursor = new Date(year, 0, 1)
+  let portfolio = 0
+  let netIncome = 0
+  while (cursor <= end) {
+    const iso = toIso(cursor)
+    portfolio += portfolioByDay.get(iso) ?? 0
+    netIncome += incomeByDay.get(iso) ?? 0
+    series.push({ date: new Date(cursor), portfolio, netIncome })
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return series
+}
+
 export interface MonthOverMonth {
   current: number
   previous: number

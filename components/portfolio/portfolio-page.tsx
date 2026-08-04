@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import {
   Activity,
   ArrowDownLeft,
@@ -17,6 +16,10 @@ import {
 
 import { AppShell } from "@/components/layout/app-shell"
 import { GrowthContributors } from "@/components/portfolio/growth-contributors"
+import { Area, AreaChart } from "@/components/charts/area-chart"
+import { Grid } from "@/components/charts/grid"
+import { XAxis } from "@/components/charts/x-axis"
+import { ChartTooltip } from "@/components/charts/tooltip"
 import {
   Card,
   CardContent,
@@ -24,12 +27,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart"
 import {
   Empty,
   EmptyDescription,
@@ -48,7 +45,7 @@ import {
 } from "@/components/ui/tooltip"
 import { formatMoney } from "@/lib/mock-data"
 import {
-  buildDailySeries,
+  buildDualDailySeries,
   getContributors,
   getPortfolioInsights,
   getPortfolioStats,
@@ -66,16 +63,18 @@ const presets: { value: Preset; label: string }[] = [
   { value: "custom", label: "Customise" },
 ]
 
-const chartConfig = {
-  value: { label: "Portfolio", color: "var(--success)" },
-} satisfies ChartConfig
+const PORTFOLIO_COLOR = "var(--success)"
+const INCOME_COLOR = "var(--chart-foreground-muted)"
 
-function formatDay(iso: string): string {
+// Accepts a Date (chart series) or an ISO day string (insight dates).
+function formatDay(value: Date | string): string {
+  const date =
+    typeof value === "string" ? new Date(`${value}T00:00:00`) : value
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
-  }).format(new Date(`${iso}T00:00:00`))
+  }).format(date)
 }
 
 // Compact stat card: label, figure, supporting line, and a framed icon.
@@ -156,17 +155,18 @@ export function PortfolioPage() {
   )
 
   const fullSeries = React.useMemo(
-    () => buildDailySeries(entries, year),
+    () => buildDualDailySeries(entries, year),
     [entries, year]
   )
 
   const series = React.useMemo(() => {
     if (preset === "ytd") return fullSeries
     if (preset === "custom") {
+      const from = customFrom ? new Date(`${customFrom}T00:00:00`) : null
+      const to = customTo ? new Date(`${customTo}T23:59:59`) : null
       return fullSeries.filter(
         (point) =>
-          (!customFrom || point.date >= customFrom) &&
-          (!customTo || point.date <= customTo)
+          (!from || point.date >= from) && (!to || point.date <= to)
       )
     }
     const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90
@@ -203,10 +203,10 @@ export function PortfolioPage() {
 
   const first = series[0]
   const last = series[series.length - 1]
-  const change = first && last ? last.value - first.value : 0
+  const change = first && last ? last.portfolio - first.portfolio : 0
   const percent =
-    first && Math.abs(first.value) > 0.01
-      ? (change / Math.abs(first.value)) * 100
+    first && Math.abs(first.portfolio) > 0.01
+      ? (change / Math.abs(first.portfolio)) * 100
       : null
   const rangeLabel = presets.find((p) => p.value === preset)?.label ?? "Range"
   const momentumDelta = insights.thisMonthNet - insights.lastMonthNet
@@ -327,55 +327,64 @@ export function PortfolioPage() {
             </Empty>
           ) : (
             <>
-              <ChartContainer config={chartConfig} className="h-64 w-full">
-                <AreaChart data={series} margin={{ left: 4, right: 4 }}>
-                  <defs>
-                    <linearGradient id="fillValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="var(--color-value)"
-                        stopOpacity={0.3}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="var(--color-value)"
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid vertical horizontal={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    minTickGap={40}
-                    tickFormatter={(value: string) =>
-                      new Intl.DateTimeFormat("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      }).format(new Date(`${value}T00:00:00`))
-                    }
+              <AreaChart
+                data={series}
+                xDataKey="date"
+                className="w-full"
+                style={{ aspectRatio: "auto", height: 300 }}
+                margin={{ top: 24, right: 24, bottom: 32, left: 24 }}
+              >
+                <Grid />
+                <XAxis />
+                {/* Net income sits behind — it ignores cash moving in and out,
+                    so it runs above the portfolio line whenever you cash out. */}
+                <Area
+                  dataKey="netIncome"
+                  stroke={INCOME_COLOR}
+                  fill={INCOME_COLOR}
+                  fillOpacity={0.12}
+                  strokeWidth={1.5}
+                />
+                <Area
+                  dataKey="portfolio"
+                  stroke={PORTFOLIO_COLOR}
+                  fill={PORTFOLIO_COLOR}
+                  fillOpacity={0.28}
+                  strokeWidth={2}
+                />
+                <ChartTooltip
+                  rows={(point) => [
+                    {
+                      color: PORTFOLIO_COLOR,
+                      label: "Portfolio",
+                      value: formatMoney(Number(point.portfolio), "USD"),
+                    },
+                    {
+                      color: INCOME_COLOR,
+                      label: "Net income",
+                      value: formatMoney(Number(point.netIncome), "USD"),
+                    },
+                  ]}
+                />
+              </AreaChart>
+              <div className="flex flex-wrap items-center gap-4 text-xs">
+                <span className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className="h-0.5 w-4 rounded-full"
+                    style={{ backgroundColor: PORTFOLIO_COLOR }}
                   />
-                  <YAxis hide domain={["dataMin - 50", "dataMax + 50"]} />
-                  <ChartTooltip
-                    content={
-                      <ChartTooltipContent
-                        labelFormatter={(value) => formatDay(String(value))}
-                        formatter={(value) => formatMoney(Number(value), "USD")}
-                      />
-                    }
+                  Portfolio value
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className="h-0.5 w-4 rounded-full"
+                    style={{ backgroundColor: INCOME_COLOR }}
                   />
-                  <Area
-                    dataKey="value"
-                    type="stepAfter"
-                    stroke="var(--color-value)"
-                    strokeWidth={2}
-                    fill="url(#fillValue)"
-                    dot={false}
-                  />
-                </AreaChart>
-              </ChartContainer>
+                  Net income
+                </span>
+              </div>
               <Separator />
               <div className="flex items-end justify-between gap-4">
                 <div className="flex flex-col gap-0.5">
@@ -383,7 +392,7 @@ export function PortfolioPage() {
                     {formatDay(first.date)}
                   </span>
                   <span className="font-medium tabular-nums">
-                    {formatMoney(first.value, "USD")}
+                    {formatMoney(first.portfolio, "USD")}
                   </span>
                 </div>
                 <div className="flex flex-col items-end gap-0.5">
@@ -391,7 +400,7 @@ export function PortfolioPage() {
                     {formatDay(last.date)}
                   </span>
                   <span className="font-medium tabular-nums">
-                    {formatMoney(last.value, "USD")}
+                    {formatMoney(last.portfolio, "USD")}
                   </span>
                 </div>
               </div>
