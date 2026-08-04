@@ -63,8 +63,8 @@ const presets: { value: Preset; label: string }[] = [
   { value: "custom", label: "Customise" },
 ]
 
-const PORTFOLIO_COLOR = "var(--success)"
-const INCOME_COLOR = "var(--chart-foreground-muted)"
+const PORTFOLIO_COLOR = "var(--chart-line-primary)"
+const INCOME_COLOR = "var(--chart-line-secondary)"
 
 // Accepts a Date (chart series) or an ISO day string (insight dates).
 function formatDay(value: Date | string): string {
@@ -334,24 +334,12 @@ export function PortfolioPage() {
                 style={{ aspectRatio: "auto", height: 300 }}
                 margin={{ top: 24, right: 24, bottom: 32, left: 24 }}
               >
-                <Grid />
+                <Grid horizontal />
                 <XAxis />
                 {/* Net income sits behind — it ignores cash moving in and out,
                     so it runs above the portfolio line whenever you cash out. */}
-                <Area
-                  dataKey="netIncome"
-                  stroke={INCOME_COLOR}
-                  fill={INCOME_COLOR}
-                  fillOpacity={0.12}
-                  strokeWidth={1.5}
-                />
-                <Area
-                  dataKey="portfolio"
-                  stroke={PORTFOLIO_COLOR}
-                  fill={PORTFOLIO_COLOR}
-                  fillOpacity={0.28}
-                  strokeWidth={2}
-                />
+                <Area dataKey="netIncome" fill={INCOME_COLOR} />
+                <Area dataKey="portfolio" fill={PORTFOLIO_COLOR} />
                 <ChartTooltip
                   rows={(point) => [
                     {

@@ -100,6 +100,11 @@ function useElementSize(ref: React.RefObject<HTMLDivElement | null>) {
     };
 
     measure();
+    // The first measure can land before layout settles. Re-measure on the next
+    // frame and shortly after so a zero reading self-corrects even where
+    // ResizeObserver never fires.
+    const frame = requestAnimationFrame(measure);
+    const timer = window.setTimeout(measure, 150);
 
     let observer: ResizeObserver | undefined;
     if (typeof ResizeObserver !== "undefined") {
@@ -109,6 +114,8 @@ function useElementSize(ref: React.RefObject<HTMLDivElement | null>) {
     window.addEventListener("resize", measure);
 
     return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
       observer?.disconnect();
       window.removeEventListener("resize", measure);
     };
