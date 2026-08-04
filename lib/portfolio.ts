@@ -64,6 +64,40 @@ export function buildDailySeries(
   return series
 }
 
+export interface MonthOverMonth {
+  current: number
+  previous: number
+  change: number
+  percent: number | null // null when the previous month sat at zero
+}
+
+// Compares the latest balance against where it stood at the end of the
+// previous month. Anchored to the last point in the series, so it reads
+// correctly for past years too (Dec compared against end of Nov).
+export function getMonthOverMonth(series: SeriesPoint[]): MonthOverMonth {
+  if (series.length === 0) {
+    return { current: 0, previous: 0, change: 0, percent: null }
+  }
+  const lastPoint = series[series.length - 1]
+  const monthStart = `${lastPoint.date.slice(0, 7)}-01`
+
+  let previous = 0
+  for (const point of series) {
+    if (point.date >= monthStart) break
+    previous = point.value
+  }
+
+  const current = lastPoint.value
+  const change = current - previous
+  return {
+    current,
+    previous,
+    change,
+    percent:
+      Math.abs(previous) > 0.01 ? (change / Math.abs(previous)) * 100 : null,
+  }
+}
+
 export interface PortfolioStats {
   grossIncome: number // all profit
   loss: number // all loss
