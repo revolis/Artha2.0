@@ -151,6 +151,8 @@ interface Goal {
   currency: Currency;
   startDate?: string;     // period start (ISO) — goals can span days, months, a quarter, a year…
   endDate?: string;       // period end (ISO)
+  completedAt?: string;   // ISO date the goal was reached, if it has been
+  showOnDashboard?: boolean; // pinned to the dashboard's goals section
   color?: string;         // theme chart token, e.g. "chart-1" — for the progress ring
 }
 ```

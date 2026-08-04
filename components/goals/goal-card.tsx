@@ -1,15 +1,45 @@
 "use client"
 
 import {
+  CheckCircle2,
+  CircleAlert,
+  Clock,
+  Copy,
+  LayoutDashboard,
+  MoreVertical,
+  Pencil,
+  Pin,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Progress } from "@/components/ui/progress"
+import {
+  getGoalPercent,
+  getGoalStatus,
+  isGoalCompleted,
+  type GoalStatusTone,
+} from "@/lib/goals"
 import { formatMoney } from "@/lib/mock-data"
 import type { Goal } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 function formatPeriod(goal: Goal): string {
   if (!goal.startDate || !goal.endDate) return "No target period"
@@ -18,21 +48,110 @@ function formatPeriod(goal: Goal): string {
     day: "numeric",
     year: "numeric",
   })
-  return `${fmt.format(new Date(goal.startDate))} – ${fmt.format(new Date(goal.endDate))}`
+  return `${fmt.format(new Date(`${goal.startDate}T00:00:00`))} – ${fmt.format(new Date(`${goal.endDate}T00:00:00`))}`
 }
 
-export function GoalCard({ goal }: { goal: Goal }) {
-  const percent =
-    goal.targetAmount > 0
-      ? Math.min(100, (goal.currentAmount / goal.targetAmount) * 100)
-      : 0
+const statusIcons: Record<GoalStatusTone, typeof CheckCircle2> = {
+  success: CheckCircle2,
+  warning: TriangleAlert,
+  overdue: CircleAlert,
+  neutral: Clock,
+}
+
+const statusClasses: Record<GoalStatusTone, string> = {
+  success: "text-foreground",
+  warning: "text-foreground",
+  overdue: "text-destructive",
+  neutral: "text-muted-foreground",
+}
+
+interface GoalCardActions {
+  onEdit: (goal: Goal) => void
+  onDelete: (goal: Goal) => void
+  onToggleDashboard: (goal: Goal) => void
+  onMarkCompleted: (goal: Goal) => void
+  onDuplicate: (goal: Goal) => void
+}
+
+interface GoalCardProps {
+  goal: Goal
+  actions?: GoalCardActions // omit to render a read-only card (e.g. on the dashboard)
+}
+
+export function GoalCard({ goal, actions }: GoalCardProps) {
+  const percent = getGoalPercent(goal)
   const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
+  const status = getGoalStatus(goal)
+  const StatusIcon = statusIcons[status.tone]
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{goal.title}</CardTitle>
+        <CardTitle className="flex items-center gap-1.5">
+          {goal.title}
+          {goal.showOnDashboard ? (
+            <Pin
+              className="size-3.5 text-muted-foreground"
+              aria-label="Shown on dashboard"
+            />
+          ) : null}
+        </CardTitle>
         <CardDescription>{formatPeriod(goal)}</CardDescription>
+        {actions ? (
+          <CardAction>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Goal options"
+                  />
+                }
+              >
+                <MoreVertical />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => actions.onEdit(goal)}>
+                    <Pencil />
+                    Edit
+                  </DropdownMenuItem>
+                  {!isGoalCompleted(goal) ? (
+                    <DropdownMenuItem
+                      onClick={() => actions.onMarkCompleted(goal)}
+                    >
+                      <CheckCircle2 />
+                      Mark as completed
+                    </DropdownMenuItem>
+                  ) : null}
+                  <DropdownMenuItem onClick={() => actions.onDuplicate(goal)}>
+                    <Copy />
+                    Duplicate
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => actions.onToggleDashboard(goal)}
+                  >
+                    <LayoutDashboard />
+                    {goal.showOnDashboard
+                      ? "Hide from Dashboard"
+                      : "Show in Dashboard"}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => actions.onDelete(goal)}
+                  >
+                    <Trash2 />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex items-baseline justify-between">
@@ -61,6 +180,15 @@ export function GoalCard({ goal }: { goal: Goal }) {
               {formatMoney(goal.targetAmount, goal.currency)}
             </span>
           </div>
+        </div>
+        <div
+          className={cn(
+            "flex items-center gap-1.5 text-xs",
+            statusClasses[status.tone]
+          )}
+        >
+          <StatusIcon className="size-3.5 shrink-0" />
+          <span>{status.message}</span>
         </div>
       </CardContent>
     </Card>

@@ -50,5 +50,7 @@ export interface Goal {
   currency: Currency
   startDate?: string // period start (ISO) — a goal can span days, months, a quarter, a year…
   endDate?: string // period end (ISO)
+  completedAt?: string // ISO date the goal was reached, if it has been
+  showOnDashboard?: boolean // pinned to the dashboard's goals section
   color?: string
 }

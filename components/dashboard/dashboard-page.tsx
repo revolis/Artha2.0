@@ -1,14 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { Plus } from "lucide-react"
+import Link from "next/link"
+import { ArrowRight, Plus } from "lucide-react"
 
 import { AvgMonthlyIncome } from "@/components/dashboard/avg-monthly-income"
 import { YearSwitcher } from "@/components/dashboard/year-switcher"
+import { GoalCard } from "@/components/goals/goal-card"
 import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { getAvgMonthlyIncome, mockSettings } from "@/lib/mock-data"
+import { useGoals } from "@/lib/use-goals"
 import type { Currency } from "@/lib/types"
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -27,6 +30,8 @@ export function DashboardPage() {
   }
 
   const avgMonthlyIncomeUsd = getAvgMonthlyIncome(selectedYear)
+  const { goals } = useGoals()
+  const pinnedGoals = goals.filter((goal) => goal.showOnDashboard)
 
   return (
     <AppShell>
@@ -57,6 +62,30 @@ export function DashboardPage() {
         currency={currency}
         onCurrencyChange={setCurrency}
       />
+
+      {pinnedGoals.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
+              Goals
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link href="/goals" />}
+              nativeButton={false}
+            >
+              Manage goals
+              <ArrowRight data-icon="inline-end" />
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {pinnedGoals.map((goal) => (
+              <GoalCard key={goal.id} goal={goal} />
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <Separator />
       {/* Goals card, portfolio value, P/L cards, charts, heatmap — added later */}

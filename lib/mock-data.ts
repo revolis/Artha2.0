@@ -51,6 +51,8 @@ const entriesByYear: Record<number, Entry[]> = {
   ],
 }
 
+// Seed goals cover every status the card can show: on track, behind pace,
+// completed early, and timeframe ended without completing.
 export const mockGoals: Goal[] = [
   {
     id: "g_1",
@@ -60,6 +62,7 @@ export const mockGoals: Goal[] = [
     currency: "USD",
     startDate: "2026-01-01",
     endDate: "2026-12-31",
+    showOnDashboard: true,
   },
   {
     id: "g_2",
@@ -69,6 +72,7 @@ export const mockGoals: Goal[] = [
     currency: "USD",
     startDate: "2026-01-01",
     endDate: "2026-06-30",
+    showOnDashboard: true,
   },
   {
     id: "g_3",
@@ -78,6 +82,16 @@ export const mockGoals: Goal[] = [
     currency: "USD",
     startDate: "2026-07-01",
     endDate: "2026-09-30",
+  },
+  {
+    id: "g_4",
+    title: "Phone Upgrade",
+    targetAmount: 900,
+    currentAmount: 900,
+    currency: "USD",
+    startDate: "2026-03-01",
+    endDate: "2026-06-30",
+    completedAt: "2026-05-20",
   },
 ]
 
