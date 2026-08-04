@@ -218,7 +218,7 @@ export function P2PPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
-            💱 Fiat/P2P
+            Fiat/P2P
           </span>
           <h1 className="text-2xl font-semibold tracking-tight">
             Fiat &amp; P2P Exchange
@@ -294,7 +294,7 @@ export function P2PPage() {
               </EmptyMedia>
               <EmptyTitle>No Fiat/P2P trades in this period</EmptyTitle>
               <EmptyDescription>
-                Add an entry with type 💱Fiat/P2P and it will show up here.
+                Add an entry with type Fiat/P2P and it will show up here.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>

@@ -30,7 +30,7 @@ export interface Source {
   campaignUrl?: string // link to the specific campaign/airdrop
 }
 
-// Extra details recorded on 💱Fiat/P2P entries: which way the money moved,
+// Extra details recorded on Fiat/P2P entries: which way the money moved,
 // what cash currency was involved, and at what rate.
 export interface P2PDetails {
   direction: "usd-to-cash" | "cash-to-usd" // sold USD vs bought USD

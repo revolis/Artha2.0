@@ -119,17 +119,22 @@ export function getPortfolioStats(
   return stats
 }
 
+export type ContributorKind = "category" | "source"
+
 export interface Contributor {
   name: string
+  kind: ContributorKind
   net: number
   gross: number
   count: number
+  lastDate: string // most recent entry date, for the row sub-line
 }
 
 // Rank categories or sources by their net contribution to the year.
 export function getContributors(
   entries: Entry[],
   year: number,
+  kind: ContributorKind,
   keyOf: (entry: Entry) => string | undefined
 ): Contributor[] {
   const map = new Map<string, Contributor>()
@@ -138,10 +143,18 @@ export function getContributors(
     if (entry.type === "p2p" || entry.type === "transfer") continue
     const name = keyOf(entry)
     if (!name) continue
-    const current = map.get(name) ?? { name, net: 0, gross: 0, count: 0 }
+    const current = map.get(name) ?? {
+      name,
+      kind,
+      net: 0,
+      gross: 0,
+      count: 0,
+      lastDate: entry.datetime,
+    }
     current.net += getPortfolioDelta(entry)
     if (entry.type === "profit") current.gross += entry.amount
     current.count += 1
+    if (entry.datetime > current.lastDate) current.lastDate = entry.datetime
     map.set(name, current)
   }
   return Array.from(map.values()).sort((a, b) => b.net - a.net)

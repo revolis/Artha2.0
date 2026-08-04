@@ -97,7 +97,7 @@ interface Entry {
   tags: string[];          // free-form, create-or-pick
   sourceId?: string;       // references a Source
   amount: number;          // always positive, in USD — sign comes from `type`
-  p2p?: P2PDetails;        // only on type "p2p" (shown as 💱Fiat/P2P)
+  p2p?: P2PDetails;        // only on type "p2p" (shown as Fiat/P2P)
   note?: string;
   attachments?: string[];  // image file names (design phase — not uploaded anywhere)
 }

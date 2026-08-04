@@ -28,7 +28,7 @@ import {
 const navItems = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { title: "Entries", href: "/entries", icon: ArrowUpDown },
-  { title: "💱Fiat/P2P", href: "/p2p", icon: ArrowLeftRight },
+  { title: "Fiat/P2P", href: "/p2p", icon: ArrowLeftRight },
   { title: "Portfolio", href: "/portfolio", icon: LineChart },
   { title: "Analytics", href: "#", icon: BarChart3 },
   { title: "Year Heatmap", href: "/heatmap", icon: CalendarDays },

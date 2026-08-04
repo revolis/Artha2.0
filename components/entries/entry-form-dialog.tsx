@@ -40,7 +40,7 @@ import type { Entry, EntryType, Source } from "@/lib/types"
 export const entryTypeLabels: Record<EntryType, string> = {
   profit: "Profit",
   loss: "Loss",
-  p2p: "💱Fiat/P2P",
+  p2p: "Fiat/P2P",
   fee: "Fee",
   tax: "Tax",
   transfer: "Transfer",
@@ -286,7 +286,7 @@ export function EntryFormDialog({
           ) : null}
           {isP2P ? (
             <div className="flex flex-col gap-4 rounded-lg border p-4">
-              <p className="text-sm font-medium">💱 Fiat/P2P exchange</p>
+              <p className="text-sm font-medium">Fiat/P2P exchange</p>
               <div className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="p2p-direction">Direction</FieldLabel>
