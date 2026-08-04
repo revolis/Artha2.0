@@ -149,7 +149,8 @@ interface Goal {
   targetAmount: number;
   currentAmount: number;
   currency: Currency;
-  deadline?: string;      // optional ISO date
+  startDate?: string;     // period start (ISO) — goals can span days, months, a quarter, a year…
+  endDate?: string;       // period end (ISO)
   color?: string;         // theme chart token, e.g. "chart-1" — for the progress ring
 }
 ```

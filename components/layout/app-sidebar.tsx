@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   ArrowLeftRight,
   ArrowUpDown,
@@ -25,13 +26,13 @@ import {
 } from "@/components/ui/sidebar"
 
 const navItems = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, isActive: true },
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { title: "Entries", href: "#", icon: ArrowUpDown },
   { title: "P2P Cash", href: "#", icon: ArrowLeftRight },
   { title: "Portfolio", href: "#", icon: LineChart },
   { title: "Analytics", href: "#", icon: BarChart3 },
   { title: "Year Heatmap", href: "#", icon: CalendarDays },
-  { title: "Goals", href: "#", icon: Target },
+  { title: "Goals", href: "/goals", icon: Target },
   { title: "Reports", href: "#", icon: FileText },
   { title: "Sources", href: "#", icon: Layers },
   { title: "AI Insights", href: "#", icon: Sparkles },
@@ -39,6 +40,8 @@ const navItems = [
 ]
 
 export function AppSidebar() {
+  const pathname = usePathname()
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -56,7 +59,7 @@ export function AppSidebar() {
           {navItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
-                isActive={item.isActive}
+                isActive={item.href !== "#" && pathname.startsWith(item.href)}
                 render={<Link href={item.href} />}
               >
                 <item.icon />

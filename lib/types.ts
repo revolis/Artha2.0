@@ -48,6 +48,7 @@ export interface Goal {
   targetAmount: number
   currentAmount: number
   currency: Currency
-  deadline?: string
+  startDate?: string // period start (ISO) — a goal can span days, months, a quarter, a year…
+  endDate?: string // period end (ISO)
   color?: string
 }

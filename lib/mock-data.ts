@@ -1,7 +1,7 @@
 // Mock data for the design phase. No backend — everything the UI shows
 // comes from here, keyed by financial year so switching years swaps the data.
 
-import type { Currency, Entry, Settings, UserProfile } from "@/lib/types"
+import type { Currency, Entry, Goal, Settings, UserProfile } from "@/lib/types"
 
 export const mockUser: UserProfile = {
   id: "u_1",
@@ -50,6 +50,36 @@ const entriesByYear: Record<number, Entry[]> = {
     { id: "e26-11", kind: "income", assetType: "cash", amount: 73.28, currency: "USD", category: "Prediction Market", date: "2026-07-21" },
   ],
 }
+
+export const mockGoals: Goal[] = [
+  {
+    id: "g_1",
+    title: "Target Of 2k26",
+    targetAmount: 14999.98,
+    currentAmount: 3237.88,
+    currency: "USD",
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+  },
+  {
+    id: "g_2",
+    title: "Emergency Fund",
+    targetAmount: 5000,
+    currentAmount: 4100,
+    currency: "USD",
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+  },
+  {
+    id: "g_3",
+    title: "New Laptop",
+    targetAmount: 1800,
+    currentAmount: 540,
+    currency: "USD",
+    startDate: "2026-07-01",
+    endDate: "2026-09-30",
+  },
+]
 
 export function getEntriesForYear(year: number): Entry[] {
   return entriesByYear[year] ?? []
