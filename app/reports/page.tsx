@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
 
-import { GoalsPage } from "@/components/goals/goals-page"
+import { ReportsPage } from "@/components/reports/reports-page"
 
 export const metadata: Metadata = {
-  title: "Goals",
+  title: "Reports",
 }
 
 export default function Page() {
-  return <GoalsPage />
+  return <ReportsPage />
 }

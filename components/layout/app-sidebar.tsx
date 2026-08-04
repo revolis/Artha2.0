@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -33,7 +34,7 @@ const navItems = [
   { title: "Analytics", href: "/analytics", icon: BarChart3 },
   { title: "Year Heatmap", href: "/heatmap", icon: CalendarDays },
   { title: "Goals", href: "/goals", icon: Target },
-  { title: "Reports", href: "#", icon: FileText },
+  { title: "Reports", href: "/reports", icon: FileText },
   { title: "Sources", href: "#", icon: Layers },
   { title: "AI Insights", href: "#", icon: Sparkles },
   { title: "Settings", href: "#", icon: Settings },
@@ -45,14 +46,24 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-lg font-bold text-primary-foreground">
-            A
+        <Link href="/dashboard" className="flex items-center gap-2 px-2 py-1.5">
+          <Image
+            src="/logo.png"
+            alt=""
+            width={32}
+            height={32}
+            className="size-8 rounded-lg object-contain"
+            priority
+          />
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold tracking-[0.2em] text-sidebar-foreground">
+              ARTHA
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              Take Control of Your Financial Future
+            </span>
           </div>
-          <span className="text-xs font-semibold tracking-[0.2em] text-sidebar-foreground">
-            ARTHA
-          </span>
-        </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu className="px-2">

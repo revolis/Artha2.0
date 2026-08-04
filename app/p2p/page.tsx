@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { P2PPage } from "@/components/p2p/p2p-page"
 
 export const metadata: Metadata = {
-  title: "Fiat/P2P — Artha",
+  title: "Fiat/P2P",
 }
 
 export default function Page() {
