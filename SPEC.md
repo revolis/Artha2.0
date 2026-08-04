@@ -83,23 +83,37 @@ interface Settings {
 
 ### Entry (the core object)
 
-Every manual addition is an Entry — a crypto buy, a stock sell, or cash income.
-The "Recent entries" list, charts, and heatmap are all built from these.
+Every manual addition is an Entry. The entries table, charts, heatmap, and
+average monthly income are all built from these.
 
 ```ts
+type EntryType = "profit" | "loss" | "p2p" | "fee" | "tax" | "transfer";
+
 interface Entry {
   id: string;
-  kind: "buy" | "sell" | "income";
-  assetType: AssetType;    // "crypto" | "stock" | "cash"
-  symbol?: string;         // "BTC", "AAPL" — trades only, not cash income
-  assetName?: string;      // "Bitcoin", "Apple Inc."
-  quantity?: number;       // trades only, e.g. 0.05 BTC
-  pricePerUnit?: number;   // trades only, in `currency`
-  amount: number;          // total value of this entry (quantity × price for trades)
-  currency: Currency;      // the currency you entered it in
-  category?: string;       // income only: "Salary", "Freelance", "Gift", ...
-  date: string;            // ISO date the entry happened
-  notes?: string;
+  datetime: string;        // ISO date + time, auto-filled with "now" in the form
+  type: EntryType;
+  category?: string;       // free-form, create-or-pick: "Binance Alpha", "Prediction Market"…
+  tags: string[];          // free-form, create-or-pick
+  sourceId?: string;       // references a Source
+  amount: number;          // always positive, in USD — sign comes from `type`
+  note?: string;
+  attachments?: string[];  // image file names (design phase — not uploaded anywhere)
+}
+```
+
+### Source
+
+Where money comes from — an exchange, platform, person, or campaign.
+Created inline while adding an entry, managed later on the Sources page.
+
+```ts
+interface Source {
+  id: string;
+  name: string;            // "Binance", "Local P2P — Ram"
+  socialHandle?: string;   // "@binance"
+  platformUrl?: string;    // link to the platform
+  campaignUrl?: string;    // link to the specific campaign/airdrop
 }
 ```
 

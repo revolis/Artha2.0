@@ -10,6 +10,7 @@ import { GoalCard } from "@/components/goals/goal-card"
 import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { useEntries } from "@/lib/local-store"
 import { getAvgMonthlyIncome, mockSettings } from "@/lib/mock-data"
 import { useGoals } from "@/lib/use-goals"
 import type { Currency } from "@/lib/types"
@@ -29,7 +30,8 @@ export function DashboardPage() {
     setSelectedYear(year)
   }
 
-  const avgMonthlyIncomeUsd = getAvgMonthlyIncome(selectedYear)
+  const { items: entries } = useEntries()
+  const avgMonthlyIncomeUsd = getAvgMonthlyIncome(entries, selectedYear)
   const { goals } = useGoals()
   const pinnedGoals = goals.filter((goal) => goal.showOnDashboard)
 

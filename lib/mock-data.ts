@@ -1,7 +1,14 @@
 // Mock data for the design phase. No backend — everything the UI shows
-// comes from here, keyed by financial year so switching years swaps the data.
+// comes from here (seeded into localStorage-backed stores by lib/local-store.ts).
 
-import type { Currency, Entry, Goal, Settings, UserProfile } from "@/lib/types"
+import type {
+  Currency,
+  Entry,
+  Goal,
+  Settings,
+  Source,
+  UserProfile,
+} from "@/lib/types"
 
 export const mockUser: UserProfile = {
   id: "u_1",
@@ -17,38 +24,244 @@ export const mockSettings: Settings = {
   theme: "system",
 }
 
-const entriesByYear: Record<number, Entry[]> = {
-  2024: [
-    { id: "e24-1", kind: "income", assetType: "cash", amount: 120, currency: "USD", category: "Freelance", date: "2024-03-12" },
-    { id: "e24-2", kind: "income", assetType: "cash", amount: 85.5, currency: "USD", category: "Simple Earn (APR)", date: "2024-05-02" },
-    { id: "e24-3", kind: "income", assetType: "cash", amount: 210, currency: "USD", category: "Binance Alpha", date: "2024-07-19" },
-    { id: "e24-4", kind: "buy", assetType: "crypto", symbol: "BTC", assetName: "Bitcoin", quantity: 0.004, pricePerUnit: 61000, amount: 244, currency: "USD", date: "2024-09-08" },
-    { id: "e24-5", kind: "income", assetType: "cash", amount: 95, currency: "USD", category: "Surprise Drop", date: "2024-10-21" },
-    { id: "e24-6", kind: "income", assetType: "cash", amount: 160.25, currency: "USD", category: "IDO", date: "2024-12-05" },
-  ],
-  2025: [
-    { id: "e25-1", kind: "income", assetType: "cash", amount: 310.4, currency: "USD", category: "Binance Alpha", date: "2025-01-18" },
-    { id: "e25-2", kind: "income", assetType: "cash", amount: 74, currency: "USD", category: "PreMarket", date: "2025-02-26" },
-    { id: "e25-3", kind: "income", assetType: "cash", amount: 128.75, currency: "USD", category: "Prediction Market", date: "2025-04-09" },
-    { id: "e25-4", kind: "buy", assetType: "crypto", symbol: "ETH", assetName: "Ethereum", quantity: 0.12, pricePerUnit: 2450, amount: 294, currency: "USD", date: "2025-05-14" },
-    { id: "e25-5", kind: "income", assetType: "cash", amount: 452.1, currency: "USD", category: "Binance Alpha", date: "2025-06-30" },
-    { id: "e25-6", kind: "income", assetType: "cash", amount: 66, currency: "USD", category: "Simple Earn (APR)", date: "2025-08-22" },
-    { id: "e25-7", kind: "income", assetType: "cash", amount: 189.99, currency: "USD", category: "IDO", date: "2025-10-11" },
-    { id: "e25-8", kind: "income", assetType: "cash", amount: 240.5, currency: "USD", category: "Bitget", date: "2025-12-19" },
-  ],
-  2026: [
-    { id: "e26-1", kind: "income", assetType: "cash", amount: 96.2, currency: "USD", category: "BINANCE", date: "2026-01-15" },
-    { id: "e26-2", kind: "income", assetType: "cash", amount: 187.4, currency: "USD", category: "Binance Alpha", date: "2026-02-08" },
-    { id: "e26-3", kind: "income", assetType: "cash", amount: 315, currency: "USD", category: "Binance Alpha", date: "2026-03-21" },
-    { id: "e26-4", kind: "income", assetType: "cash", amount: 82.6, currency: "USD", category: "PreMarket", date: "2026-04-17" },
-    { id: "e26-5", kind: "buy", assetType: "crypto", symbol: "BTC", assetName: "Bitcoin", quantity: 0.002, pricePerUnit: 104000, amount: 208, currency: "USD", date: "2026-05-05" },
-    { id: "e26-6", kind: "income", assetType: "cash", amount: 145.3, currency: "USD", category: "IDO", date: "2026-05-28" },
-    { id: "e26-7", kind: "income", assetType: "cash", amount: -27, currency: "USD", category: "PreMarket", date: "2026-06-22", notes: "Loss" },
-    { id: "e26-8", kind: "income", assetType: "cash", amount: -50, currency: "USD", category: "Prediction Market", date: "2026-06-28", notes: "Loss" },
-    { id: "e26-9", kind: "income", assetType: "cash", amount: 437.42, currency: "USD", category: "Binance Alpha", date: "2026-06-30" },
-    { id: "e26-10", kind: "income", assetType: "cash", amount: 53, currency: "USD", category: "Simple Earn (APR)", date: "2026-06-30" },
-    { id: "e26-11", kind: "income", assetType: "cash", amount: 73.28, currency: "USD", category: "Prediction Market", date: "2026-07-21" },
-  ],
+export const mockSources: Source[] = [
+  {
+    id: "s_1",
+    name: "Binance",
+    socialHandle: "@binance",
+    platformUrl: "https://www.binance.com",
+  },
+  {
+    id: "s_2",
+    name: "Binance Alpha",
+    socialHandle: "@binance",
+    platformUrl: "https://www.binance.com/en/alpha",
+    campaignUrl: "https://www.binance.com/en/alpha/events",
+  },
+  {
+    id: "s_3",
+    name: "Bitget",
+    socialHandle: "@bitgetglobal",
+    platformUrl: "https://www.bitget.com",
+  },
+  {
+    id: "s_4",
+    name: "Polymarket",
+    socialHandle: "@Polymarket",
+    platformUrl: "https://polymarket.com",
+  },
+  {
+    id: "s_5",
+    name: "Local P2P — Ram",
+    socialHandle: "@ram_trades",
+  },
+]
+
+export const mockEntries: Entry[] = [
+  // 2026
+  {
+    id: "e_26_11",
+    datetime: "2026-07-21T14:20",
+    type: "profit",
+    category: "Prediction Market",
+    tags: ["airdrop-season"],
+    sourceId: "s_4",
+    amount: 73.28,
+    note: "US election market resolved in my favor.",
+  },
+  {
+    id: "e_26_10",
+    datetime: "2026-06-30T21:05",
+    type: "profit",
+    category: "Simple Earn (APR)",
+    tags: ["passive"],
+    sourceId: "s_1",
+    amount: 53,
+    note: "Monthly APR payout.",
+  },
+  {
+    id: "e_26_9",
+    datetime: "2026-06-30T18:40",
+    type: "profit",
+    category: "Binance Alpha",
+    tags: ["airdrop-season", "alpha"],
+    sourceId: "s_2",
+    amount: 437.42,
+    note: "Alpha points redemption — best drop this quarter.",
+    attachments: ["alpha-payout.png"],
+  },
+  {
+    id: "e_26_8",
+    datetime: "2026-06-28T11:15",
+    type: "loss",
+    category: "Prediction Market",
+    tags: [],
+    sourceId: "s_4",
+    amount: 50,
+    note: "Sports market went the wrong way.",
+  },
+  {
+    id: "e_26_7",
+    datetime: "2026-06-22T09:30",
+    type: "loss",
+    category: "PreMarket",
+    tags: ["premarket"],
+    sourceId: "s_3",
+    amount: 27,
+  },
+  {
+    id: "e_26_6",
+    datetime: "2026-05-28T16:00",
+    type: "profit",
+    category: "IDO",
+    tags: ["launchpad"],
+    sourceId: "s_3",
+    amount: 145.3,
+  },
+  {
+    id: "e_26_5",
+    datetime: "2026-05-05T13:45",
+    type: "p2p",
+    category: "P2P Cash",
+    tags: ["npr-cashout"],
+    sourceId: "s_5",
+    amount: 208,
+    note: "Sold USDT for NPR cash.",
+  },
+  {
+    id: "e_26_4",
+    datetime: "2026-04-17T19:10",
+    type: "fee",
+    category: "Withdrawal Fee",
+    tags: [],
+    sourceId: "s_1",
+    amount: 4.6,
+  },
+  {
+    id: "e_26_3",
+    datetime: "2026-03-21T10:00",
+    type: "profit",
+    category: "Binance Alpha",
+    tags: ["alpha"],
+    sourceId: "s_2",
+    amount: 315,
+    attachments: ["march-alpha.png", "march-alpha-2.png"],
+  },
+  {
+    id: "e_26_2",
+    datetime: "2026-02-08T15:30",
+    type: "profit",
+    category: "Binance Alpha",
+    tags: ["alpha"],
+    sourceId: "s_2",
+    amount: 187.4,
+  },
+  {
+    id: "e_26_1",
+    datetime: "2026-01-15T12:00",
+    type: "profit",
+    category: "Simple Earn (APR)",
+    tags: ["passive"],
+    sourceId: "s_1",
+    amount: 96.2,
+  },
+  // 2025
+  {
+    id: "e_25_4",
+    datetime: "2025-12-19T17:25",
+    type: "profit",
+    category: "Launchpool",
+    tags: ["launchpad"],
+    sourceId: "s_3",
+    amount: 240.5,
+  },
+  {
+    id: "e_25_3",
+    datetime: "2025-06-30T20:00",
+    type: "profit",
+    category: "Binance Alpha",
+    tags: ["alpha"],
+    sourceId: "s_2",
+    amount: 452.1,
+  },
+  {
+    id: "e_25_2",
+    datetime: "2025-04-09T14:00",
+    type: "loss",
+    category: "Prediction Market",
+    tags: [],
+    sourceId: "s_4",
+    amount: 61.25,
+  },
+  {
+    id: "e_25_1",
+    datetime: "2025-01-18T09:45",
+    type: "profit",
+    category: "Airdrop",
+    tags: ["airdrop-season"],
+    sourceId: "s_1",
+    amount: 310.4,
+  },
+  // 2024
+  {
+    id: "e_24_2",
+    datetime: "2024-10-21T18:30",
+    type: "profit",
+    category: "Airdrop",
+    tags: ["airdrop-season"],
+    sourceId: "s_1",
+    amount: 95,
+  },
+  {
+    id: "e_24_1",
+    datetime: "2024-03-12T11:20",
+    type: "p2p",
+    category: "P2P Cash",
+    tags: ["npr-cashout"],
+    sourceId: "s_5",
+    amount: 120,
+  },
+]
+
+// Money in minus money out. Profit adds; loss, fee, and tax subtract;
+// p2p and transfer just move money around, so they don't count.
+export function getNetAmount(entry: Entry): number {
+  if (entry.type === "profit") return entry.amount
+  if (entry.type === "loss" || entry.type === "fee" || entry.type === "tax") {
+    return -entry.amount
+  }
+  return 0
+}
+
+export function getEntryYear(entry: Entry): number {
+  return Number(entry.datetime.slice(0, 4))
+}
+
+// Average monthly income for a year, in USD, from real entries.
+// Past years divide by 12; the current year divides by months elapsed so far.
+export function getAvgMonthlyIncome(
+  entries: Entry[],
+  year: number,
+  now = new Date()
+): number {
+  if (year > now.getFullYear()) return 0
+  const total = entries
+    .filter((entry) => getEntryYear(entry) === year)
+    .reduce((sum, entry) => sum + getNetAmount(entry), 0)
+  const months = year === now.getFullYear() ? now.getMonth() + 1 : 12
+  return total / months
+}
+
+export function convertFromUsd(amountUsd: number, to: Currency): number {
+  return to === "NPR" ? amountUsd * mockSettings.usdToNprRate : amountUsd
+}
+
+export function formatMoney(amount: number, currency: Currency): string {
+  return new Intl.NumberFormat(currency === "NPR" ? "en-IN" : "en-US", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2,
+  }).format(amount)
 }
 
 // Seed goals cover every status the card can show: on track, behind pace,
@@ -94,31 +307,3 @@ export const mockGoals: Goal[] = [
     completedAt: "2026-05-20",
   },
 ]
-
-export function getEntriesForYear(year: number): Entry[] {
-  return entriesByYear[year] ?? []
-}
-
-// Average monthly income for a year, in USD.
-// Past years divide by 12; the current year divides by months elapsed so far.
-export function getAvgMonthlyIncome(year: number, now = new Date()): number {
-  const entries = getEntriesForYear(year)
-  const totalIncome = entries
-    .filter((entry) => entry.kind === "income")
-    .reduce((sum, entry) => sum + entry.amount, 0)
-  if (year > now.getFullYear()) return 0
-  const months = year === now.getFullYear() ? now.getMonth() + 1 : 12
-  return totalIncome / months
-}
-
-export function convertFromUsd(amountUsd: number, to: Currency): number {
-  return to === "NPR" ? amountUsd * mockSettings.usdToNprRate : amountUsd
-}
-
-export function formatMoney(amount: number, currency: Currency): string {
-  return new Intl.NumberFormat(currency === "NPR" ? "en-IN" : "en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amount)
-}

@@ -19,19 +19,27 @@ export interface Settings {
   theme: "light" | "dark" | "system"
 }
 
+export type EntryType = "profit" | "loss" | "p2p" | "fee" | "tax" | "transfer"
+
+// Where money comes from — an exchange, a platform, a person, a campaign.
+export interface Source {
+  id: string
+  name: string
+  socialHandle?: string // e.g. "@binance"
+  platformUrl?: string // link to the platform
+  campaignUrl?: string // link to the specific campaign/airdrop
+}
+
 export interface Entry {
   id: string
-  kind: "buy" | "sell" | "income"
-  assetType: AssetType
-  symbol?: string
-  assetName?: string
-  quantity?: number
-  pricePerUnit?: number
-  amount: number
-  currency: Currency
+  datetime: string // ISO date + time, e.g. "2026-08-04T14:30"
+  type: EntryType
   category?: string
-  date: string
-  notes?: string
+  tags: string[]
+  sourceId?: string // references a Source
+  amount: number // always positive, in USD; sign comes from `type`
+  note?: string
+  attachments?: string[] // image file names (design phase — not uploaded anywhere)
 }
 
 export interface AssetPrice {
