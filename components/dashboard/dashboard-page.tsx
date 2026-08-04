@@ -5,6 +5,8 @@ import Link from "next/link"
 import { ArrowRight, Plus } from "lucide-react"
 
 import { AvgMonthlyIncome } from "@/components/dashboard/avg-monthly-income"
+import { CategoryContribution } from "@/components/dashboard/category-contribution"
+import { NetPLTrend } from "@/components/dashboard/net-pl-trend"
 import { PortfolioCard } from "@/components/dashboard/portfolio-card"
 import { YearSwitcher } from "@/components/dashboard/year-switcher"
 import { EntryFormDialog } from "@/components/entries/entry-form-dialog"
@@ -172,8 +174,13 @@ export function DashboardPage() {
         />
       </div>
 
+      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+        <NetPLTrend entries={entries} year={selectedYear} />
+        <CategoryContribution entries={entries} year={selectedYear} />
+      </div>
+
       <Separator />
-      {/* Charts and heatmap — added later */}
+      {/* Recent entries and heatmap — added later */}
 
       <EntryFormDialog
         key={entryDialogOpen ? "create" : "closed"}

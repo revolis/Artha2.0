@@ -209,6 +209,79 @@ export function getWeekdayPerformance(
   return days
 }
 
+export type TrendTimeframe =
+  | "monthly"
+  | "quarterly"
+  | "6months"
+  | "yearly"
+  | "all"
+
+export interface TrendPoint {
+  label: string
+  net: number
+}
+
+// Net P/L bucketed for the dashboard trend chart. Monthly, quarterly and the
+// six-month window stay inside the selected year; yearly and all span the
+// whole history.
+export function getTrendSeries(
+  entries: Entry[],
+  year: number,
+  timeframe: TrendTimeframe,
+  now = new Date()
+): TrendPoint[] {
+  if (timeframe === "yearly") {
+    const byYear = new Map<number, number>()
+    for (const entry of entries) {
+      if (!countsTowardPerformance(entry)) continue
+      const entryYear = getEntryYear(entry)
+      byYear.set(entryYear, (byYear.get(entryYear) ?? 0) + getNetAmount(entry))
+    }
+    return Array.from(byYear.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([value, net]) => ({ label: String(value), net }))
+  }
+
+  if (timeframe === "all") {
+    const byMonth = new Map<string, number>()
+    for (const entry of entries) {
+      if (!countsTowardPerformance(entry)) continue
+      const key = entry.datetime.slice(0, 7)
+      byMonth.set(key, (byMonth.get(key) ?? 0) + getNetAmount(entry))
+    }
+    return Array.from(byMonth.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, net]) => {
+        const [yearPart, monthPart] = key.split("-")
+        return {
+          label: `${MONTH_LABELS[Number(monthPart) - 1]} ${yearPart.slice(2)}`,
+          net,
+        }
+      })
+  }
+
+  const months = getMonthlyPerformance(entries, year)
+
+  if (timeframe === "quarterly") {
+    return [0, 1, 2, 3].map((quarter) => ({
+      label: `Q${quarter + 1}`,
+      net: months
+        .slice(quarter * 3, quarter * 3 + 3)
+        .reduce((sum, month) => sum + month.net, 0),
+    }))
+  }
+
+  if (timeframe === "6months") {
+    const endMonth = year === now.getFullYear() ? now.getMonth() : 11
+    const startMonth = Math.max(0, endMonth - 5)
+    return months
+      .slice(startMonth, endMonth + 1)
+      .map((month) => ({ label: month.label, net: month.net }))
+  }
+
+  return months.map((month) => ({ label: month.label, net: month.net }))
+}
+
 export interface YearTotals {
   income: number
   expense: number

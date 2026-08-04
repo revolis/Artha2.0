@@ -442,7 +442,8 @@ export function AnalyticsPage() {
                     />
                   }
                 />
-                <Bar dataKey="net" radius={6}>
+                {/* Animation left on leaves the bars unrendered here. */}
+                <Bar dataKey="net" radius={6} isAnimationActive={false}>
                   {months.map((month) => (
                     <Cell
                       key={month.label}
