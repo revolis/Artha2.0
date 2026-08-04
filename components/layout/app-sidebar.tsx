@@ -30,7 +30,7 @@ const navItems = [
   { title: "Entries", href: "/entries", icon: ArrowUpDown },
   { title: "Fiat/P2P", href: "/p2p", icon: ArrowLeftRight },
   { title: "Portfolio", href: "/portfolio", icon: LineChart },
-  { title: "Analytics", href: "#", icon: BarChart3 },
+  { title: "Analytics", href: "/analytics", icon: BarChart3 },
   { title: "Year Heatmap", href: "/heatmap", icon: CalendarDays },
   { title: "Goals", href: "/goals", icon: Target },
   { title: "Reports", href: "#", icon: FileText },
