@@ -83,13 +83,21 @@ interface SocialLink {
 Your preferences. Lives on `/settings`.
 
 ```ts
-interface Settings {
-  displayCurrency: Currency; // which currency leads on the dashboard (the other shows as secondary)
-  usdToNprRate: number;      // e.g. 134.5 — used to convert between USD and NPR
-  rateUpdatedAt: string;     // when you last updated the rate
-  theme: "light" | "dark" | "system";
+interface AppSettings {
+  displayCurrency: Currency; // every amount on the site is shown in this
+  rateUpdatedAt: string;     // when the USD→NPR rate was last refreshed
+  language: string;
+  timezone: string;
+  timeFormat: "12h" | "24h";
+  notifications: Record<NotificationKey, { inApp: boolean; email: boolean }>;
+  privacyMode: boolean;      // masks every amount on screen (the header's eye button)
+  loginMethod: "google" | "password";
+  hasPassword: boolean;
+  twoFactor: boolean;
 }
 ```
+
+Theme is owned by next-themes, not stored here.
 
 > Decided: the USD→NPR rate will be **synced daily** (added later, in the
 > functionality phase). Until then, mock data uses a fixed rate.

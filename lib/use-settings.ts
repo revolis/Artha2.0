@@ -5,7 +5,11 @@
 
 import * as React from "react"
 
-import { mockSettings, setDisplayCurrency } from "@/lib/mock-data"
+import {
+  mockSettings,
+  setDisplayCurrency,
+  setPrivacyMode,
+} from "@/lib/mock-data"
 import type { AppSettings, Currency, NotificationKey } from "@/lib/types"
 
 const STORAGE_KEY = "artha.settings"
@@ -39,6 +43,7 @@ function getSnapshot(): AppSettings {
     cache = load()
     // Keep the formatter in step the moment settings are first read.
     setDisplayCurrency(cache.displayCurrency)
+    setPrivacyMode(cache.privacyMode)
   }
   return cache
 }
@@ -55,6 +60,7 @@ function subscribe(onChange: () => void) {
 function write(next: AppSettings) {
   cache = next
   setDisplayCurrency(next.displayCurrency)
+  setPrivacyMode(next.privacyMode)
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
   } catch {

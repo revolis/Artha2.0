@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import {
   Copy,
   FilterX,
@@ -112,14 +113,10 @@ function AmountCell({ entry }: { entry: Entry }) {
   const net = getNetAmount(entry)
   const formatted = formatMoney(entry.amount, "USD")
   if (net > 0) {
-    return (
-      <span className="font-medium text-success">+{formatted}</span>
-    )
+    return <span className="font-medium text-success">+{formatted}</span>
   }
   if (net < 0) {
-    return (
-      <span className="font-medium text-destructive">−{formatted}</span>
-    )
+    return <span className="font-medium text-destructive">−{formatted}</span>
   }
   return <span className="font-medium">{formatted}</span>
 }
@@ -127,13 +124,28 @@ function AmountCell({ entry }: { entry: Entry }) {
 export function EntriesPage() {
   // Subscribing re-renders every amount when the display currency changes.
   useSettings()
-  const { entries, setEntries, sources, categoryOptions, tagOptions, saveEntry } =
-    useEntryData()
+  const {
+    entries,
+    setEntries,
+    sources,
+    categoryOptions,
+    tagOptions,
+    saveEntry,
+  } = useEntryData()
 
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<Entry | null>(null)
 
-  const [search, setSearch] = React.useState("")
+  // The header search sends people here with ?q=… . Mirroring the param into
+  // state during render (rather than in an effect) keeps the box editable
+  // afterwards while still following later navigations.
+  const urlQuery = useSearchParams().get("q") ?? ""
+  const [search, setSearch] = React.useState(urlQuery)
+  const [lastUrlQuery, setLastUrlQuery] = React.useState(urlQuery)
+  if (urlQuery !== lastUrlQuery) {
+    setLastUrlQuery(urlQuery)
+    setSearch(urlQuery)
+  }
   const [typeFilter, setTypeFilter] = React.useState<string>("all")
   const [sourceFilter, setSourceFilter] = React.useState<string>("all")
   const [tagFilter, setTagFilter] = React.useState<string>("all")
@@ -222,10 +234,7 @@ export function EntriesPage() {
   }
 
   function handleDuplicate(entry: Entry) {
-    setEntries((prev) => [
-      { ...entry, id: `e_${Date.now()}` },
-      ...prev,
-    ])
+    setEntries((prev) => [{ ...entry, id: `e_${Date.now()}` }, ...prev])
   }
 
   const typeFilterItems = [

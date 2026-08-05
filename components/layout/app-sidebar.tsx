@@ -4,25 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  ArrowLeftRight,
-  ArrowUpDown,
-  BarChart3,
-  CalendarDays,
-  Check,
-  CreditCard,
-  FileText,
-  HelpCircle,
-  Info,
-  LayoutDashboard,
-  LineChart,
-  Mail,
-  PanelLeft,
-  Settings,
-  Target,
-  User,
-  type LucideIcon,
-} from "lucide-react"
+import { Check, PanelLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -38,60 +20,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { NAV_SECTIONS as sections } from "@/lib/nav-config"
 import { SITE } from "@/lib/site"
-import {
-  SIDEBAR_MODES,
-  type SidebarMode,
-} from "@/lib/use-sidebar-mode"
+import { SIDEBAR_MODES, type SidebarMode } from "@/lib/use-sidebar-mode"
 import { cn } from "@/lib/utils"
-
-interface NavItem {
-  title: string
-  href: string
-  icon: LucideIcon
-}
-
-interface NavSection {
-  title: string
-  items: NavItem[]
-}
-
-const sections: NavSection[] = [
-  {
-    title: "Overview",
-    items: [
-      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { title: "Entries", href: "/entries", icon: ArrowUpDown },
-      { title: "Fiat/P2P", href: "/p2p", icon: ArrowLeftRight },
-      { title: "Portfolio", href: "/portfolio", icon: LineChart },
-      { title: "Analytics", href: "/analytics", icon: BarChart3 },
-    ],
-  },
-  {
-    title: "Planning",
-    items: [
-      { title: "Goals", href: "/goals", icon: Target },
-      { title: "Year Heatmap", href: "/heatmap", icon: CalendarDays },
-      { title: "Reports", href: "/reports", icon: FileText },
-    ],
-  },
-  {
-    title: "Account",
-    items: [
-      { title: "Profile", href: "/profile", icon: User },
-      { title: "Billing", href: "/billing", icon: CreditCard },
-      { title: "Settings", href: "/settings", icon: Settings },
-    ],
-  },
-  {
-    title: "Support",
-    items: [
-      { title: "Help Centre", href: "/help", icon: HelpCircle },
-      { title: "Contact Us", href: "/contact", icon: Mail },
-      { title: "About Us", href: "/about", icon: Info },
-    ],
-  },
-]
 
 interface AppSidebarProps {
   mode: SidebarMode
@@ -215,7 +147,9 @@ export function AppSidebar({
                 aria-label="Sidebar display options"
                 className={cn(
                   "ml-auto shrink-0 transition-opacity",
-                  expanded ? "opacity-100" : "opacity-0 group-hover/sidebar:opacity-100"
+                  expanded
+                    ? "opacity-100"
+                    : "opacity-0 group-hover/sidebar:opacity-100"
                 )}
               />
             }
@@ -232,9 +166,7 @@ export function AppSidebar({
                   key={option.value}
                   onClick={() => onModeChange(option.value)}
                 >
-                  <Check
-                    className={cn(option.value !== mode && "invisible")}
-                  />
+                  <Check className={cn(option.value !== mode && "invisible")} />
                   <span className="flex flex-col">
                     <span>{option.label}</span>
                     <span className="text-xs text-muted-foreground">
@@ -260,7 +192,10 @@ export function AppSidebar({
         />
 
         {sections.map((section) => (
-          <div key={section.title} className="flex flex-col gap-1 pt-4 first:pt-0">
+          <div
+            key={section.title}
+            className="flex flex-col gap-1 pt-4 first:pt-0"
+          >
             <span
               className={cn(
                 "px-3 text-xs font-medium text-muted-foreground transition-all duration-200",

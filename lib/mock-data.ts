@@ -53,6 +53,7 @@ export const mockSettings: AppSettings = {
     rateSync: { inApp: false, email: false },
     productNews: { inApp: false, email: false },
   },
+  privacyMode: false,
   loginMethod: "google",
   hasPassword: false,
   twoFactor: false,
@@ -62,6 +63,7 @@ export const mockSettings: AppSettings = {
 // existing formatMoney(amount, "USD") call sites across the app pick up the
 // user's choice without each one having to thread settings through.
 let displayCurrency: Currency = mockSettings.displayCurrency
+let privacyMode = mockSettings.privacyMode
 
 export function setDisplayCurrency(currency: Currency) {
   displayCurrency = currency
@@ -69,6 +71,15 @@ export function setDisplayCurrency(currency: Currency) {
 
 export function getDisplayCurrency(): Currency {
   return displayCurrency
+}
+
+/** Masks every formatted amount without touching the underlying data. */
+export function setPrivacyMode(enabled: boolean) {
+  privacyMode = enabled
+}
+
+export function isPrivacyMode(): boolean {
+  return privacyMode
 }
 
 export const mockSources: Source[] = [
@@ -339,6 +350,7 @@ const CURRENCY_LOCALES: Record<Currency, string> = {
  * their display currency, so one setting changes every figure on the site.
  */
 export function formatMoney(amount: number, currency: Currency): string {
+  if (privacyMode) return "••••••"
   const target = displayCurrency
   const converted = convertCurrency(amount, currency, target)
   return new Intl.NumberFormat(CURRENCY_LOCALES[target], {

@@ -16,6 +16,7 @@ import {
   getAvatarPreset,
   PresetAvatar,
 } from "@/components/profile/avatar-presets"
+import { SocialIcon } from "@/components/profile/social-icons"
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -297,7 +298,8 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
               </span>
               <div className="grid grid-cols-6 gap-2">
                 {AVATAR_PRESETS.map((preset) => {
-                  const selected = !draft.avatarUrl && draft.avatarId === preset.id
+                  const selected =
+                    !draft.avatarUrl && draft.avatarId === preset.id
                   return (
                     <button
                       key={preset.id}
@@ -317,7 +319,10 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
                         selected ? "ring-2 ring-ring" : "ring-1 ring-border"
                       )}
                     >
-                      <PresetAvatar preset={preset} className="size-full rounded-full" />
+                      <PresetAvatar
+                        preset={preset}
+                        className="size-full rounded-full"
+                      />
                     </button>
                   )
                 })}
@@ -335,9 +340,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
           <Card>
             <CardHeader>
               <CardTitle>Identity</CardTitle>
-              <CardDescription>
-                How you appear across Artha.
-              </CardDescription>
+              <CardDescription>How you appear across Artha.</CardDescription>
             </CardHeader>
             <CardContent>
               <FieldGroup>
@@ -416,7 +419,9 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
                       id="location"
                       placeholder="City, Country"
                       value={draft.location ?? ""}
-                      onChange={(event) => update("location", event.target.value)}
+                      onChange={(event) =>
+                        update("location", event.target.value)
+                      }
                     />
                   </Field>
                   <Field>
@@ -486,15 +491,27 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
                       key={link.id}
                       className="grid gap-2 sm:grid-cols-[160px_1fr_auto]"
                     >
-                      <Input
-                        aria-label="Platform"
-                        list="social-suggestions"
-                        placeholder="Platform"
-                        value={link.platform}
-                        onChange={(event) =>
-                          updateSocial(link.id, { platform: event.target.value })
-                        }
-                      />
+                      {/* The logo updates as the platform is typed, so it's
+                          obvious the name was recognised. */}
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <SocialIcon
+                            platform={link.platform}
+                            className="size-4"
+                          />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          aria-label="Platform"
+                          list="social-suggestions"
+                          placeholder="Platform"
+                          value={link.platform}
+                          onChange={(event) =>
+                            updateSocial(link.id, {
+                              platform: event.target.value,
+                            })
+                          }
+                        />
+                      </InputGroup>
                       <Input
                         aria-label="Profile URL"
                         placeholder="https://…"

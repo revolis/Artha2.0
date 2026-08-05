@@ -27,6 +27,8 @@ export interface AppSettings {
   timezone: string
   timeFormat: TimeFormat
   notifications: Record<NotificationKey, NotificationPref>
+  /** Masks every amount on screen without changing any data. */
+  privacyMode: boolean
   /** How the account was created — drives the security recommendations. */
   loginMethod: "google" | "password"
   hasPassword: boolean
