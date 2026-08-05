@@ -7,14 +7,13 @@ import {
   isValidElement,
   type ReactNode,
   useCallback,
-  useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
 import { Area, type AreaProps } from "./area";
+import { useElementSize } from "./use-element-size";
 import type { LineConfig, Margin } from "./chart-context";
 import { ChartLoadingLabel } from "./chart-loading-label";
 import {
@@ -69,60 +68,6 @@ export interface AreaChartProps {
 }
 
 const DEFAULT_MARGIN: Margin = { top: 40, right: 40, bottom: 40, left: 40 };
-
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
-/**
- * Measures the container. Replaces `@visx/responsive`'s ParentSize, which
- * relies solely on ResizeObserver — in environments where that never fires the
- * size stays 0 and the chart silently renders nothing. This measures once
- * synchronously on mount and then keeps ResizeObserver (plus a window-resize
- * fallback) for staying responsive.
- */
-function useElementSize(ref: React.RefObject<HTMLDivElement | null>) {
-  const [size, setSize] = useState({ width: 0, height: 0 });
-
-  useIsomorphicLayoutEffect(() => {
-    const element = ref.current;
-    if (!element) {
-      return;
-    }
-
-    const measure = () => {
-      const rect = element.getBoundingClientRect();
-      setSize((previous) =>
-        Math.abs(previous.width - rect.width) < 0.5 &&
-        Math.abs(previous.height - rect.height) < 0.5
-          ? previous
-          : { width: rect.width, height: rect.height }
-      );
-    };
-
-    measure();
-    // The first measure can land before layout settles. Re-measure on the next
-    // frame and shortly after so a zero reading self-corrects even where
-    // ResizeObserver never fires.
-    const frame = requestAnimationFrame(measure);
-    const timer = window.setTimeout(measure, 150);
-
-    let observer: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(measure);
-      observer.observe(element);
-    }
-    window.addEventListener("resize", measure);
-
-    return () => {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(timer);
-      observer?.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [ref]);
-
-  return size;
-}
 
 function extractAreaConfigs(children: ReactNode): LineConfig[] {
   const configs: LineConfig[] = [];

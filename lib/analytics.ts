@@ -217,7 +217,11 @@ export type TrendTimeframe =
   | "all"
 
 export interface TrendPoint {
+  // Index signature so the array satisfies the chart's Record<string, unknown>.
+  [key: string]: string | number
   label: string
+  income: number
+  expense: number
   net: number
 }
 
@@ -230,56 +234,79 @@ export function getTrendSeries(
   timeframe: TrendTimeframe,
   now = new Date()
 ): TrendPoint[] {
+  // Accumulates income, expense and net together so the chart can draw all
+  // three bars from a single pass.
+  const blank = () => ({ income: 0, expense: 0, net: 0 })
+  const add = (
+    bucket: { income: number; expense: number; net: number },
+    entry: Entry
+  ) => {
+    if (isIncome(entry)) bucket.income += entry.amount
+    else bucket.expense += entry.amount
+    bucket.net += getNetAmount(entry)
+  }
+
   if (timeframe === "yearly") {
-    const byYear = new Map<number, number>()
+    const byYear = new Map<number, ReturnType<typeof blank>>()
     for (const entry of entries) {
       if (!countsTowardPerformance(entry)) continue
       const entryYear = getEntryYear(entry)
-      byYear.set(entryYear, (byYear.get(entryYear) ?? 0) + getNetAmount(entry))
+      const bucket = byYear.get(entryYear) ?? blank()
+      add(bucket, entry)
+      byYear.set(entryYear, bucket)
     }
     return Array.from(byYear.entries())
       .sort((a, b) => a[0] - b[0])
-      .map(([value, net]) => ({ label: String(value), net }))
+      .map(([value, bucket]) => ({ label: String(value), ...bucket }))
   }
 
   if (timeframe === "all") {
-    const byMonth = new Map<string, number>()
+    const byMonth = new Map<string, ReturnType<typeof blank>>()
     for (const entry of entries) {
       if (!countsTowardPerformance(entry)) continue
       const key = entry.datetime.slice(0, 7)
-      byMonth.set(key, (byMonth.get(key) ?? 0) + getNetAmount(entry))
+      const bucket = byMonth.get(key) ?? blank()
+      add(bucket, entry)
+      byMonth.set(key, bucket)
     }
     return Array.from(byMonth.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([key, net]) => {
+      .map(([key, bucket]) => {
         const [yearPart, monthPart] = key.split("-")
         return {
           label: `${MONTH_LABELS[Number(monthPart) - 1]} ${yearPart.slice(2)}`,
-          net,
+          ...bucket,
         }
       })
   }
 
   const months = getMonthlyPerformance(entries, year)
+  const fromMonth = (month: MonthPerformance) => ({
+    label: month.label,
+    income: month.income,
+    expense: month.expense,
+    net: month.net,
+  })
 
   if (timeframe === "quarterly") {
-    return [0, 1, 2, 3].map((quarter) => ({
-      label: `Q${quarter + 1}`,
-      net: months
-        .slice(quarter * 3, quarter * 3 + 3)
-        .reduce((sum, month) => sum + month.net, 0),
-    }))
+    return [0, 1, 2, 3].map((quarter) => {
+      const slice = months.slice(quarter * 3, quarter * 3 + 3)
+      return {
+        label: `Q${quarter + 1}`,
+        income: slice.reduce((sum, month) => sum + month.income, 0),
+        expense: slice.reduce((sum, month) => sum + month.expense, 0),
+        net: slice.reduce((sum, month) => sum + month.net, 0),
+      }
+    })
   }
 
   if (timeframe === "6months") {
     const endMonth = year === now.getFullYear() ? now.getMonth() : 11
     const startMonth = Math.max(0, endMonth - 5)
-    return months
-      .slice(startMonth, endMonth + 1)
-      .map((month) => ({ label: month.label, net: month.net }))
+    return months.slice(startMonth, endMonth + 1).map(fromMonth)
   }
 
-  return months.map((month) => ({ label: month.label, net: month.net }))
+  return months.map(fromMonth)
 }
 
 export interface YearTotals {
