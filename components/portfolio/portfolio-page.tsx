@@ -55,6 +55,7 @@ import {
   trendOf,
 } from "@/lib/stat-series"
 import type { Entry } from "@/lib/types"
+import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import { cn } from "@/lib/utils"
 
@@ -111,6 +112,8 @@ function Insight({
 }
 
 export function PortfolioPage() {
+  // Subscribing re-renders every amount when the display currency changes.
+  useSettings()
   const { entries, sources } = useEntryData()
   const year = new Date().getFullYear()
 

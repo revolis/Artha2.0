@@ -51,6 +51,7 @@ import {
 import { StatCard } from "@/components/stats/stat-card"
 import { formatMoney } from "@/lib/mock-data"
 import { autoBuckets, toStatPoints, trendOf } from "@/lib/stat-series"
+import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 
@@ -101,6 +102,8 @@ function formatEntryDate(datetime: string): { date: string; time: string } {
 }
 
 export function P2PPage() {
+  // Subscribing re-renders every amount when the display currency changes.
+  useSettings()
   const { entries, setEntries, sources, categoryOptions, tagOptions, saveEntry } =
     useEntryData()
 

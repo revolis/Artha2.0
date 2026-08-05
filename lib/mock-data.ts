@@ -2,10 +2,10 @@
 // comes from here (seeded into localStorage-backed stores by lib/local-store.ts).
 
 import type {
+  AppSettings,
   Currency,
   Entry,
   Goal,
-  Settings,
   Source,
   UserProfile,
 } from "@/lib/types"
@@ -24,11 +24,47 @@ export const mockUser: UserProfile = {
   createdAt: "2024-01-15",
 }
 
-export const mockSettings: Settings = {
+// Units of each currency per 1 USD. Only the USD↔NPR pair is meant to sync
+// daily later; the rest are fixed reference rates for the design phase.
+export const USD_RATES: Record<Currency, number> = {
+  USD: 1,
+  NPR: 139.5,
+  INR: 83.2,
+  EUR: 0.92,
+  GBP: 0.78,
+  AED: 3.67,
+}
+
+export const mockSettings: AppSettings = {
   displayCurrency: "USD",
-  usdToNprRate: 139.5,
   rateUpdatedAt: "2026-08-04",
-  theme: "system",
+  language: "en",
+  timezone: "Asia/Kathmandu",
+  timeFormat: "12h",
+  notifications: {
+    goalMilestones: { inApp: true, email: true },
+    weeklySummary: { inApp: true, email: false },
+    monthlyReport: { inApp: true, email: true },
+    largeEntries: { inApp: true, email: false },
+    rateSync: { inApp: false, email: false },
+    productNews: { inApp: false, email: false },
+  },
+  loginMethod: "google",
+  hasPassword: false,
+  twoFactor: false,
+}
+
+// The currency every amount is rendered in. Held at module level so the
+// existing formatMoney(amount, "USD") call sites across the app pick up the
+// user's choice without each one having to thread settings through.
+let displayCurrency: Currency = mockSettings.displayCurrency
+
+export function setDisplayCurrency(currency: Currency) {
+  displayCurrency = currency
+}
+
+export function getDisplayCurrency(): Currency {
+  return displayCurrency
 }
 
 export const mockSources: Source[] = [
@@ -272,15 +308,40 @@ export function getAvgMonthlyIncome(
 }
 
 export function convertFromUsd(amountUsd: number, to: Currency): number {
-  return to === "NPR" ? amountUsd * mockSettings.usdToNprRate : amountUsd
+  return amountUsd * USD_RATES[to]
 }
 
+export function convertCurrency(
+  amount: number,
+  from: Currency,
+  to: Currency
+): number {
+  if (from === to) return amount
+  return (amount / USD_RATES[from]) * USD_RATES[to]
+}
+
+const CURRENCY_LOCALES: Record<Currency, string> = {
+  USD: "en-US",
+  NPR: "en-IN",
+  INR: "en-IN",
+  EUR: "de-DE",
+  GBP: "en-GB",
+  AED: "en-AE",
+}
+
+/**
+ * Formats an amount for display. `currency` is the currency the amount is
+ * stored in — the result is converted into whatever the user has picked as
+ * their display currency, so one setting changes every figure on the site.
+ */
 export function formatMoney(amount: number, currency: Currency): string {
-  return new Intl.NumberFormat(currency === "NPR" ? "en-IN" : "en-US", {
+  const target = displayCurrency
+  const converted = convertCurrency(amount, currency, target)
+  return new Intl.NumberFormat(CURRENCY_LOCALES[target], {
     style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amount)
+    currency: target,
+    maximumFractionDigits: target === "NPR" || target === "INR" ? 0 : 2,
+  }).format(converted)
 }
 
 // Seed goals cover every status the card can show: on track, behind pace,

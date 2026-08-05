@@ -45,6 +45,7 @@ import {
   toJSON,
   type ReportMeta,
 } from "@/lib/reports"
+import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry, EntryType } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -114,6 +115,8 @@ const presets: { label: string; description: string; scope: ScopeKind }[] = [
 ]
 
 export function ReportsPage() {
+  // Subscribing re-renders every amount when the display currency changes.
+  useSettings()
   const { entries, sources } = useEntryData()
   const currentYear = new Date().getFullYear()
 

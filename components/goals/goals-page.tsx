@@ -6,6 +6,7 @@ import { GoalFormDialog } from "@/components/goals/goal-form-dialog"
 import { AppShell } from "@/components/layout/app-shell"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { useGoals } from "@/lib/use-goals"
+import { useSettings } from "@/lib/use-settings"
 import type { Goal } from "@/lib/types"
 
 function todayIso(): string {
@@ -14,6 +15,8 @@ function todayIso(): string {
 }
 
 export function GoalsPage() {
+  // Subscribing re-renders every amount when the display currency changes.
+  useSettings()
   const { goals, setGoals } = useGoals()
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<Goal | null>(null)

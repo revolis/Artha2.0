@@ -57,6 +57,7 @@ import {
   toStatPoints,
   trendOf,
 } from "@/lib/stat-series"
+import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -275,6 +276,8 @@ function BreakdownTable({
 }
 
 export function AnalyticsPage() {
+  // Subscribing re-renders every amount when the display currency changes.
+  useSettings()
   const { entries, sources } = useEntryData()
   const currentYear = new Date().getFullYear()
   const [year, setYear] = React.useState(currentYear)

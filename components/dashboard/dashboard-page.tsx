@@ -23,8 +23,8 @@ import {
   getAvgMonthlyIncome,
   getEntryYear,
   getNetAmount,
-  mockSettings,
 } from "@/lib/mock-data"
+import { useSettings } from "@/lib/use-settings"
 import {
   buildDualDailySeries,
   getMonthOverMonth,
@@ -37,7 +37,7 @@ import {
 } from "@/lib/stat-series"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
-import type { Currency, Entry } from "@/lib/types"
+import type { Entry } from "@/lib/types"
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -45,9 +45,8 @@ export function DashboardPage() {
   // Always start on the current year; more years appear as the user adds them.
   const [years, setYears] = React.useState<number[]>([CURRENT_YEAR])
   const [selectedYear, setSelectedYear] = React.useState(CURRENT_YEAR)
-  const [currency, setCurrency] = React.useState<Currency>(
-    mockSettings.displayCurrency
-  )
+  // Subscribing re-renders every amount when the display currency changes.
+  useSettings()
 
   const [yearPendingDelete, setYearPendingDelete] = React.useState<number | null>(
     null
@@ -173,11 +172,7 @@ export function DashboardPage() {
         onRequestDeleteYear={setYearPendingDelete}
       />
 
-      <AvgMonthlyIncome
-        amountUsd={avgMonthlyIncomeUsd}
-        currency={currency}
-        onCurrencyChange={setCurrency}
-      />
+      <AvgMonthlyIncome amountUsd={avgMonthlyIncomeUsd} />
 
       {pinnedGoals.length > 0 ? (
         <div className="flex flex-col gap-3">

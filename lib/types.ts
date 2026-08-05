@@ -1,8 +1,37 @@
 // Data shapes for Artha. These mirror the "Data shapes" section in SPEC.md —
 // mock data conforms to these so a real backend can be swapped in later.
 
-export type Currency = "NPR" | "USD"
+export type Currency = "USD" | "NPR" | "INR" | "EUR" | "GBP" | "AED"
 export type AssetType = "crypto" | "stock" | "cash"
+
+export type TimeFormat = "12h" | "24h"
+
+export type NotificationKey =
+  | "goalMilestones"
+  | "weeklySummary"
+  | "monthlyReport"
+  | "largeEntries"
+  | "rateSync"
+  | "productNews"
+
+export interface NotificationPref {
+  inApp: boolean
+  email: boolean
+}
+
+export interface AppSettings {
+  /** Currency every amount on the site is displayed in. */
+  displayCurrency: Currency
+  rateUpdatedAt: string
+  language: string
+  timezone: string
+  timeFormat: TimeFormat
+  notifications: Record<NotificationKey, NotificationPref>
+  /** How the account was created — drives the security recommendations. */
+  loginMethod: "google" | "password"
+  hasPassword: boolean
+  twoFactor: boolean
+}
 
 export interface SocialLink {
   id: string
@@ -27,13 +56,6 @@ export interface UserProfile {
   website?: string
   socials: SocialLink[]
   createdAt: string
-}
-
-export interface Settings {
-  displayCurrency: Currency
-  usdToNprRate: number
-  rateUpdatedAt: string
-  theme: "light" | "dark" | "system"
 }
 
 export type EntryType = "profit" | "loss" | "p2p" | "fee" | "tax" | "transfer"

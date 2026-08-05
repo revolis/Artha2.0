@@ -58,6 +58,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatMoney, getNetAmount } from "@/lib/mock-data"
+import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -124,6 +125,8 @@ function AmountCell({ entry }: { entry: Entry }) {
 }
 
 export function EntriesPage() {
+  // Subscribing re-renders every amount when the display currency changes.
+  useSettings()
   const { entries, setEntries, sources, categoryOptions, tagOptions, saveEntry } =
     useEntryData()
 
