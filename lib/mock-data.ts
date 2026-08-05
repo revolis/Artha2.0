@@ -12,8 +12,15 @@ import type {
 
 export const mockUser: UserProfile = {
   id: "u_1",
+  username: "rajan",
   name: "Rajan",
   email: "thematrixogs@gmail.com",
+  avatarId: "aurora",
+  bio: "Tracking crypto, stocks and cash income in one place.",
+  location: "Kathmandu, Nepal",
+  timezone: "Asia/Kathmandu",
+  website: "",
+  socials: [],
   createdAt: "2024-01-15",
 }
 

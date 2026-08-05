@@ -58,10 +58,23 @@ Who you are. Used on `/settings` and the dashboard header.
 ```ts
 interface UserProfile {
   id: string;
+  username: string;       // platform handle, e.g. "rajan" → artha.app/@rajan
   name: string;           // "Rajan"
   email: string;
-  avatarUrl?: string;     // optional profile picture
+  avatarUrl?: string;     // uploaded photo, stored as a data URL
+  avatarId?: string;      // id of a built-in preset avatar, used when no photo
+  bio?: string;
+  location?: string;
+  timezone?: string;
+  website?: string;
+  socials: SocialLink[];
   createdAt: string;      // ISO date, e.g. "2026-08-04"
+}
+
+interface SocialLink {
+  id: string;
+  platform: string;       // free text: "X", "GitHub", "Telegram"…
+  url: string;
 }
 ```
 

@@ -78,7 +78,7 @@ const sections: NavSection[] = [
   {
     title: "Account",
     items: [
-      { title: "Profile", href: "#", icon: User },
+      { title: "Profile", href: "/profile", icon: User },
       { title: "Billing", href: "#", icon: CreditCard },
       { title: "Settings", href: "#", icon: Settings },
     ],

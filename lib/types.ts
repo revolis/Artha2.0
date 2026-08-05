@@ -4,11 +4,28 @@
 export type Currency = "NPR" | "USD"
 export type AssetType = "crypto" | "stock" | "cash"
 
+export interface SocialLink {
+  id: string
+  /** Which network — free text so any platform can be added. */
+  platform: string
+  url: string
+}
+
 export interface UserProfile {
   id: string
+  /** Platform handle, e.g. "rajan" in artha.app/@rajan. */
+  username: string
   name: string
   email: string
+  /** Uploaded photo as a data URL. Takes priority over avatarId. */
   avatarUrl?: string
+  /** Id of a built-in preset avatar when no photo is uploaded. */
+  avatarId?: string
+  bio?: string
+  location?: string
+  timezone?: string
+  website?: string
+  socials: SocialLink[]
   createdAt: string
 }
 
