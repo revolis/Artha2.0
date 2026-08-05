@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
@@ -116,8 +117,20 @@ export function ReportsPage() {
   const { entries, sources } = useEntryData()
   const currentYear = new Date().getFullYear()
 
-  const [year, setYear] = React.useState(currentYear)
-  const [scope, setScope] = React.useState<ScopeKind>("all")
+  // Deep link support, e.g. /reports?year=2026&scope=all — used by the
+  // "export before deleting" prompt on the dashboard.
+  const searchParams = useSearchParams()
+  const linkedYear = Number(searchParams.get("year"))
+  const linkedScope = searchParams.get("scope")
+
+  const [year, setYear] = React.useState(
+    Number.isFinite(linkedYear) && linkedYear > 0 ? linkedYear : currentYear
+  )
+  const [scope, setScope] = React.useState<ScopeKind>(
+    scopeItems.some((item) => item.value === linkedScope)
+      ? (linkedScope as ScopeKind)
+      : "all"
+  )
   const [scopeValue, setScopeValue] = React.useState<string>("")
   const [range, setRange] = React.useState<RangeKind>("year")
   const [customFrom, setCustomFrom] = React.useState("")

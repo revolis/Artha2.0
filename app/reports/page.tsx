@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 
 import { ReportsPage } from "@/components/reports/reports-page"
@@ -7,5 +8,11 @@ export const metadata: Metadata = {
 }
 
 export default function Page() {
-  return <ReportsPage />
+  // ReportsPage reads search params for deep links, which Next requires be
+  // wrapped in a Suspense boundary.
+  return (
+    <Suspense>
+      <ReportsPage />
+    </Suspense>
+  )
 }

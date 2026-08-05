@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react"
 
 import { AvgMonthlyIncome } from "@/components/dashboard/avg-monthly-income"
 import { CategoryContribution } from "@/components/dashboard/category-contribution"
+import { DeleteYearDialog } from "@/components/dashboard/delete-year-dialog"
 import { StatCard } from "@/components/stats/stat-card"
 import { NetPLTrend } from "@/components/dashboard/net-pl-trend"
 import { PortfolioCard } from "@/components/dashboard/portfolio-card"
@@ -48,9 +49,29 @@ export function DashboardPage() {
     mockSettings.displayCurrency
   )
 
+  const [yearPendingDelete, setYearPendingDelete] = React.useState<number | null>(
+    null
+  )
+
   function handleSelectYear(year: number) {
     setYears((prev) => (prev.includes(year) ? prev : [...prev, year]))
     setSelectedYear(year)
+  }
+
+  // Removes the year's entries as well as the tab — that data loss is what the
+  // export prompt and hold-to-confirm in the dialog are guarding.
+  function handleDeleteYear(year: number) {
+    setEntries((prev) =>
+      prev.filter((entry) => getEntryYear(entry) !== year)
+    )
+    setYears((prev) => {
+      const remaining = prev.filter((item) => item !== year)
+      const next = remaining.length > 0 ? remaining : [CURRENT_YEAR]
+      if (selectedYear === year) {
+        setSelectedYear(Math.max(...next))
+      }
+      return next
+    })
   }
 
   const {
@@ -149,6 +170,7 @@ export function DashboardPage() {
         selectedYear={selectedYear}
         currentYear={CURRENT_YEAR}
         onSelectYear={handleSelectYear}
+        onRequestDeleteYear={setYearPendingDelete}
       />
 
       <AvgMonthlyIncome
@@ -233,6 +255,22 @@ export function DashboardPage() {
 
       <Separator />
       {/* Recent entries — added later */}
+
+      <DeleteYearDialog
+        year={yearPendingDelete}
+        entryCount={
+          yearPendingDelete === null
+            ? 0
+            : entries.filter(
+                (entry) => getEntryYear(entry) === yearPendingDelete
+              ).length
+        }
+        open={yearPendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setYearPendingDelete(null)
+        }}
+        onConfirm={handleDeleteYear}
+      />
 
       <EntryFormDialog
         key={entryDialogOpen ? (editingEntry?.id ?? "create") : "closed"}
