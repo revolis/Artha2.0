@@ -66,6 +66,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { HELP_ARTICLES } from "@/lib/help-content"
 import { formatMoney } from "@/lib/mock-data"
 import { SITE } from "@/lib/site"
 import { useProfile } from "@/lib/use-profile"
@@ -97,28 +98,9 @@ const FEEDBACK_TOPICS = [
   { value: "other", label: "Something else" },
 ]
 
-const FAQS = [
-  {
-    q: "Why do my totals ignore Fiat/P2P entries?",
-    a: "Converting USD to cash moves money between forms rather than earning or losing it, so it never counts as profit or loss. It does affect your portfolio value, since that money has left your USD balance.",
-  },
-  {
-    q: "How is portfolio value calculated?",
-    a: "Net income minus the USD you sold for cash, plus the USD you bought back. Gross portfolio value is the same figure before any cash movement.",
-  },
-  {
-    q: "Can I change the currency everything is shown in?",
-    a: "Yes — General → Display currency. Every amount across Artha converts to it, including charts, reports and goals.",
-  },
-  {
-    q: "How do I get my data out?",
-    a: "Reports lets you export everything, or a filtered slice, as PDF, CSV or JSON. Each export carries your totals and the period it covers.",
-  },
-  {
-    q: "What happens when I delete a year?",
-    a: "Every entry dated in that year is removed along with the tab. You are prompted to export first, and have to hold the delete button for four seconds.",
-  },
-]
+// The five most-asked, pulled from the shared help content so this panel and
+// the Help Centre never drift apart.
+const FAQS = HELP_ARTICLES.slice(0, 5)
 
 function SettingRow({
   title,

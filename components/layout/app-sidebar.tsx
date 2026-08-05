@@ -79,16 +79,16 @@ const sections: NavSection[] = [
     title: "Account",
     items: [
       { title: "Profile", href: "/profile", icon: User },
-      { title: "Billing", href: "#", icon: CreditCard },
+      { title: "Billing", href: "/billing", icon: CreditCard },
       { title: "Settings", href: "/settings", icon: Settings },
     ],
   },
   {
     title: "Support",
     items: [
-      { title: "Help Center", href: "#", icon: HelpCircle },
-      { title: "Contact Us", href: "#", icon: Mail },
-      { title: "About Us", href: "#", icon: Info },
+      { title: "Help Centre", href: "/help", icon: HelpCircle },
+      { title: "Contact Us", href: "/contact", icon: Mail },
+      { title: "About Us", href: "/about", icon: Info },
     ],
   },
 ]
