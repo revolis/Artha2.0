@@ -3,15 +3,12 @@
 import * as React from "react"
 import {
   Activity,
-  ArrowDownLeft,
-  ArrowUpRight,
   CalendarCheck,
   Info,
   Target,
   TrendingDown,
   TrendingUp,
   Trophy,
-  Wallet,
 } from "lucide-react"
 
 import { AppShell } from "@/components/layout/app-shell"
@@ -43,13 +40,21 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { formatMoney } from "@/lib/mock-data"
+import { formatMoney, getNetAmount } from "@/lib/mock-data"
+import { StatCard } from "@/components/stats/stat-card"
 import {
   buildDualDailySeries,
   getContributors,
+  getPortfolioDelta,
   getPortfolioInsights,
   getPortfolioStats,
 } from "@/lib/portfolio"
+import {
+  monthBucketsForYear,
+  toStatPoints,
+  trendOf,
+} from "@/lib/stat-series"
+import type { Entry } from "@/lib/types"
 import { useEntryData } from "@/lib/use-entry-data"
 import { cn } from "@/lib/utils"
 
@@ -75,42 +80,6 @@ function formatDay(value: Date | string): string {
     day: "numeric",
     year: "numeric",
   }).format(date)
-}
-
-// Compact stat card: label, figure, supporting line, and a framed icon.
-function StatCard({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  tone,
-}: {
-  label: string
-  value: string
-  sub: string
-  icon: React.ComponentType<{ className?: string }>
-  tone?: string
-}) {
-  return (
-    <Card size="sm" className="transition-shadow hover:shadow-lg">
-      <CardContent className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            {label}
-          </span>
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border bg-muted/50">
-            <Icon className="size-4 text-muted-foreground" />
-          </div>
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className={cn("text-2xl font-semibold tabular-nums", tone)}>
-            {value}
-          </span>
-          <span className="text-xs text-muted-foreground">{sub}</span>
-        </div>
-      </CardContent>
-    </Card>
-  )
 }
 
 // One metric inside the Insights card.
@@ -200,6 +169,53 @@ export function PortfolioPage() {
     () => getPortfolioInsights(entries, year, topSource, stats.grossIncome),
     [entries, year, topSource, stats.grossIncome]
   )
+
+  // Monthly points behind each summary card. Portfolio value is cumulative —
+  // it's a running balance, not a per-month figure.
+  const cardSeries = React.useMemo(() => {
+    const buckets = monthBucketsForYear(entries, year)
+    const sum = (pick: (entry: Entry) => number) => (rows: Entry[]) =>
+      rows.reduce((total, entry) => total + pick(entry), 0)
+
+    const isCashOut = (entry: Entry) =>
+      entry.type === "p2p" && entry.p2p?.direction === "usd-to-cash"
+    const isCashIn = (entry: Entry) =>
+      entry.type === "p2p" && entry.p2p?.direction === "cash-to-usd"
+
+    const portfolio = toStatPoints(buckets, sum(getPortfolioDelta), {
+      cumulative: true,
+    })
+    const netIncome = toStatPoints(buckets, sum(getNetAmount))
+    const grossIncome = toStatPoints(
+      buckets,
+      sum((entry) => (entry.type === "profit" ? entry.amount : 0))
+    )
+    const loss = toStatPoints(
+      buckets,
+      sum((entry) =>
+        entry.type === "loss" || entry.type === "fee" || entry.type === "tax"
+          ? entry.amount
+          : 0
+      )
+    )
+    const cashOut = toStatPoints(
+      buckets,
+      sum((entry) => (isCashOut(entry) ? entry.amount : 0))
+    )
+    const cashIn = toStatPoints(
+      buckets,
+      sum((entry) => (isCashIn(entry) ? entry.amount : 0))
+    )
+
+    return {
+      portfolio: { data: portfolio, trend: trendOf(portfolio) },
+      netIncome: { data: netIncome, trend: trendOf(netIncome) },
+      grossIncome: { data: grossIncome, trend: trendOf(grossIncome) },
+      loss: { data: loss, trend: trendOf(loss) },
+      cashOut: { data: cashOut, trend: trendOf(cashOut) },
+      cashIn: { data: cashIn, trend: trendOf(cashIn) },
+    }
+  }, [entries, year])
 
   const first = series[0]
   const last = series[series.length - 1]
@@ -399,49 +415,52 @@ export function PortfolioPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
-          label="Portfolio Value"
-          value={formatMoney(stats.portfolioValue, "USD")}
-          sub="Net income minus cash out, plus cash in"
-          icon={Wallet}
-          tone={
-            stats.portfolioValue >= 0 ? "text-success" : "text-destructive"
-          }
+          title="Portfolio Value"
+          data={cardSeries.portfolio.data}
+          value={stats.portfolioValue}
+          trend={cardSeries.portfolio.trend}
+          color="var(--chart-line-primary)"
+          gradientId="portfolio-value"
         />
         <StatCard
-          label="Net Income"
-          value={formatMoney(stats.netIncome, "USD")}
-          sub="After loss, fees and tax"
-          icon={TrendingUp}
-          tone={stats.netIncome >= 0 ? "text-success" : "text-destructive"}
+          title="Net Income"
+          data={cardSeries.netIncome.data}
+          value={stats.netIncome}
+          trend={cardSeries.netIncome.trend}
+          color="var(--chart-1)"
+          gradientId="portfolio-net-income"
         />
         <StatCard
-          label="Gross Income"
-          value={formatMoney(stats.grossIncome, "USD")}
-          sub={`Across ${insights.wins} profit entries`}
-          icon={Trophy}
+          title="Gross Income"
+          data={cardSeries.grossIncome.data}
+          value={stats.grossIncome}
+          trend={cardSeries.grossIncome.trend}
+          color="var(--success)"
+          gradientId="portfolio-gross-income"
         />
         <StatCard
-          label="Total Loss"
-          value={formatMoney(stats.loss + stats.fees + stats.taxes, "USD")}
-          sub={`Loss ${formatMoney(stats.loss, "USD")} · Fees ${formatMoney(stats.fees, "USD")} · Tax ${formatMoney(stats.taxes, "USD")}`}
-          icon={TrendingDown}
-          tone={
-            stats.loss + stats.fees + stats.taxes > 0
-              ? "text-destructive"
-              : undefined
-          }
+          title="Total Loss"
+          data={cardSeries.loss.data}
+          value={stats.loss + stats.fees + stats.taxes}
+          trend={cardSeries.loss.trend}
+          color="var(--destructive)"
+          gradientId="portfolio-total-loss"
         />
         <StatCard
-          label="USD Cashed Out"
-          value={formatMoney(stats.cashOut, "USD")}
-          sub="Sold to fiat through P2P"
-          icon={ArrowUpRight}
+          title="USD Cashed Out"
+          data={cardSeries.cashOut.data}
+          value={stats.cashOut}
+          trend={cardSeries.cashOut.trend}
+          color="var(--chart-3)"
+          gradientId="portfolio-cash-out"
         />
         <StatCard
-          label="USD Cashed In"
-          value={formatMoney(stats.cashIn, "USD")}
-          sub="Bought with fiat through P2P"
-          icon={ArrowDownLeft}
+          title="USD Cashed In"
+          data={cardSeries.cashIn.data}
+          value={stats.cashIn}
+          trend={cardSeries.cashIn.trend}
+          color="var(--chart-5)"
+          gradientId="portfolio-cash-in"
         />
       </div>
 

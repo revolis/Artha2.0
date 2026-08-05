@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react"
 
 import { AvgMonthlyIncome } from "@/components/dashboard/avg-monthly-income"
 import { CategoryContribution } from "@/components/dashboard/category-contribution"
-import { MonthlyStatCard } from "@/components/dashboard/monthly-stat-card"
+import { StatCard } from "@/components/stats/stat-card"
 import { NetPLTrend } from "@/components/dashboard/net-pl-trend"
 import { PortfolioCard } from "@/components/dashboard/portfolio-card"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
@@ -21,14 +21,19 @@ import { Separator } from "@/components/ui/separator"
 import {
   getAvgMonthlyIncome,
   getEntryYear,
+  getNetAmount,
   mockSettings,
 } from "@/lib/mock-data"
-import { getMonthlyPerformance } from "@/lib/analytics"
 import {
   buildDualDailySeries,
   getMonthOverMonth,
   getPortfolioStats,
 } from "@/lib/portfolio"
+import {
+  monthBucketsForYear,
+  toStatPoints,
+  trendOf,
+} from "@/lib/stat-series"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
 import type { Currency, Entry } from "@/lib/types"
@@ -94,40 +99,28 @@ export function DashboardPage() {
   // Monthly points for the three stat cards. The current year stops at the
   // present month so the line doesn't fall to zero across months yet to come.
   const monthlyCards = React.useMemo(() => {
-    const months = getMonthlyPerformance(entries, selectedYear)
-    const lastMonth =
-      selectedYear === CURRENT_YEAR ? new Date().getMonth() : 11
-    const visible = months.slice(0, lastMonth + 1)
+    const buckets = monthBucketsForYear(entries, selectedYear)
+    const sum = (pick: (entry: Entry) => number) => (rows: Entry[]) =>
+      rows.reduce((total, entry) => total + pick(entry), 0)
 
-    const seriesFor = (pick: (month: (typeof months)[number]) => number) =>
-      visible.map((month) => ({
-        date: new Date(selectedYear, month.month, 1),
-        value: pick(month),
-      }))
-
-    // Percent change between the last two months that had any activity.
-    const trendFor = (pick: (month: (typeof months)[number]) => number) => {
-      const active = visible.filter((month) => month.count > 0)
-      if (active.length < 2) return null
-      const latest = pick(active[active.length - 1])
-      const previous = pick(active[active.length - 2])
-      if (previous === 0) return null
-      return ((latest - previous) / Math.abs(previous)) * 100
-    }
+    const netPL = toStatPoints(buckets, sum(getNetAmount))
+    const income = toStatPoints(
+      buckets,
+      sum((entry) => (entry.type === "profit" ? entry.amount : 0))
+    )
+    const expense = toStatPoints(
+      buckets,
+      sum((entry) =>
+        entry.type === "loss" || entry.type === "fee" || entry.type === "tax"
+          ? entry.amount
+          : 0
+      )
+    )
 
     return {
-      netPL: {
-        data: seriesFor((month) => month.net),
-        trend: trendFor((month) => month.net),
-      },
-      income: {
-        data: seriesFor((month) => month.income),
-        trend: trendFor((month) => month.income),
-      },
-      expense: {
-        data: seriesFor((month) => month.expense),
-        trend: trendFor((month) => month.expense),
-      },
+      netPL: { data: netPL, trend: trendOf(netPL) },
+      income: { data: income, trend: trendOf(income) },
+      expense: { data: expense, trend: trendOf(expense) },
     }
   }, [entries, selectedYear])
   const yearEntries = React.useMemo(
@@ -197,26 +190,26 @@ export function DashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <MonthlyStatCard
+        <StatCard
           title="Net P/L"
           data={monthlyCards.netPL.data}
-          netValue={stats.netIncome}
+          value={stats.netIncome}
           trend={monthlyCards.netPL.trend}
           color="var(--chart-1)"
           gradientId="stat-card-net-pl"
         />
-        <MonthlyStatCard
+        <StatCard
           title="Gross Income"
           data={monthlyCards.income.data}
-          netValue={stats.grossIncome}
+          value={stats.grossIncome}
           trend={monthlyCards.income.trend}
           color="var(--success)"
           gradientId="stat-card-gross-income"
         />
-        <MonthlyStatCard
+        <StatCard
           title="Net Loss"
           data={monthlyCards.expense.data}
-          netValue={netLoss}
+          value={netLoss}
           trend={monthlyCards.expense.trend}
           color="var(--destructive)"
           gradientId="stat-card-net-loss"

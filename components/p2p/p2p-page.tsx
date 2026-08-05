@@ -8,9 +8,6 @@ import {
   MoreVertical,
   Paperclip,
   Pencil,
-  Percent,
-  Repeat,
-  Scale,
   Trash2,
   Wallet,
 } from "lucide-react"
@@ -19,13 +16,6 @@ import { EntryFormDialog } from "@/components/entries/entry-form-dialog"
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,10 +48,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { StatCard } from "@/components/stats/stat-card"
 import { formatMoney } from "@/lib/mock-data"
+import { autoBuckets, toStatPoints, trendOf } from "@/lib/stat-series"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
-import { cn } from "@/lib/utils"
 
 type Timeframe = "year" | "month" | "all" | "custom"
 
@@ -142,9 +133,7 @@ export function P2PPage() {
   const soldUsd = sold.reduce((s, t) => s + t.amount, 0)
   const boughtUsd = bought.reduce((s, t) => s + t.amount, 0)
   const soldCash = sold.reduce((s, t) => s + t.p2p!.cashAmount, 0)
-  const boughtCash = bought.reduce((s, t) => s + t.p2p!.cashAmount, 0)
   const avgSellRate = soldUsd > 0 ? soldCash / soldUsd : 0
-  const avgBuyRate = boughtUsd > 0 ? boughtCash / boughtUsd : 0
   const netUsd = boughtUsd - soldUsd
 
   // The cash currency used most in this period, for the card sub-lines.
@@ -177,41 +166,58 @@ export function P2PPage() {
     setEntries((prev) => [{ ...entry, id: `e_${Date.now()}` }, ...prev])
   }
 
-  const tradeWord = (n: number) => (n === 1 ? "trade" : "trades")
-  const stats = [
-    {
-      label: "USD Sold → Cash",
-      value: formatMoney(soldUsd, "USD"),
-      sub: `${sold.length} ${tradeWord(sold.length)} · ${formatCash(soldCash, currency)} received`,
-      icon: ArrowUpRight,
-    },
-    {
-      label: "USD Bought ← Cash",
-      value: formatMoney(boughtUsd, "USD"),
-      sub: `${bought.length} ${tradeWord(bought.length)} · ${formatCash(boughtCash, currency)} spent`,
-      icon: ArrowDownLeft,
-    },
-    {
-      label: "Average Rates",
-      value: avgSellRate > 0 ? avgSellRate.toFixed(2) : "—",
-      sub: `Sell ${avgSellRate > 0 ? avgSellRate.toFixed(2) : "—"} · Buy ${avgBuyRate > 0 ? avgBuyRate.toFixed(2) : "—"}`,
-      icon: Percent,
-    },
-    {
-      label: "Net Position",
-      value: `${netUsd > 0 ? "+" : netUsd < 0 ? "−" : ""}${formatMoney(Math.abs(netUsd), "USD")}`,
-      sub: netUsd >= 0 ? "Net USD gained in period" : "Net USD converted to cash",
-      icon: Scale,
-      valueClass:
-        netUsd > 0 ? "text-success" : netUsd < 0 ? "text-destructive" : undefined,
-    },
-    {
-      label: "Total Trades",
-      value: String(trades.length),
-      sub: `${sold.length} sold · ${bought.length} bought`,
-      icon: Repeat,
-    },
-  ]
+  // Buckets follow the selected timeframe: months when it spans a while,
+  // days when it doesn't, so a one-month view still draws a real line.
+  const cardSeries = React.useMemo(() => {
+    const buckets = autoBuckets(trades)
+    const granularity: "month" | "day" =
+      buckets.length > 1 &&
+      buckets[1].date.getTime() - buckets[0].date.getTime() > 2 * 86_400_000
+        ? "month"
+        : "day"
+
+    const sumWhere = (
+      match: (entry: Entry) => boolean,
+      pick: (entry: Entry) => number
+    ) => (rows: Entry[]) =>
+      rows.reduce((total, entry) => (match(entry) ? total + pick(entry) : total), 0)
+
+    const isSold = (entry: Entry) => entry.p2p?.direction === "usd-to-cash"
+    const isBought = (entry: Entry) => entry.p2p?.direction === "cash-to-usd"
+
+    const soldSeries = toStatPoints(buckets, sumWhere(isSold, (e) => e.amount))
+    const boughtSeries = toStatPoints(
+      buckets,
+      sumWhere(isBought, (e) => e.amount)
+    )
+    const netSeries = toStatPoints(buckets, (rows) =>
+      rows.reduce(
+        (total, entry) =>
+          isBought(entry) ? total + entry.amount : total - entry.amount,
+        0
+      )
+    )
+    const countSeries = toStatPoints(buckets, (rows) => rows.length)
+    // Weighted average sell rate for the bucket, not a mean of rates.
+    const rateSeries = toStatPoints(buckets, (rows) => {
+      const soldRows = rows.filter(isSold)
+      const usd = soldRows.reduce((total, entry) => total + entry.amount, 0)
+      const cash = soldRows.reduce(
+        (total, entry) => total + (entry.p2p?.cashAmount ?? 0),
+        0
+      )
+      return usd > 0 ? cash / usd : 0
+    })
+
+    return {
+      granularity,
+      sold: { data: soldSeries, trend: trendOf(soldSeries) },
+      bought: { data: boughtSeries, trend: trendOf(boughtSeries) },
+      net: { data: netSeries, trend: trendOf(netSeries) },
+      count: { data: countSeries, trend: trendOf(countSeries) },
+      rate: { data: rateSeries, trend: trendOf(rateSeries) },
+    }
+  }, [trades])
 
   return (
     <AppShell>
@@ -266,22 +272,57 @@ export function P2PPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardHeader>
-              <CardDescription>{stat.label}</CardDescription>
-              <CardTitle
-                className={cn("text-2xl tabular-nums", stat.valueClass)}
-              >
-                {stat.value}
-              </CardTitle>
-              <CardAction>
-                <stat.icon className="size-4 text-muted-foreground" />
-              </CardAction>
-              <CardDescription className="text-xs">{stat.sub}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
+        <StatCard
+          title="USD Sold → Cash"
+          data={cardSeries.sold.data}
+          value={soldUsd}
+          restLabel="Total"
+          trend={cardSeries.sold.trend}
+          color="var(--chart-3)"
+          gradientId="p2p-sold"
+          granularity={cardSeries.granularity}
+        />
+        <StatCard
+          title="USD Bought ← Cash"
+          data={cardSeries.bought.data}
+          value={boughtUsd}
+          restLabel="Total"
+          trend={cardSeries.bought.trend}
+          color="var(--chart-5)"
+          gradientId="p2p-bought"
+          granularity={cardSeries.granularity}
+        />
+        <StatCard
+          title={`Average Rate (${currency})`}
+          data={cardSeries.rate.data}
+          value={avgSellRate}
+          restLabel="Sell"
+          trend={cardSeries.rate.trend}
+          color="var(--chart-2)"
+          gradientId="p2p-rate"
+          granularity={cardSeries.granularity}
+          formatOptions={{ maximumFractionDigits: 2, style: "decimal" }}
+        />
+        <StatCard
+          title="Net Position"
+          data={cardSeries.net.data}
+          value={netUsd}
+          trend={cardSeries.net.trend}
+          color="var(--chart-1)"
+          gradientId="p2p-net"
+          granularity={cardSeries.granularity}
+        />
+        <StatCard
+          title="Total Trades"
+          data={cardSeries.count.data}
+          value={trades.length}
+          restLabel="Trades"
+          trend={cardSeries.count.trend}
+          color="var(--chart-4)"
+          gradientId="p2p-trades"
+          granularity={cardSeries.granularity}
+          formatOptions={{ maximumFractionDigits: 0, style: "decimal" }}
+        />
       </div>
 
       <div className="flex flex-col gap-3">

@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { entryTypeLabels } from "@/components/entries/entry-form-dialog"
+import { StatCard } from "@/components/stats/stat-card"
 import {
   getMonthExtremes,
   getMonthlyPerformance,
@@ -45,10 +46,17 @@ import {
   getTopTransactions,
   getWeekdayPerformance,
   getYearTotals,
+  isExpense,
+  isIncome,
   type MonthPerformance,
   type PerformanceRow,
 } from "@/lib/analytics"
-import { formatMoney, getEntryYear } from "@/lib/mock-data"
+import { formatMoney, getEntryYear, getNetAmount } from "@/lib/mock-data"
+import {
+  monthBucketsForYear,
+  toStatPoints,
+  trendOf,
+} from "@/lib/stat-series"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -74,32 +82,6 @@ function formatDate(datetime: string): string {
     day: "numeric",
     year: "numeric",
   }).format(new Date(datetime))
-}
-
-function StatCard({
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  label: string
-  value: string
-  sub: string
-  tone?: string
-}) {
-  return (
-    <Card size="sm">
-      <CardContent className="flex flex-col gap-2">
-        <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          {label}
-        </span>
-        <span className={cn("text-2xl font-semibold tabular-nums", tone)}>
-          {value}
-        </span>
-        <span className="text-xs text-muted-foreground">{sub}</span>
-      </CardContent>
-    </Card>
-  )
 }
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -343,6 +325,29 @@ export function AnalyticsPage() {
     [entries, year]
   )
 
+  // Monthly points behind each headline card.
+  const cardSeries = React.useMemo(() => {
+    const buckets = monthBucketsForYear(entries, year)
+    const sum = (pick: (entry: Entry) => number) => (rows: Entry[]) =>
+      rows.reduce((total, entry) => total + pick(entry), 0)
+
+    const net = toStatPoints(buckets, sum(getNetAmount))
+    const income = toStatPoints(
+      buckets,
+      sum((entry) => (isIncome(entry) ? entry.amount : 0))
+    )
+    const expense = toStatPoints(
+      buckets,
+      sum((entry) => (isExpense(entry) ? entry.amount : 0))
+    )
+
+    return {
+      net: { data: net, trend: trendOf(net) },
+      income: { data: income, trend: trendOf(income) },
+      expense: { data: expense, trend: trendOf(expense) },
+    }
+  }, [entries, year])
+
   const activeMonths = months.filter((month) => month.count > 0)
   const maxWeekdayNet = Math.max(1, ...weekdays.map((day) => Math.abs(day.net)))
   const bestWeekday = [...weekdays].sort((a, b) => b.net - a.net)[0]
@@ -380,28 +385,37 @@ export function AnalyticsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Net Result"
-          value={signed(totals.net)}
-          sub={`${totals.count} entries across ${totals.activeMonths} active months`}
-          tone={toneFor(totals.net)}
+          title="Net Result"
+          data={cardSeries.net.data}
+          value={totals.net}
+          trend={cardSeries.net.trend}
+          color="var(--chart-1)"
+          gradientId="analytics-net-result"
         />
         <StatCard
-          label="Total Income"
-          value={formatMoney(totals.income, "USD")}
-          sub="Profit entries only"
-          tone="text-success"
+          title="Total Income"
+          data={cardSeries.income.data}
+          value={totals.income}
+          trend={cardSeries.income.trend}
+          color="var(--success)"
+          gradientId="analytics-total-income"
         />
         <StatCard
-          label="Total Expense"
-          value={formatMoney(totals.expense, "USD")}
-          sub="Loss, fees and tax"
-          tone={totals.expense > 0 ? "text-destructive" : undefined}
+          title="Total Expense"
+          data={cardSeries.expense.data}
+          value={totals.expense}
+          trend={cardSeries.expense.trend}
+          color="var(--destructive)"
+          gradientId="analytics-total-expense"
         />
         <StatCard
-          label="Monthly Average"
-          value={signed(totals.monthlyAverage)}
-          sub="Across months with activity"
-          tone={toneFor(totals.monthlyAverage)}
+          title="Monthly Average"
+          data={cardSeries.net.data}
+          value={totals.monthlyAverage}
+          restLabel="Avg"
+          trend={cardSeries.net.trend}
+          color="var(--chart-4)"
+          gradientId="analytics-monthly-average"
         />
       </div>
 
