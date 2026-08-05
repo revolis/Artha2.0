@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react"
 
 import { AvgMonthlyIncome } from "@/components/dashboard/avg-monthly-income"
 import { CategoryContribution } from "@/components/dashboard/category-contribution"
+import { MonthlyStatCard } from "@/components/dashboard/monthly-stat-card"
 import { NetPLTrend } from "@/components/dashboard/net-pl-trend"
 import { PortfolioCard } from "@/components/dashboard/portfolio-card"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
@@ -15,15 +16,14 @@ import { GoalCard } from "@/components/goals/goal-card"
 import { YearHeatmap } from "@/components/heatmap/year-heatmap"
 import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { Separator } from "@/components/ui/separator"
 import {
-  formatMoney,
   getAvgMonthlyIncome,
   getEntryYear,
   mockSettings,
 } from "@/lib/mock-data"
+import { getMonthlyPerformance } from "@/lib/analytics"
 import {
   buildDualDailySeries,
   getMonthOverMonth,
@@ -32,41 +32,8 @@ import {
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
 import type { Currency, Entry } from "@/lib/types"
-import { cn } from "@/lib/utils"
 
 const CURRENT_YEAR = new Date().getFullYear()
-
-function signed(value: number): string {
-  const sign = value > 0 ? "+" : value < 0 ? "−" : ""
-  return `${sign}${formatMoney(Math.abs(value), "USD")}`
-}
-
-// Compact figure card used for the Net P/L, Gross Income and Net Loss row.
-function SummaryCard({
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  label: string
-  value: string
-  sub: string
-  tone?: string
-}) {
-  return (
-    <Card size="sm">
-      <CardContent className="flex flex-col gap-2">
-        <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          {label}
-        </span>
-        <span className={cn("text-2xl font-semibold tabular-nums", tone)}>
-          {value}
-        </span>
-        <span className="text-xs text-muted-foreground">{sub}</span>
-      </CardContent>
-    </Card>
-  )
-}
 
 export function DashboardPage() {
   // Always start on the current year; more years appear as the user adds them.
@@ -123,6 +90,46 @@ export function DashboardPage() {
     [entries, selectedYear]
   )
   const netLoss = stats.loss + stats.fees + stats.taxes
+
+  // Monthly points for the three stat cards. The current year stops at the
+  // present month so the line doesn't fall to zero across months yet to come.
+  const monthlyCards = React.useMemo(() => {
+    const months = getMonthlyPerformance(entries, selectedYear)
+    const lastMonth =
+      selectedYear === CURRENT_YEAR ? new Date().getMonth() : 11
+    const visible = months.slice(0, lastMonth + 1)
+
+    const seriesFor = (pick: (month: (typeof months)[number]) => number) =>
+      visible.map((month) => ({
+        date: new Date(selectedYear, month.month, 1),
+        value: pick(month),
+      }))
+
+    // Percent change between the last two months that had any activity.
+    const trendFor = (pick: (month: (typeof months)[number]) => number) => {
+      const active = visible.filter((month) => month.count > 0)
+      if (active.length < 2) return null
+      const latest = pick(active[active.length - 1])
+      const previous = pick(active[active.length - 2])
+      if (previous === 0) return null
+      return ((latest - previous) / Math.abs(previous)) * 100
+    }
+
+    return {
+      netPL: {
+        data: seriesFor((month) => month.net),
+        trend: trendFor((month) => month.net),
+      },
+      income: {
+        data: seriesFor((month) => month.income),
+        trend: trendFor((month) => month.income),
+      },
+      expense: {
+        data: seriesFor((month) => month.expense),
+        trend: trendFor((month) => month.expense),
+      },
+    }
+  }, [entries, selectedYear])
   const yearEntries = React.useMemo(
     () => entries.filter((entry) => getEntryYear(entry) === selectedYear),
     [entries, selectedYear]
@@ -190,29 +197,29 @@ export function DashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <SummaryCard
-          label="Net P/L"
-          value={signed(stats.netIncome)}
-          sub="Income after loss, fees and tax"
-          tone={
-            stats.netIncome > 0
-              ? "text-success"
-              : stats.netIncome < 0
-                ? "text-destructive"
-                : undefined
-          }
+        <MonthlyStatCard
+          title="Net P/L"
+          data={monthlyCards.netPL.data}
+          netValue={stats.netIncome}
+          trend={monthlyCards.netPL.trend}
+          color="var(--chart-1)"
+          gradientId="stat-card-net-pl"
         />
-        <SummaryCard
-          label="Gross Income"
-          value={formatMoney(stats.grossIncome, "USD")}
-          sub="Everything earned before deductions"
-          tone="text-success"
+        <MonthlyStatCard
+          title="Gross Income"
+          data={monthlyCards.income.data}
+          netValue={stats.grossIncome}
+          trend={monthlyCards.income.trend}
+          color="var(--success)"
+          gradientId="stat-card-gross-income"
         />
-        <SummaryCard
-          label="Net Loss"
-          value={formatMoney(netLoss, "USD")}
-          sub={`Loss ${formatMoney(stats.loss, "USD")} · Fees ${formatMoney(stats.fees, "USD")} · Tax ${formatMoney(stats.taxes, "USD")}`}
-          tone={netLoss > 0 ? "text-destructive" : undefined}
+        <MonthlyStatCard
+          title="Net Loss"
+          data={monthlyCards.expense.data}
+          netValue={netLoss}
+          trend={monthlyCards.expense.trend}
+          color="var(--destructive)"
+          gradientId="stat-card-net-loss"
         />
       </div>
 
