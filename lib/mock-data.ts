@@ -20,7 +20,11 @@ export const mockUser: UserProfile = {
   location: "Kathmandu, Nepal",
   timezone: "Asia/Kathmandu",
   website: "",
-  socials: [],
+  socials: [
+    { id: "sl_1", platform: "X", url: "https://x.com/" },
+    { id: "sl_2", platform: "GitHub", url: "https://github.com/" },
+    { id: "sl_3", platform: "Telegram", url: "https://telegram.org/" },
+  ],
   createdAt: "2024-01-15",
 }
 
