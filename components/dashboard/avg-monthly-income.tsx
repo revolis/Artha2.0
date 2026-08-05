@@ -31,7 +31,11 @@ export function AvgMonthlyIncome({ amountUsd }: { amountUsd: number }) {
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button variant="ghost" size="icon-sm" aria-label="Change currency" />
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Change currency"
+            />
           }
         >
           <ChevronDown />

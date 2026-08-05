@@ -60,7 +60,10 @@ export function getGoalStatus(goal: Goal, now = new Date()): GoalStatus {
       }
     }
     if (goal.completedAt) {
-      return { tone: "success", message: `Completed on ${fmtDate(goal.completedAt)}` }
+      return {
+        tone: "success",
+        message: `Completed on ${fmtDate(goal.completedAt)}`,
+      }
     }
     return { tone: "success", message: "Goal completed" }
   }
@@ -80,12 +83,16 @@ export function getGoalStatus(goal: Goal, now = new Date()): GoalStatus {
     return { tone: "neutral", message: `Starts on ${fmtDate(goal.startDate!)}` }
   }
 
-  const daysLeft = Math.max(1, Math.ceil((end.getTime() - now.getTime()) / DAY_MS))
+  const daysLeft = Math.max(
+    1,
+    Math.ceil((end.getTime() - now.getTime()) / DAY_MS)
+  )
   const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
 
   if (start) {
     const expectedPercent =
-      ((now.getTime() - start.getTime()) / (end.getTime() - start.getTime())) * 100
+      ((now.getTime() - start.getTime()) / (end.getTime() - start.getTime())) *
+      100
     if (percent >= expectedPercent) {
       return { tone: "success", message: `On track — ${daysLeft} days left` }
     }

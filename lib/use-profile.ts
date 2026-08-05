@@ -75,12 +75,20 @@ export function getProfileCompletion(profile: UserProfile) {
     { label: "Username", done: validateUsername(profile.username) === null },
     { label: "Full name", done: profile.name.trim().length > 0 },
     { label: "Email", done: profile.email.trim().length > 0 },
-    { label: "Profile photo", done: Boolean(profile.avatarUrl || profile.avatarId) },
+    {
+      label: "Profile photo",
+      done: Boolean(profile.avatarUrl || profile.avatarId),
+    },
     { label: "Bio", done: (profile.bio ?? "").trim().length > 0 },
     { label: "Location", done: (profile.location ?? "").trim().length > 0 },
     { label: "Website", done: (profile.website ?? "").trim().length > 0 },
     { label: "A social link", done: profile.socials.length > 0 },
   ]
   const done = checks.filter((check) => check.done).length
-  return { checks, done, total: checks.length, percent: (done / checks.length) * 100 }
+  return {
+    checks,
+    done,
+    total: checks.length,
+    percent: (done / checks.length) * 100,
+  }
 }

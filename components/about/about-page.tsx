@@ -150,7 +150,9 @@ export function AboutPage() {
         <Card>
           <CardHeader>
             <CardTitle>The short version</CardTitle>
-            <CardDescription>Everything worth knowing, in a list.</CardDescription>
+            <CardDescription>
+              Everything worth knowing, in a list.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col divide-y">
@@ -183,7 +185,9 @@ export function AboutPage() {
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => router.push("/contact")}>Get in touch</Button>
+            <Button onClick={() => router.push("/contact")}>
+              Get in touch
+            </Button>
             <Button variant="outline" onClick={() => router.push("/help")}>
               Help Centre
             </Button>

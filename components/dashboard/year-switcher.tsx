@@ -125,9 +125,7 @@ export function YearSwitcher({
                 >
                   {year}
                   {year === currentYear && (
-                    <span className="text-xs text-muted-foreground">
-                      · now
-                    </span>
+                    <span className="text-xs text-muted-foreground">· now</span>
                   )}
                 </DropdownMenuItem>
               ))}

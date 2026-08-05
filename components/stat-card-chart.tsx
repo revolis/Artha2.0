@@ -1,24 +1,24 @@
-"use client";
+"use client"
 
-import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import type { ReactNode } from "react"
+import { cn } from "@/lib/utils"
 
 export interface StatCardHoverState {
-  value: number | null;
-  label: string | null;
-  trend: number | null;
+  value: number | null
+  label: string | null
+  trend: number | null
 }
 
 export const statCardValueClassName =
-  "text-3xl font-semibold leading-none tracking-tight";
+  "text-3xl font-semibold leading-none tracking-tight"
 
-export const statCardLabelClassName = "mt-0 text-xs";
+export const statCardLabelClassName = "mt-0 text-xs"
 
 export const statCardChartHeights = {
   sm: "[--stat-card-chart-h:96px]",
   md: "[--stat-card-chart-h:190px]",
   lg: "[--stat-card-chart-h:420px]",
-} as const;
+} as const
 
 /** Bleeds charts edge-to-edge inside stat card content padding. */
 export function StatCardChart({
@@ -26,9 +26,9 @@ export function StatCardChart({
   className,
   size = "sm",
 }: {
-  children: ReactNode;
-  className?: string;
-  size?: keyof typeof statCardChartHeights;
+  children: ReactNode
+  className?: string
+  size?: keyof typeof statCardChartHeights
 }) {
   return (
     <div
@@ -41,5 +41,5 @@ export function StatCardChart({
     >
       {children}
     </div>
-  );
+  )
 }

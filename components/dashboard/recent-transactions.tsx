@@ -36,9 +36,7 @@ function startOfDay(date: Date): number {
 // "Today, 10:24 AM" / "Yesterday" / "Oct 12" / "Oct 12, 2025"
 function formatWhen(datetime: string, now = new Date()): string {
   const when = new Date(datetime)
-  const dayDiff = Math.round(
-    (startOfDay(now) - startOfDay(when)) / 86_400_000
-  )
+  const dayDiff = Math.round((startOfDay(now) - startOfDay(when)) / 86_400_000)
 
   if (dayDiff === 0) {
     const time = new Intl.DateTimeFormat("en-US", {

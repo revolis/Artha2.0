@@ -81,10 +81,7 @@ function TabsContent({
       // that never runs, leaving every panel stacked on the page. The inert
       // rule covers the same case while a panel is on its way out.
       keepMounted={keepMounted}
-      className={cn(
-        "flex-1 text-sm outline-none [&[inert]]:hidden",
-        className
-      )}
+      className={cn("flex-1 text-sm outline-none [&[inert]]:hidden", className)}
       {...props}
     />
   )

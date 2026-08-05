@@ -1,31 +1,31 @@
-"use client";
+"use client"
 
-import { motion, useReducedMotion, type Variants } from "motion/react";
-import { type ComponentProps, useCallback } from "react";
-import { cn } from "@/lib/utils";
+import { motion, useReducedMotion, type Variants } from "motion/react"
+import { type ComponentProps, useCallback } from "react"
+import { cn } from "@/lib/utils"
 
 export type ShimmeringTextProps = Omit<
   ComponentProps<typeof motion.span>,
   "children"
 > & {
   /** The text to render with the shimmering effect. */
-  text: string;
+  text: string
   /**
    * Duration in seconds for one shimmer cycle.
    * @defaultValue 1
    */
-  duration?: number;
+  duration?: number
   /**
    * Pause the shimmer (e.g. when the hero leaves the viewport).
    * @defaultValue false
    */
-  paused?: boolean;
+  paused?: boolean
   /**
    * Legacy alias for `paused`.
    * @defaultValue false
    */
-  isStopped?: boolean;
-};
+  isStopped?: boolean
+}
 
 export function ShimmeringText({
   text,
@@ -35,8 +35,8 @@ export function ShimmeringText({
   className,
   ...props
 }: ShimmeringTextProps) {
-  const reducedMotion = useReducedMotion();
-  const stopped = isStopped || paused || reducedMotion === true;
+  const reducedMotion = useReducedMotion()
+  const stopped = isStopped || paused || reducedMotion === true
 
   const createCharVariants = useCallback(
     (charIndex: number): Variants => ({
@@ -60,12 +60,12 @@ export function ShimmeringText({
       },
     }),
     [duration, text.length]
-  );
+  )
 
   return (
     <motion.span
       className={cn(
-        "inline-flex select-none items-center leading-none",
+        "inline-flex items-center leading-none select-none",
         "[--color:var(--muted-foreground)] [--shimmering-color:var(--foreground)]",
         className
       )}
@@ -75,7 +75,7 @@ export function ShimmeringText({
         <motion.span
           animate={stopped ? "stopped" : "running"}
           aria-hidden
-          className="inline-block whitespace-pre leading-none"
+          className="inline-block leading-none whitespace-pre"
           initial="stopped"
           // biome-ignore lint/suspicious/noArrayIndexKey: static label text, order never changes
           key={index}
@@ -86,5 +86,5 @@ export function ShimmeringText({
       ))}
       <span className="sr-only">{text}</span>
     </motion.span>
-  );
+  )
 }

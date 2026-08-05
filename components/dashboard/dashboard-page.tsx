@@ -30,11 +30,7 @@ import {
   getMonthOverMonth,
   getPortfolioStats,
 } from "@/lib/portfolio"
-import {
-  monthBucketsForYear,
-  toStatPoints,
-  trendOf,
-} from "@/lib/stat-series"
+import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
 import type { Entry } from "@/lib/types"
@@ -48,9 +44,9 @@ export function DashboardPage() {
   // Subscribing re-renders every amount when the display currency changes.
   useSettings()
 
-  const [yearPendingDelete, setYearPendingDelete] = React.useState<number | null>(
-    null
-  )
+  const [yearPendingDelete, setYearPendingDelete] = React.useState<
+    number | null
+  >(null)
 
   function handleSelectYear(year: number) {
     setYears((prev) => (prev.includes(year) ? prev : [...prev, year]))
@@ -60,9 +56,7 @@ export function DashboardPage() {
   // Removes the year's entries as well as the tab — that data loss is what the
   // export prompt and hold-to-confirm in the dialog are guarding.
   function handleDeleteYear(year: number) {
-    setEntries((prev) =>
-      prev.filter((entry) => getEntryYear(entry) !== year)
-    )
+    setEntries((prev) => prev.filter((entry) => getEntryYear(entry) !== year))
     setYears((prev) => {
       const remaining = prev.filter((item) => item !== year)
       const next = remaining.length > 0 ? remaining : [CURRENT_YEAR]

@@ -42,7 +42,10 @@ const filters: { value: Filter; label: string }[] = [
 
 // Two letters from a multi-word name, otherwise the first three characters.
 function initials(name: string): string {
-  const words = name.replace(/[^\w\s]/g, " ").trim().split(/\s+/)
+  const words = name
+    .replace(/[^\w\s]/g, " ")
+    .trim()
+    .split(/\s+/)
   if (words.length > 1) {
     return (words[0][0] + words[1][0]).toUpperCase()
   }
@@ -65,21 +68,23 @@ export function GrowthContributors({ items }: { items: Contributor[] }) {
 
   const filtered = React.useMemo(() => {
     const query = search.trim().toLowerCase()
-    return items
-      .filter((item) => {
-        if (filter === "drainers" && item.net >= 0) return false
-        if (
-          (filter === "category" || filter === "source") &&
-          item.kind !== filter
-        ) {
-          return false
-        }
-        if (query && !item.name.toLowerCase().includes(query)) return false
-        return true
-      })
-      // Biggest movers first in either direction, so the heaviest drainers
-      // surface next to the strongest contributors.
-      .sort((a, b) => Math.abs(b.net) - Math.abs(a.net))
+    return (
+      items
+        .filter((item) => {
+          if (filter === "drainers" && item.net >= 0) return false
+          if (
+            (filter === "category" || filter === "source") &&
+            item.kind !== filter
+          ) {
+            return false
+          }
+          if (query && !item.name.toLowerCase().includes(query)) return false
+          return true
+        })
+        // Biggest movers first in either direction, so the heaviest drainers
+        // surface next to the strongest contributors.
+        .sort((a, b) => Math.abs(b.net) - Math.abs(a.net))
+    )
   }, [items, search, filter])
 
   // Collapse back to one page whenever the list being shown changes.

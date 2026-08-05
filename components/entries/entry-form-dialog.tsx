@@ -149,9 +149,7 @@ export function EntryFormDialog({
         tags,
         sourceId: existingSource?.id, // page fills this in for a new source
         amount,
-        p2p: isP2P
-          ? { direction, cashCurrency, rate, cashAmount }
-          : undefined,
+        p2p: isP2P ? { direction, cashCurrency, rate, cashAmount } : undefined,
         note: note.trim() ? note.trim() : undefined,
         attachments: attachments.length > 0 ? attachments : undefined,
       },
@@ -248,9 +246,7 @@ export function EntryFormDialog({
           </Field>
           {isNewSource ? (
             <div className="flex flex-col gap-4 rounded-lg border p-4">
-              <p className="text-sm font-medium">
-                New source: {sourceName}
-              </p>
+              <p className="text-sm font-medium">New source: {sourceName}</p>
               <div className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="source-handle">Social Handle</FieldLabel>

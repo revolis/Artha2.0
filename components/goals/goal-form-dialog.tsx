@@ -47,7 +47,8 @@ function detectPreset(goal: Goal | null): PeriodPreset {
   if (!goal?.startDate || !goal?.endDate) return "year"
   for (const preset of ["month", "quarter", "year"] as const) {
     const range = presetRange(preset)
-    if (goal.startDate === range.from && goal.endDate === range.to) return preset
+    if (goal.startDate === range.from && goal.endDate === range.to)
+      return preset
   }
   return "custom"
 }
@@ -93,8 +94,7 @@ export function GoalFormDialog({
 
   const targetAmount = Number(amountText.replace(/[^0-9.]/g, ""))
   const achievedAmount = Number(achievedText.replace(/[^0-9.]/g, "")) || 0
-  const validPeriod =
-    preset !== "custom" || (!!from && !!to && from <= to)
+  const validPeriod = preset !== "custom" || (!!from && !!to && from <= to)
   const canSave = name.trim().length > 0 && targetAmount > 0 && validPeriod
 
   function handleSave() {
@@ -119,7 +119,9 @@ export function GoalFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{goal ? "Edit goal" : "Set a new milestone"}</DialogTitle>
+          <DialogTitle>
+            {goal ? "Edit goal" : "Set a new milestone"}
+          </DialogTitle>
           <DialogDescription>
             {goal
               ? "Update your target and we'll re-pace your savings."

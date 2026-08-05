@@ -14,16 +14,40 @@ export interface AvatarPreset {
 }
 
 export const AVATAR_PRESETS: AvatarPreset[] = [
-  { id: "aurora", name: "Aurora", motif: "orbit", from: "#0f766e", to: "#22d3ee" },
-  { id: "ember", name: "Ember", motif: "bloom", from: "#9a3412", to: "#fb923c" },
-  { id: "indigo", name: "Indigo", motif: "prism", from: "#3730a3", to: "#818cf8" },
+  {
+    id: "aurora",
+    name: "Aurora",
+    motif: "orbit",
+    from: "#0f766e",
+    to: "#22d3ee",
+  },
+  {
+    id: "ember",
+    name: "Ember",
+    motif: "bloom",
+    from: "#9a3412",
+    to: "#fb923c",
+  },
+  {
+    id: "indigo",
+    name: "Indigo",
+    motif: "prism",
+    from: "#3730a3",
+    to: "#818cf8",
+  },
   { id: "moss", name: "Moss", motif: "wave", from: "#14532d", to: "#86efac" },
   { id: "slate", name: "Slate", motif: "grid", from: "#334155", to: "#94a3b8" },
   { id: "plum", name: "Plum", motif: "arc", from: "#6b21a8", to: "#e879f9" },
   { id: "gold", name: "Gold", motif: "bloom", from: "#92400e", to: "#fcd34d" },
   { id: "ocean", name: "Ocean", motif: "wave", from: "#0c4a6e", to: "#38bdf8" },
   { id: "rose", name: "Rose", motif: "orbit", from: "#9f1239", to: "#fda4af" },
-  { id: "graphite", name: "Graphite", motif: "prism", from: "#18181b", to: "#71717a" },
+  {
+    id: "graphite",
+    name: "Graphite",
+    motif: "prism",
+    from: "#18181b",
+    to: "#71717a",
+  },
   { id: "mint", name: "Mint", motif: "arc", from: "#065f46", to: "#5eead4" },
   { id: "sand", name: "Sand", motif: "grid", from: "#78350f", to: "#fde68a" },
 ]
@@ -39,7 +63,14 @@ function Motif({ motif }: { motif: AvatarMotif }) {
         <g fill="none" stroke="white" strokeOpacity="0.55" strokeWidth="3">
           <circle cx="32" cy="32" r="18" />
           <ellipse cx="32" cy="32" rx="26" ry="10" />
-          <circle cx="32" cy="32" r="5" fill="white" fillOpacity="0.9" stroke="none" />
+          <circle
+            cx="32"
+            cy="32"
+            r="5"
+            fill="white"
+            fillOpacity="0.9"
+            stroke="none"
+          />
         </g>
       )
     case "prism":
@@ -59,10 +90,24 @@ function Motif({ motif }: { motif: AvatarMotif }) {
     case "grid":
       return (
         <g fill="white">
-          <rect x="14" y="14" width="14" height="14" rx="3" fillOpacity="0.85" />
+          <rect
+            x="14"
+            y="14"
+            width="14"
+            height="14"
+            rx="3"
+            fillOpacity="0.85"
+          />
           <rect x="36" y="14" width="14" height="14" rx="3" fillOpacity="0.5" />
           <rect x="14" y="36" width="14" height="14" rx="3" fillOpacity="0.5" />
-          <rect x="36" y="36" width="14" height="14" rx="3" fillOpacity="0.85" />
+          <rect
+            x="36"
+            y="36"
+            width="14"
+            height="14"
+            rx="3"
+            fillOpacity="0.85"
+          />
         </g>
       )
     case "bloom":

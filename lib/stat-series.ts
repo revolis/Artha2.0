@@ -30,8 +30,7 @@ function emptyBuckets(
   granularity: "month" | "day"
 ): StatBucket[] {
   const buckets: StatBucket[] = []
-  const cursor =
-    granularity === "month" ? startOfMonth(from) : startOfDay(from)
+  const cursor = granularity === "month" ? startOfMonth(from) : startOfDay(from)
   const end = granularity === "month" ? startOfMonth(to) : startOfDay(to)
 
   while (cursor <= end) {
@@ -80,7 +79,9 @@ export function monthBucketsForYear(
 ): StatBucket[] {
   const from = new Date(year, 0, 1)
   const to =
-    year === now.getFullYear() ? new Date(year, now.getMonth(), 1) : new Date(year, 11, 1)
+    year === now.getFullYear()
+      ? new Date(year, now.getMonth(), 1)
+      : new Date(year, 11, 1)
   const inYear = entries.filter(
     (entry) => Number(entry.datetime.slice(0, 4)) === year
   )

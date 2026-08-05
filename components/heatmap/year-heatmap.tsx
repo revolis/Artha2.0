@@ -19,8 +19,18 @@ import type { Entry, Source } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ]
 
 // Per-day aggregation for the hover card: net decides the colour, the rest

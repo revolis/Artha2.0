@@ -49,11 +49,7 @@ import {
   getPortfolioInsights,
   getPortfolioStats,
 } from "@/lib/portfolio"
-import {
-  monthBucketsForYear,
-  toStatPoints,
-  trendOf,
-} from "@/lib/stat-series"
+import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import type { Entry } from "@/lib/types"
 import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
@@ -74,8 +70,7 @@ const INCOME_COLOR = "var(--chart-line-secondary)"
 
 // Accepts a Date (chart series) or an ISO day string (insight dates).
 function formatDay(value: Date | string): string {
-  const date =
-    typeof value === "string" ? new Date(`${value}T00:00:00`) : value
+  const date = typeof value === "string" ? new Date(`${value}T00:00:00`) : value
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
@@ -137,8 +132,7 @@ export function PortfolioPage() {
       const from = customFrom ? new Date(`${customFrom}T00:00:00`) : null
       const to = customTo ? new Date(`${customTo}T23:59:59`) : null
       return fullSeries.filter(
-        (point) =>
-          (!from || point.date >= from) && (!to || point.date <= to)
+        (point) => (!from || point.date >= from) && (!to || point.date <= to)
       )
     }
     const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90

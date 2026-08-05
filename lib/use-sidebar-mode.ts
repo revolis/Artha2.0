@@ -7,13 +7,16 @@ import * as React from "react"
 
 export type SidebarMode = "open" | "rail" | "hover" | "hidden"
 
-export const SIDEBAR_MODES: { value: SidebarMode; label: string; hint: string }[] =
-  [
-    { value: "open", label: "Always Open", hint: "Expanded with labels" },
-    { value: "rail", label: "Icon Rail", hint: "Icons only" },
-    { value: "hover", label: "Expand on Hover", hint: "Opens when pointed at" },
-    { value: "hidden", label: "Hide Sidebar", hint: "Off screen entirely" },
-  ]
+export const SIDEBAR_MODES: {
+  value: SidebarMode
+  label: string
+  hint: string
+}[] = [
+  { value: "open", label: "Always Open", hint: "Expanded with labels" },
+  { value: "rail", label: "Icon Rail", hint: "Icons only" },
+  { value: "hover", label: "Expand on Hover", hint: "Opens when pointed at" },
+  { value: "hidden", label: "Hide Sidebar", hint: "Off screen entirely" },
+]
 
 const STORAGE_KEY = "artha.sidebar-mode"
 const DEFAULT_MODE: SidebarMode = "open"
@@ -22,7 +25,12 @@ let cache: SidebarMode | null = null
 const listeners = new Set<() => void>()
 
 function isMode(value: string | null): value is SidebarMode {
-  return value === "open" || value === "rail" || value === "hover" || value === "hidden"
+  return (
+    value === "open" ||
+    value === "rail" ||
+    value === "hover" ||
+    value === "hidden"
+  )
 }
 
 function getSnapshot(): SidebarMode {

@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useState, type RefObject } from "react"
 
 const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+  typeof window !== "undefined" ? useLayoutEffect : useEffect
 
 /**
  * Measures a chart container. Replaces `@visx/responsive`'s ParentSize, which
@@ -14,42 +14,42 @@ const useIsomorphicLayoutEffect =
  * window-resize fallback for staying responsive.
  */
 export function useElementSize(ref: RefObject<HTMLDivElement | null>) {
-  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [size, setSize] = useState({ width: 0, height: 0 })
 
   useIsomorphicLayoutEffect(() => {
-    const element = ref.current;
+    const element = ref.current
     if (!element) {
-      return;
+      return
     }
 
     const measure = () => {
-      const rect = element.getBoundingClientRect();
+      const rect = element.getBoundingClientRect()
       setSize((previous) =>
         Math.abs(previous.width - rect.width) < 0.5 &&
         Math.abs(previous.height - rect.height) < 0.5
           ? previous
           : { width: rect.width, height: rect.height }
-      );
-    };
-
-    measure();
-    const frame = requestAnimationFrame(measure);
-    const timer = window.setTimeout(measure, 150);
-
-    let observer: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(measure);
-      observer.observe(element);
+      )
     }
-    window.addEventListener("resize", measure);
+
+    measure()
+    const frame = requestAnimationFrame(measure)
+    const timer = window.setTimeout(measure, 150)
+
+    let observer: ResizeObserver | undefined
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(measure)
+      observer.observe(element)
+    }
+    window.addEventListener("resize", measure)
 
     return () => {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(timer);
-      observer?.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [ref]);
+      cancelAnimationFrame(frame)
+      window.clearTimeout(timer)
+      observer?.disconnect()
+      window.removeEventListener("resize", measure)
+    }
+  }, [ref])
 
-  return size;
+  return size
 }

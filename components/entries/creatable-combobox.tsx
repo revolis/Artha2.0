@@ -86,9 +86,7 @@ export function CreatableCombobox({
                   value={option}
                   onSelect={() => select(option)}
                 >
-                  <Check
-                    className={cn(option !== value && "invisible")}
-                  />
+                  <Check className={cn(option !== value && "invisible")} />
                   {option}
                 </CommandItem>
               ))}
@@ -164,9 +162,7 @@ export function CreatableMultiCombobox({
               values.length === 0 && "text-muted-foreground"
             )}
           >
-            {values.length === 0
-              ? placeholder
-              : `${values.length} selected`}
+            {values.length === 0 ? placeholder : `${values.length} selected`}
           </span>
           <ChevronsUpDown data-icon="inline-end" className="opacity-50" />
         </PopoverTrigger>
@@ -216,7 +212,9 @@ export function CreatableMultiCombobox({
               <button
                 type="button"
                 aria-label={`Remove ${value}`}
-                onClick={() => onValuesChange(values.filter((v) => v !== value))}
+                onClick={() =>
+                  onValuesChange(values.filter((v) => v !== value))
+                }
                 className="flex items-center"
               >
                 <X className="size-3" />

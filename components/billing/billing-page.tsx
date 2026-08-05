@@ -2,7 +2,13 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { Check, Heart, Infinity as InfinityIcon, Sparkles, X } from "lucide-react"
+import {
+  Check,
+  Heart,
+  Infinity as InfinityIcon,
+  Sparkles,
+  X,
+} from "lucide-react"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
@@ -53,9 +59,21 @@ export function BillingPage() {
 
   // A real invoice, with real usage — it just never adds up to anything.
   const lineItems = [
-    { label: "Entries recorded", detail: `${entries.length} this account`, amount: 0 },
-    { label: "Sources tracked", detail: `${sources.length} platforms`, amount: 0 },
-    { label: "Goals in progress", detail: `${goals.length} targets`, amount: 0 },
+    {
+      label: "Entries recorded",
+      detail: `${entries.length} this account`,
+      amount: 0,
+    },
+    {
+      label: "Sources tracked",
+      detail: `${sources.length} platforms`,
+      amount: 0,
+    },
+    {
+      label: "Goals in progress",
+      detail: `${goals.length} targets`,
+      amount: 0,
+    },
     { label: "Reports exported", detail: "Unlimited", amount: 0 },
     { label: "Seats", detail: "Just you", amount: 0 },
   ]
@@ -85,8 +103,8 @@ export function BillingPage() {
 
           <p className="max-w-md text-sm text-muted-foreground">
             There is no paid tier to upgrade to, no trial counting down, and no
-            card on file. {SITE.name} is a personal project — everything in it is
-            yours to use.
+            card on file. {SITE.name} is a personal project — everything in it
+            is yours to use.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
@@ -121,7 +139,7 @@ export function BillingPage() {
                       {item.detail}
                     </span>
                   </div>
-                  <span className="text-sm font-medium tabular-nums text-muted-foreground">
+                  <span className="text-sm font-medium text-muted-foreground tabular-nums">
                     $0.00
                   </span>
                 </div>
@@ -132,7 +150,7 @@ export function BillingPage() {
 
             <div className="flex items-center justify-between gap-4">
               <span className="text-sm font-medium">Total due</span>
-              <span className="text-2xl font-semibold tabular-nums text-success">
+              <span className="text-2xl font-semibold text-success tabular-nums">
                 $0.00
               </span>
             </div>
@@ -151,7 +169,9 @@ export function BillingPage() {
                 <InfinityIcon className="size-4" />
                 What you get
               </CardTitle>
-              <CardDescription>All of it. There is no other tier.</CardDescription>
+              <CardDescription>
+                All of it. There is no other tier.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="flex flex-col gap-2">

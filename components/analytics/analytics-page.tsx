@@ -52,11 +52,7 @@ import {
   type PerformanceRow,
 } from "@/lib/analytics"
 import { formatMoney, getEntryYear, getNetAmount } from "@/lib/mock-data"
-import {
-  monthBucketsForYear,
-  toStatPoints,
-  trendOf,
-} from "@/lib/stat-series"
+import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
@@ -85,7 +81,13 @@ function formatDate(datetime: string): string {
   }).format(new Date(datetime))
 }
 
-function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+function DetailRow({
+  label,
+  value,
+}: {
+  label: string
+  value: React.ReactNode
+}) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-2">
       <span className="text-sm text-muted-foreground">{label}</span>
@@ -130,7 +132,10 @@ function MonthCard({
             </span>
             <Separator />
             <div className="flex flex-col divide-y">
-              <DetailRow label="Income" value={formatMoney(month.income, "USD")} />
+              <DetailRow
+                label="Income"
+                value={formatMoney(month.income, "USD")}
+              />
               <DetailRow
                 label="Expense"
                 value={formatMoney(month.expense, "USD")}
@@ -262,7 +267,7 @@ function BreakdownTable({
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Progress value={row.share} className="flex-1" />
-                  <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
+                  <span className="w-10 text-right text-xs text-muted-foreground tabular-nums">
                     {row.share.toFixed(0)}%
                   </span>
                 </div>
@@ -465,9 +470,7 @@ export function AnalyticsPage() {
                     <Cell
                       key={month.label}
                       fill={
-                        month.net >= 0
-                          ? "var(--success)"
-                          : "var(--destructive)"
+                        month.net >= 0 ? "var(--success)" : "var(--destructive)"
                       }
                     />
                   ))}

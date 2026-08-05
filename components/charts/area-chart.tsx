@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import type { Transition } from "motion/react";
+import type { Transition } from "motion/react"
 import {
   Children,
   type CSSProperties,
@@ -10,92 +10,92 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react";
-import { cn } from "@/lib/utils";
-import { Area, type AreaProps } from "./area";
-import { useElementSize } from "./use-element-size";
-import type { LineConfig, Margin } from "./chart-context";
-import { ChartLoadingLabel } from "./chart-loading-label";
+} from "react"
+import { cn } from "@/lib/utils"
+import { Area, type AreaProps } from "./area"
+import { useElementSize } from "./use-element-size"
+import type { LineConfig, Margin } from "./chart-context"
+import { ChartLoadingLabel } from "./chart-loading-label"
 import {
   type ChartPhase,
   type ChartStatus,
   DEFAULT_CHART_STATUS,
   DEFAULT_Y_DOMAIN_TWEEN_MS,
   resolveRestingChartPhase,
-} from "./chart-phase";
-import { PatternArea } from "./pattern-area";
-import { TimeSeriesChartInner } from "./time-series-chart-shell";
+} from "./chart-phase"
+import { PatternArea } from "./pattern-area"
+import { TimeSeriesChartInner } from "./time-series-chart-shell"
 
 export interface AreaChartProps {
   /** Data array - each item should have a date field and numeric values */
-  data: Record<string, unknown>[];
+  data: Record<string, unknown>[]
   /** Key in data for the x-axis (date). Default: "date" */
-  xDataKey?: string;
+  xDataKey?: string
   /** Chart margins */
-  margin?: Partial<Margin>;
+  margin?: Partial<Margin>
   /** Animation duration in milliseconds. Default: 1100 */
-  animationDuration?: number;
+  animationDuration?: number
   /** CSS easing for clip-reveal. Default: cubic-bezier(0.85, 0, 0.15, 1) */
-  animationEasing?: string;
+  animationEasing?: string
   /** Motion enter transition (spring or cubic-bezier tween). */
-  enterTransition?: Transition;
+  enterTransition?: Transition
   /** Signature of motion URL state — triggers reveal replay when it changes. */
-  revealSignature?: string;
+  revealSignature?: string
   /** Aspect ratio as "width / height". Default: "2 / 1" */
-  aspectRatio?: string;
+  aspectRatio?: string
   /** Additional class name for the container */
-  className?: string;
+  className?: string
   /** Loading vs ready — drives chart phase and loading chrome. Default: `"ready"`. */
-  status?: ChartStatus;
+  status?: ChartStatus
   /** Centered shimmer label while loading. */
-  loadingLabel?: string;
+  loadingLabel?: string
   /** Animate y-domain over this duration (ms) on status transitions. Default: 500. */
-  yDomainTweenDuration?: number;
+  yDomainTweenDuration?: number
   /** Animate y-domain when status or target domain changes. Default: true */
-  yDomainTween?: boolean;
+  yDomainTween?: boolean
   /** Visible x-domain for brush zoom. */
-  xDomain?: [Date, Date];
+  xDomain?: [Date, Date]
   /** Full dataset length for x-scale padding when `xDomain` is set. */
-  xDomainSlotCount?: number;
+  xDomainSlotCount?: number
   /** Tween y-domain when brush changes the visible x-range. Default: false */
-  tweenYDomainOnXDomainChange?: boolean;
+  tweenYDomainOnXDomainChange?: boolean
   /** Inline container styles (e.g. fixed height for brush strip). */
-  style?: CSSProperties;
+  style?: CSSProperties
   /** Fires when the internal chart phase changes (e.g. OG capture readiness). */
-  onPhaseChange?: (phase: ChartPhase) => void;
+  onPhaseChange?: (phase: ChartPhase) => void
   /** Child components (Area, Grid, ChartTooltip, etc.) */
-  children: ReactNode;
+  children: ReactNode
 }
 
-const DEFAULT_MARGIN: Margin = { top: 40, right: 40, bottom: 40, left: 40 };
+const DEFAULT_MARGIN: Margin = { top: 40, right: 40, bottom: 40, left: 40 }
 
 function extractAreaConfigs(children: ReactNode): LineConfig[] {
-  const configs: LineConfig[] = [];
+  const configs: LineConfig[] = []
 
   Children.forEach(children, (child) => {
     if (!isValidElement(child)) {
-      return;
+      return
     }
 
     const childType = child.type as {
-      displayName?: string;
-      name?: string;
-    };
+      displayName?: string
+      name?: string
+    }
     const componentName =
       typeof child.type === "function"
         ? childType.displayName || childType.name || ""
-        : "";
+        : ""
 
-    const props = child.props as AreaProps | undefined;
+    const props = child.props as AreaProps | undefined
     const isPatternArea =
-      componentName === "PatternArea" || child.type === PatternArea;
+      componentName === "PatternArea" || child.type === PatternArea
     const isAreaComponent =
       componentName === "Area" ||
       child.type === Area ||
       (props &&
         typeof props.dataKey === "string" &&
         props.dataKey.length > 0 &&
-        !isPatternArea);
+        !isPatternArea)
 
     if (isAreaComponent && props?.dataKey) {
       configs.push({
@@ -103,33 +103,33 @@ function extractAreaConfigs(children: ReactNode): LineConfig[] {
         stroke: props.stroke || props.fill || "var(--chart-line-primary)",
         strokeWidth: props.strokeWidth || 2,
         yAxisId: props.yAxisId,
-      });
+      })
     }
-  });
+  })
 
-  return configs;
+  return configs
 }
 
 interface ChartInnerProps {
-  width: number;
-  height: number;
-  data: Record<string, unknown>[];
-  xDataKey: string;
-  margin: Margin;
-  animationDuration: number;
-  animationEasing?: string;
-  enterTransition?: Transition;
-  revealSignature?: string;
-  chartStatus: ChartStatus;
-  loadingLabel?: string;
-  yDomainTweenDuration: number;
-  yDomainTween: boolean;
-  xDomain?: [Date, Date];
-  xDomainSlotCount?: number;
-  tweenYDomainOnXDomainChange?: boolean;
-  children: ReactNode;
-  containerRef: React.RefObject<HTMLDivElement | null>;
-  onPhaseChange: (phase: ChartPhase) => void;
+  width: number
+  height: number
+  data: Record<string, unknown>[]
+  xDataKey: string
+  margin: Margin
+  animationDuration: number
+  animationEasing?: string
+  enterTransition?: Transition
+  revealSignature?: string
+  chartStatus: ChartStatus
+  loadingLabel?: string
+  yDomainTweenDuration: number
+  yDomainTween: boolean
+  xDomain?: [Date, Date]
+  xDomainSlotCount?: number
+  tweenYDomainOnXDomainChange?: boolean
+  children: ReactNode
+  containerRef: React.RefObject<HTMLDivElement | null>
+  onPhaseChange: (phase: ChartPhase) => void
 }
 
 function ChartInner({
@@ -153,7 +153,7 @@ function ChartInner({
   containerRef,
   onPhaseChange,
 }: ChartInnerProps) {
-  const lines = useMemo(() => extractAreaConfigs(children), [children]);
+  const lines = useMemo(() => extractAreaConfigs(children), [children])
 
   return (
     <TimeSeriesChartInner
@@ -180,7 +180,7 @@ function ChartInner({
     >
       {children}
     </TimeSeriesChartInner>
-  );
+  )
 }
 
 export function AreaChart({
@@ -204,27 +204,27 @@ export function AreaChart({
   onPhaseChange,
   children,
 }: AreaChartProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const size = useElementSize(containerRef);
-  const margin = { ...DEFAULT_MARGIN, ...marginProp };
+  const containerRef = useRef<HTMLDivElement>(null)
+  const size = useElementSize(containerRef)
+  const margin = { ...DEFAULT_MARGIN, ...marginProp }
   const [chartPhase, setChartPhase] = useState<ChartPhase>(() =>
     resolveRestingChartPhase(status)
-  );
+  )
   const handlePhaseChange = useCallback(
     (phase: ChartPhase) => {
-      setChartPhase(phase);
-      onPhaseChange?.(phase);
+      setChartPhase(phase)
+      onPhaseChange?.(phase)
     },
     [onPhaseChange]
-  );
+  )
 
   const showLoadingLabel = Boolean(
     loadingLabel?.trim() &&
-      (chartPhase === "loading" ||
-        chartPhase === "exiting" ||
-        chartPhase === "gridTweenReady" ||
-        chartPhase === "revealingLoading")
-  );
+    (chartPhase === "loading" ||
+      chartPhase === "exiting" ||
+      chartPhase === "gridTweenReady" ||
+      chartPhase === "revealingLoading")
+  )
 
   return (
     <div
@@ -261,9 +261,9 @@ export function AreaChart({
         />
       ) : null}
     </div>
-  );
+  )
 }
 
-export { Area, type AreaProps } from "./area";
+export { Area, type AreaProps } from "./area"
 
-export default AreaChart;
+export default AreaChart

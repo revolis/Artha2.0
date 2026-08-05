@@ -8,12 +8,28 @@ import { getEntryYear, getNetAmount } from "@/lib/mock-data"
 import type { Entry } from "@/lib/types"
 
 const MONTH_LABELS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ]
 
 const WEEKDAY_LABELS = [
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
 ]
 
 export function isIncome(entry: Entry): boolean {
@@ -210,11 +226,7 @@ export function getWeekdayPerformance(
 }
 
 export type TrendTimeframe =
-  | "monthly"
-  | "quarterly"
-  | "6months"
-  | "yearly"
-  | "all"
+  "monthly" | "quarterly" | "6months" | "yearly" | "all"
 
 export interface TrendPoint {
   // Index signature so the array satisfies the chart's Record<string, unknown>.

@@ -41,5 +41,12 @@ export function useEntryData() {
     [setEntries, setSources]
   )
 
-  return { entries, setEntries, sources, categoryOptions, tagOptions, saveEntry }
+  return {
+    entries,
+    setEntries,
+    sources,
+    categoryOptions,
+    tagOptions,
+    saveEntry,
+  }
 }

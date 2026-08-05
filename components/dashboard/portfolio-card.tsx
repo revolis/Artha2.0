@@ -81,7 +81,7 @@ export function PortfolioCard({
             <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
               Gross Portfolio Value
             </span>
-            <span className="text-4xl font-semibold tabular-nums text-muted-foreground">
+            <span className="text-4xl font-semibold text-muted-foreground tabular-nums">
               {formatMoney(netIncome, "USD")}
             </span>
             <span className="text-sm text-muted-foreground">

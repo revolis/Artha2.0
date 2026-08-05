@@ -104,8 +104,14 @@ function formatEntryDate(datetime: string): { date: string; time: string } {
 export function P2PPage() {
   // Subscribing re-renders every amount when the display currency changes.
   useSettings()
-  const { entries, setEntries, sources, categoryOptions, tagOptions, saveEntry } =
-    useEntryData()
+  const {
+    entries,
+    setEntries,
+    sources,
+    categoryOptions,
+    tagOptions,
+    saveEntry,
+  } = useEntryData()
 
   const [timeframe, setTimeframe] = React.useState<Timeframe>("year")
   const [customFrom, setCustomFrom] = React.useState("")
@@ -143,7 +149,10 @@ export function P2PPage() {
   const currency = React.useMemo(() => {
     const counts = new Map<string, number>()
     for (const t of trades) {
-      counts.set(t.p2p!.cashCurrency, (counts.get(t.p2p!.cashCurrency) ?? 0) + 1)
+      counts.set(
+        t.p2p!.cashCurrency,
+        (counts.get(t.p2p!.cashCurrency) ?? 0) + 1
+      )
     }
     let best = "NPR"
     let bestCount = 0
@@ -179,16 +188,21 @@ export function P2PPage() {
         ? "month"
         : "day"
 
-    const sumWhere = (
-      match: (entry: Entry) => boolean,
-      pick: (entry: Entry) => number
-    ) => (rows: Entry[]) =>
-      rows.reduce((total, entry) => (match(entry) ? total + pick(entry) : total), 0)
+    const sumWhere =
+      (match: (entry: Entry) => boolean, pick: (entry: Entry) => number) =>
+      (rows: Entry[]) =>
+        rows.reduce(
+          (total, entry) => (match(entry) ? total + pick(entry) : total),
+          0
+        )
 
     const isSold = (entry: Entry) => entry.p2p?.direction === "usd-to-cash"
     const isBought = (entry: Entry) => entry.p2p?.direction === "cash-to-usd"
 
-    const soldSeries = toStatPoints(buckets, sumWhere(isSold, (e) => e.amount))
+    const soldSeries = toStatPoints(
+      buckets,
+      sumWhere(isSold, (e) => e.amount)
+    )
     const boughtSeries = toStatPoints(
       buckets,
       sumWhere(isBought, (e) => e.amount)

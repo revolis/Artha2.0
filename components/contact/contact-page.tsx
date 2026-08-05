@@ -77,7 +77,7 @@ export function ContactPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {sent ? (
-              <div className="flex items-start gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 animate-in fade-in-0 zoom-in-95">
+              <div className="flex animate-in items-start gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
                 <BadgeCheck className="mt-0.5 size-4 shrink-0 text-success" />
                 <div className="flex flex-col gap-1">
                   <span className="font-medium">Message sent</span>

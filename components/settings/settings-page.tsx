@@ -85,7 +85,12 @@ const NAV_ITEMS: SettingsNavItem[] = [
   { id: "general", label: "General", icon: Settings2 },
   { id: "appearance", label: "Appearance", icon: Palette },
   { id: "danger", label: "Danger zone", icon: ShieldAlert, destructive: true },
-  { id: "feedback", label: "Send feedback", icon: MessageSquare, startsGroup: true },
+  {
+    id: "feedback",
+    label: "Send feedback",
+    icon: MessageSquare,
+    startsGroup: true,
+  },
   { id: "help", label: "Help & support", icon: LifeBuoy },
   { id: "about", label: "About us", icon: Info },
 ]
@@ -125,7 +130,11 @@ function SettingRow({
 const emptySubscribe = () => () => {}
 
 function useMounted() {
-  return React.useSyncExternalStore(emptySubscribe, () => true, () => false)
+  return React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
 }
 
 export function SettingsPage() {
@@ -179,16 +188,20 @@ export function SettingsPage() {
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <SettingsNav items={NAV_ITEMS} active={section} onSelect={setSection} />
+          <SettingsNav
+            items={NAV_ITEMS}
+            active={section}
+            onSelect={setSection}
+          />
         </div>
 
         {/* Keyed so switching sections remounts and replays the enter animation. */}
         <div
           key={section}
-          className="flex min-w-0 flex-col gap-6 duration-300 animate-in fade-in-0 slide-in-from-bottom-2"
+          className="flex min-w-0 animate-in flex-col gap-6 duration-300 fade-in-0 slide-in-from-bottom-2"
         >
           {notice ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 animate-in fade-in-0">
+            <div className="flex animate-in items-center gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 fade-in-0">
               <BadgeCheck className="size-4 shrink-0 text-success" />
               {notice}
             </div>
@@ -385,7 +398,10 @@ export function SettingsPage() {
                         <SelectContent>
                           <SelectGroup>
                             {LANGUAGE_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -457,7 +473,10 @@ export function SettingsPage() {
                         <SelectContent>
                           <SelectGroup>
                             {CURRENCY_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -549,7 +568,7 @@ export function SettingsPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 {feedbackSent ? (
-                  <div className="flex items-center gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 animate-in fade-in-0 zoom-in-95">
+                  <div className="flex animate-in items-center gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
                     <BadgeCheck className="size-4 shrink-0 text-success" />
                     Thanks — that has been noted. We read every message.
                   </div>
@@ -650,7 +669,10 @@ export function SettingsPage() {
                     <MessageSquare data-icon="inline-start" />
                     Contact support
                   </Button>
-                  <Button variant="ghost" onClick={() => router.push("/reports")}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => router.push("/reports")}
+                  >
                     <Download data-icon="inline-start" />
                     Export my data
                   </Button>
@@ -695,7 +717,10 @@ export function SettingsPage() {
                 <div className="flex flex-col divide-y">
                   {[
                     { label: "Entry method", value: "Manual only" },
-                    { label: "Currencies", value: "USD, NPR, INR, EUR, GBP, AED" },
+                    {
+                      label: "Currencies",
+                      value: "USD, NPR, INR, EUR, GBP, AED",
+                    },
                     { label: "Exports", value: "PDF, CSV, JSON" },
                     { label: "Data location", value: "This browser, for now" },
                   ].map((row) => (

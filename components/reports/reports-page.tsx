@@ -155,7 +155,9 @@ export function ReportsPage() {
 
   const categoryItems = React.useMemo(() => {
     const names = Array.from(
-      new Set(entries.map((entry) => entry.category).filter(Boolean) as string[])
+      new Set(
+        entries.map((entry) => entry.category).filter(Boolean) as string[]
+      )
     ).sort()
     return [
       { value: "", label: "All categories (grouped)" },
@@ -182,7 +184,8 @@ export function ReportsPage() {
         if (customFrom && day < customFrom) return false
         if (customTo && day > customTo) return false
       }
-      if (scope in TYPE_SCOPES && entry.type !== TYPE_SCOPES[scope]) return false
+      if (scope in TYPE_SCOPES && entry.type !== TYPE_SCOPES[scope])
+        return false
       if (scope === "category" && scopeValue && entry.category !== scopeValue) {
         return false
       }
@@ -200,7 +203,8 @@ export function ReportsPage() {
   )
 
   const scopeLabel = React.useMemo(() => {
-    const base = scopeItems.find((item) => item.value === scope)?.label ?? "Report"
+    const base =
+      scopeItems.find((item) => item.value === scope)?.label ?? "Report"
     if (scope === "category" && scopeValue) return `Category — ${scopeValue}`
     if (scope === "source" && scopeValue) {
       return `Source — ${sourceById.get(scopeValue) ?? scopeValue}`

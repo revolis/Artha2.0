@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import { useChart } from "@/components/charts";
-import { useEffect } from "react";
-import type { StatCardHoverState } from "./stat-card-chart";
+import { useChart } from "@/components/charts"
+import { useEffect } from "react"
+import type { StatCardHoverState } from "./stat-card-chart"
 
-export type { StatCardHoverState } from "./stat-card-chart";
+export type { StatCardHoverState } from "./stat-card-chart"
 
 export function formatStatCardMonth(date: Date) {
-  return date.toLocaleDateString("en-US", { month: "short" });
+  return date.toLocaleDateString("en-US", { month: "short" })
 }
 
 export function formatStatCardWeekday(date: Date) {
-  return date.toLocaleDateString("en-US", { weekday: "long" });
+  return date.toLocaleDateString("en-US", { weekday: "long" })
 }
 
 function parsePointDate(raw: unknown): Date | null {
   if (raw instanceof Date) {
-    return raw;
+    return raw
   }
   if (typeof raw === "string") {
-    return new Date(raw);
+    return new Date(raw)
   }
-  return null;
+  return null
 }
 
 function computePeriodTrend(
@@ -30,21 +30,21 @@ function computePeriodTrend(
   dataKey: string
 ): number | null {
   if (index <= 0) {
-    return null;
+    return null
   }
 
-  const current = data[index]?.[dataKey];
-  const previous = data[index - 1]?.[dataKey];
+  const current = data[index]?.[dataKey]
+  const previous = data[index - 1]?.[dataKey]
 
   if (
     typeof current !== "number" ||
     typeof previous !== "number" ||
     previous === 0
   ) {
-    return null;
+    return null
   }
 
-  return ((current - previous) / previous) * 100;
+  return ((current - previous) / previous) * 100
 }
 
 /** Syncs hovered chart values, labels, and trend into stat card UI. */
@@ -54,27 +54,27 @@ export function StatCardHoverBridge({
   formatLabel,
   onHoverChange,
 }: {
-  dataKey: string;
-  dateKey?: string;
-  formatLabel: (date: Date) => string;
-  onHoverChange: (state: StatCardHoverState) => void;
+  dataKey: string
+  dateKey?: string
+  formatLabel: (date: Date) => string
+  onHoverChange: (state: StatCardHoverState) => void
 }) {
-  const { data, tooltipData } = useChart();
+  const { data, tooltipData } = useChart()
 
   useEffect(() => {
     if (!tooltipData?.point) {
-      onHoverChange({ value: null, label: null, trend: null });
-      return;
+      onHoverChange({ value: null, label: null, trend: null })
+      return
     }
 
-    const raw = tooltipData.point[dataKey];
-    const value = typeof raw === "number" ? raw : null;
-    const date = parsePointDate(tooltipData.point[dateKey]);
-    const label = date ? formatLabel(date) : null;
-    const trend = computePeriodTrend(data, tooltipData.index, dataKey);
+    const raw = tooltipData.point[dataKey]
+    const value = typeof raw === "number" ? raw : null
+    const date = parsePointDate(tooltipData.point[dateKey])
+    const label = date ? formatLabel(date) : null
+    const trend = computePeriodTrend(data, tooltipData.index, dataKey)
 
-    onHoverChange({ value, label, trend });
-  }, [data, dataKey, dateKey, formatLabel, onHoverChange, tooltipData]);
+    onHoverChange({ value, label, trend })
+  }, [data, dataKey, dateKey, formatLabel, onHoverChange, tooltipData])
 
-  return null;
+  return null
 }

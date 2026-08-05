@@ -22,7 +22,10 @@ export function TrendBadge({
 
   return (
     <Badge
-      className={cn(positive && "border-success/20 bg-success/10 text-success", className)}
+      className={cn(
+        positive && "border-success/20 bg-success/10 text-success",
+        className
+      )}
       variant={positive ? "outline" : "destructive"}
     >
       {positive ? (

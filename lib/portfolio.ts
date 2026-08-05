@@ -162,8 +162,7 @@ export function getPortfolioStats(
         break
     }
   }
-  stats.netIncome =
-    stats.grossIncome - stats.loss - stats.fees - stats.taxes
+  stats.netIncome = stats.grossIncome - stats.loss - stats.fees - stats.taxes
   stats.portfolioValue = stats.netIncome - stats.cashOut + stats.cashIn
   return stats
 }

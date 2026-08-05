@@ -119,9 +119,7 @@ export function OtpDialog({
                 setError(null)
               }}
             />
-            {error ? (
-              <p className="text-sm text-destructive">{error}</p>
-            ) : null}
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </Field>
 
           {/* Stand-in for the email that a backend would send. */}
