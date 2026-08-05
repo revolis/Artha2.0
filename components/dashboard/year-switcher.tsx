@@ -59,11 +59,13 @@ export function YearSwitcher({
           Add Year
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel className="px-3 pt-2 text-xs text-muted-foreground">
-            Scroll up for past, down for upcoming
-          </DropdownMenuLabel>
           <ScrollArea className="h-56">
+            {/* The label must live inside the group — Base UI throws if a
+                group part is rendered without a Group ancestor. */}
             <DropdownMenuGroup className="p-1">
+              <DropdownMenuLabel className="px-3 pt-2 text-xs text-muted-foreground">
+                Scroll up for past, down for upcoming
+              </DropdownMenuLabel>
               {pickableYears.map((year) => (
                 <DropdownMenuItem
                   key={year}

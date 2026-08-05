@@ -223,8 +223,10 @@ export function AppSidebar({
             <PanelLeft />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel>Sidebar</DropdownMenuLabel>
+            {/* The label must live inside the group — Base UI throws if a
+                group part is rendered without a Group ancestor. */}
             <DropdownMenuGroup>
+              <DropdownMenuLabel>Sidebar</DropdownMenuLabel>
               {SIDEBAR_MODES.map((option) => (
                 <DropdownMenuItem
                   key={option.value}
