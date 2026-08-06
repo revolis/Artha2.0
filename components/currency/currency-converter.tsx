@@ -1,7 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { ArrowUpDown, Pencil, TrendingDown, TrendingUp } from "lucide-react"
+import {
+  ArrowUpDown,
+  CalendarClock,
+  Pencil,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react"
 
 import { RateSparkline } from "@/components/currency/rate-sparkline"
 import { Badge } from "@/components/ui/badge"
@@ -27,17 +33,18 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { RateEditor } from "@/components/currency/rate-editor"
 import {
+  buildRateHistory,
   CURRENCY_NAMES,
   formatAmountNumber,
+  formatDate,
   formatRateNumber,
-  getRate,
-  getRateHistory,
   RATE_RANGES,
   type RateRange,
 } from "@/lib/rates"
 import type { Currency } from "@/lib/types"
-import { useSettings } from "@/lib/use-settings"
+import { daysSince, rateFor, useRates } from "@/lib/use-rates"
 import { cn } from "@/lib/utils"
 
 const CURRENCIES: Currency[] = ["USD", "NPR", "INR", "EUR", "GBP", "AED"]
@@ -105,12 +112,18 @@ function CurrencyField({
 }
 
 /**
- * Converts between any two currencies, either at the stored rate or at a rate
- * the user types in themselves — handy for pricing a P2P trade before logging
- * it. The chart is generated sample history until the daily sync is wired up.
+ * Converts between any two currencies, either at the recorded rate or at a
+ * rate the user types in themselves — handy for pricing a P2P trade before
+ * logging it. Also where the day's rates are checked and updated.
  */
 export function CurrencyConverter({ className }: { className?: string }) {
-  const { settings } = useSettings()
+  const {
+    rates,
+    updatedAt,
+    history: readings,
+    saveRates,
+    resetRates,
+  } = useRates()
 
   const [from, setFrom] = React.useState<Currency>("USD")
   const [to, setTo] = React.useState<Currency>("NPR")
@@ -119,7 +132,7 @@ export function CurrencyConverter({ className }: { className?: string }) {
   const [customRate, setCustomRate] = React.useState("")
   const [range, setRange] = React.useState<RateRange>("1y")
 
-  const liveRate = getRate(from, to)
+  const liveRate = rateFor(rates, from, to)
   const parsedCustom = Number(customRate)
   const customValid = useCustomRate && parsedCustom > 0
   const rate = customValid ? parsedCustom : liveRate
@@ -129,9 +142,13 @@ export function CurrencyConverter({ className }: { className?: string }) {
 
   const days = RATE_RANGES.find((item) => item.value === range)?.days ?? 365
   const history = React.useMemo(
-    () => getRateHistory(from, to, days, settings.rateUpdatedAt),
-    [from, to, days, settings.rateUpdatedAt]
+    () => buildRateHistory(readings, from, to, days, updatedAt),
+    [readings, from, to, days, updatedAt]
   )
+
+  // Nudge to record a fresh reading once the stored ones are a day old.
+  const age = daysSince(updatedAt)
+  const stale = age >= 1
 
   const changePercent =
     history.length > 1
@@ -158,15 +175,23 @@ export function CurrencyConverter({ className }: { className?: string }) {
           <div className="flex flex-col gap-1">
             <CardTitle>Currency Converter</CardTitle>
             <CardDescription>
-              Convert at the stored rate, or punch in your own.
+              Today&apos;s rates, and a calculator that uses them.
             </CardDescription>
           </div>
-          {customValid ? (
-            <Badge variant="secondary" className="gap-1">
-              <Pencil className="size-3" />
-              Custom rate
-            </Badge>
-          ) : null}
+          <div className="flex items-center gap-2">
+            {stale ? (
+              <Badge variant="outline" className="gap-1">
+                <CalendarClock className="size-3" />
+                {age === 1 ? "Rates from yesterday" : `Rates ${age} days old`}
+              </Badge>
+            ) : null}
+            {customValid ? (
+              <Badge variant="secondary" className="gap-1">
+                <Pencil className="size-3" />
+                Custom rate
+              </Badge>
+            ) : null}
+          </div>
         </div>
       </CardHeader>
 
@@ -184,8 +209,8 @@ export function CurrencyConverter({ className }: { className?: string }) {
             </span>
             <span className="text-xs text-muted-foreground">
               {customValid
-                ? "Your own rate — the stored rate is untouched."
-                : `Stored rate, last updated ${new Date(`${settings.rateUpdatedAt}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}.`}
+                ? "Your own rate — the recorded rate is untouched."
+                : `Recorded ${formatDate(updatedAt)}${age === 0 ? " — today" : age === 1 ? " — yesterday" : ` — ${age} days ago`}.`}
             </span>
           </div>
 
@@ -315,14 +340,29 @@ export function CurrencyConverter({ className }: { className?: string }) {
             <div className="flex h-24 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
               Pick two different currencies
             </div>
+          ) : history.length < 2 ? (
+            <div className="flex h-24 items-center justify-center rounded-xl border border-dashed px-4 text-center text-sm text-muted-foreground">
+              Only one reading in this period — record a few more days to see a
+              line.
+            </div>
           ) : (
             <RateSparkline points={history} />
           )}
 
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Sample history for now. Once the backend is connected, rates refresh
-            once a day and this chart shows the real thing.
+            Drawn from {history.length} recorded{" "}
+            {history.length === 1 ? "reading" : "readings"} — real rates only,
+            nothing estimated in between.
           </p>
+        </div>
+
+        <div className="lg:col-span-2">
+          <RateEditor
+            rates={rates}
+            onSave={(next) => saveRates(next)}
+            onReset={resetRates}
+            stale={stale}
+          />
         </div>
       </CardContent>
     </Card>

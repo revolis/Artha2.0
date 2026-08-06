@@ -22,7 +22,6 @@ export interface NotificationPref {
 export interface AppSettings {
   /** Currency every amount on the site is displayed in. */
   displayCurrency: Currency
-  rateUpdatedAt: string
   language: string
   timezone: string
   timeFormat: TimeFormat

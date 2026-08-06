@@ -11,12 +11,12 @@ English — the builder is not a programmer, so all explanations stay simple.
 
 ## Pages
 
-| Route        | Purpose                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------- |
-| `/`          | Landing — what Artha is, feature highlights, about, get in touch                             |
-| `/login`     | Auth screens — Register, Login, Forgot password (visual only for now)                        |
+| Route        | Purpose                                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------- |
+| `/`          | Landing — what Artha is, feature highlights, about, get in touch                                              |
+| `/login`     | Auth screens — Register, Login, Forgot password (visual only for now)                                         |
 | `/dashboard` | The main product — professional & premium feel: goals, charts, pie charts, recent entries, portfolio, heatmap |
-| `/settings`  | Customization, profile, currency choice, export/import data                                  |
+| `/settings`  | Customization, profile, currency choice, export/import data                                                   |
 
 More pages may be added while building.
 
@@ -47,8 +47,8 @@ shapes so that wiring up a real backend later is a swap, not a rewrite.
 Plain-English notes follow each shape.
 
 ```ts
-type Currency = "NPR" | "USD";
-type AssetType = "crypto" | "stock" | "cash";
+type Currency = "NPR" | "USD"
+type AssetType = "crypto" | "stock" | "cash"
 ```
 
 ### UserProfile
@@ -57,24 +57,24 @@ Who you are. Used on `/settings` and the dashboard header.
 
 ```ts
 interface UserProfile {
-  id: string;
-  username: string;       // platform handle, e.g. "rajan" → artha.app/@rajan
-  name: string;           // "Rajan"
-  email: string;
-  avatarUrl?: string;     // uploaded photo, stored as a data URL
-  avatarId?: string;      // id of a built-in preset avatar, used when no photo
-  bio?: string;
-  location?: string;
-  timezone?: string;
-  website?: string;
-  socials: SocialLink[];
-  createdAt: string;      // ISO date, e.g. "2026-08-04"
+  id: string
+  username: string // platform handle, e.g. "rajan" → artha.app/@rajan
+  name: string // "Rajan"
+  email: string
+  avatarUrl?: string // uploaded photo, stored as a data URL
+  avatarId?: string // id of a built-in preset avatar, used when no photo
+  bio?: string
+  location?: string
+  timezone?: string
+  website?: string
+  socials: SocialLink[]
+  createdAt: string // ISO date, e.g. "2026-08-04"
 }
 
 interface SocialLink {
-  id: string;
-  platform: string;       // free text: "X", "GitHub", "Telegram"…
-  url: string;
+  id: string
+  platform: string // free text: "X", "GitHub", "Telegram"…
+  url: string
 }
 ```
 
@@ -84,27 +84,54 @@ Your preferences. Lives on `/settings`.
 
 ```ts
 interface AppSettings {
-  displayCurrency: Currency; // every amount on the site is shown in this
-  rateUpdatedAt: string;     // when the USD→NPR rate was last refreshed
-  language: string;
-  timezone: string;
-  timeFormat: "12h" | "24h";
-  notifications: Record<NotificationKey, { inApp: boolean; email: boolean }>;
-  privacyMode: boolean;      // masks every amount on screen (the header's eye button)
-  loginMethod: "google" | "password";
-  hasPassword: boolean;
-  twoFactor: boolean;
+  displayCurrency: Currency // every amount on the site is shown in this
+  language: string
+  timezone: string
+  timeFormat: "12h" | "24h"
+  notifications: Record<NotificationKey, { inApp: boolean; email: boolean }>
+  privacyMode: boolean // masks every amount on screen (the header's eye button)
+  loginMethod: "google" | "password"
+  hasPassword: boolean
+  twoFactor: boolean
 }
 ```
 
 Theme is owned by next-themes, not stored here.
 
-> Decided: exchange rates will be **synced once a day** (added later, in the
-> functionality phase). Google has no public rates API and its results can't be
-> scraped, so the sync will use a free rates feed instead — the numbers are the
-> same ones Google shows, since both come from the interbank market. Until
-> then, `USD_RATES` in `lib/mock-data.ts` holds fixed sample rates and the
-> Currency Converter lets you type your own rate for any one-off calculation.
+### Exchange rates
+
+Rates are **real, never invented**. They live outside the mock data:
+
+```ts
+type RateTable = Record<Currency, number> // units per 1 USD
+
+interface RateSnapshot {
+  date: string // ISO date the rates applied on
+  rates: RateTable
+}
+
+interface RateState {
+  rates: RateTable // what every conversion on the site uses
+  updatedAt: string // ISO date the current rates were recorded
+  history: RateSnapshot[] // every reading, oldest first
+}
+```
+
+- `lib/rate-data.ts` — the seeded real rates and 13 months of real monthly
+  readings, sourced from the daily currency-api dataset. USD/NPR is 152.03,
+  the mid-market rate on 5 Aug 2026.
+- `lib/use-rates.ts` — the live store (localStorage), and the only writer of
+  the module-level rate table that `convertCurrency` / `formatMoney` read.
+- The Currency Converter shows today's rates and records new ones. One
+  reading per date; saving twice in a day replaces the earlier one.
+- The chart plots recorded readings only — no interpolation, so a sparse
+  history simply draws fewer points.
+
+> Decided: rates will be **synced once a day** in the functionality phase.
+> Google has no public rates API and its page can't be scraped, so the sync
+> will use a free rates feed — the same interbank numbers Google quotes.
+> Until then the user records rates by hand from the converter, which is also
+> the fallback if a sync ever fails.
 
 ### Entry (the core object)
 
@@ -112,26 +139,26 @@ Every manual addition is an Entry. The entries table, charts, heatmap, and
 average monthly income are all built from these.
 
 ```ts
-type EntryType = "profit" | "loss" | "p2p" | "fee" | "tax" | "transfer";
+type EntryType = "profit" | "loss" | "p2p" | "fee" | "tax" | "transfer"
 
 interface Entry {
-  id: string;
-  datetime: string;        // ISO date + time, auto-filled with "now" in the form
-  type: EntryType;
-  category?: string;       // free-form, create-or-pick: "Binance Alpha", "Prediction Market"…
-  tags: string[];          // free-form, create-or-pick
-  sourceId?: string;       // references a Source
-  amount: number;          // always positive, in USD — sign comes from `type`
-  p2p?: P2PDetails;        // only on type "p2p" (shown as Fiat/P2P)
-  note?: string;
-  attachments?: string[];  // image file names (design phase — not uploaded anywhere)
+  id: string
+  datetime: string // ISO date + time, auto-filled with "now" in the form
+  type: EntryType
+  category?: string // free-form, create-or-pick: "Binance Alpha", "Prediction Market"…
+  tags: string[] // free-form, create-or-pick
+  sourceId?: string // references a Source
+  amount: number // always positive, in USD — sign comes from `type`
+  p2p?: P2PDetails // only on type "p2p" (shown as Fiat/P2P)
+  note?: string
+  attachments?: string[] // image file names (design phase — not uploaded anywhere)
 }
 
 interface P2PDetails {
-  direction: "usd-to-cash" | "cash-to-usd"; // sold USD vs bought USD
-  cashCurrency: string;    // e.g. "NPR" (default)
-  rate: number;            // cash units per 1 USD, entered manually
-  cashAmount: number;      // amount × rate, auto-calculated
+  direction: "usd-to-cash" | "cash-to-usd" // sold USD vs bought USD
+  cashCurrency: string // e.g. "NPR" (default)
+  rate: number // cash units per 1 USD, entered manually
+  cashAmount: number // amount × rate, auto-calculated
 }
 ```
 
@@ -142,11 +169,11 @@ Created inline while adding an entry, managed later on the Sources page.
 
 ```ts
 interface Source {
-  id: string;
-  name: string;            // "Binance", "Local P2P — Ram"
-  socialHandle?: string;   // "@binance"
-  platformUrl?: string;    // link to the platform
-  campaignUrl?: string;    // link to the specific campaign/airdrop
+  id: string
+  name: string // "Binance", "Local P2P — Ram"
+  socialHandle?: string // "@binance"
+  platformUrl?: string // link to the platform
+  campaignUrl?: string // link to the specific campaign/airdrop
 }
 ```
 
@@ -154,15 +181,15 @@ interface Source {
 
 Current market price for each asset you hold, so the portfolio can show today's
 value and profit/loss. **Always entered manually** — no price syncing, ever.
-Only the USD↔NPR exchange rate (in Settings) gets a daily sync, later.
+Only exchange rates get a daily sync, later — see Exchange rates above.
 
 ```ts
 interface AssetPrice {
-  symbol: string;         // "BTC"
-  assetType: AssetType;
-  currentPrice: number;
-  currency: Currency;
-  updatedAt: string;
+  symbol: string // "BTC"
+  assetType: AssetType
+  currentPrice: number
+  currency: Currency
+  updatedAt: string
 }
 ```
 
@@ -173,15 +200,15 @@ directly. Powers the portfolio table and pie chart.
 
 ```ts
 interface Holding {
-  symbol: string;
-  assetName: string;
-  assetType: AssetType;
-  quantity: number;       // total bought minus total sold
-  avgBuyPrice: number;
-  currentValue: number;   // quantity × current price
-  profitLoss: number;     // currentValue minus what you paid
-  profitLossPct: number;  // same, as a percentage
-  currency: Currency;
+  symbol: string
+  assetName: string
+  assetType: AssetType
+  quantity: number // total bought minus total sold
+  avgBuyPrice: number
+  currentValue: number // quantity × current price
+  profitLoss: number // currentValue minus what you paid
+  profitLossPct: number // same, as a percentage
+  currency: Currency
 }
 ```
 
@@ -191,16 +218,16 @@ Savings/wealth targets shown on the dashboard.
 
 ```ts
 interface Goal {
-  id: string;
-  title: string;          // "Emergency fund", "New laptop"
-  targetAmount: number;
-  currentAmount: number;
-  currency: Currency;
-  startDate?: string;     // period start (ISO) — goals can span days, months, a quarter, a year…
-  endDate?: string;       // period end (ISO)
-  completedAt?: string;   // ISO date the goal was reached, if it has been
-  showOnDashboard?: boolean; // pinned to the dashboard's goals section
-  color?: string;         // theme chart token, e.g. "chart-1" — for the progress ring
+  id: string
+  title: string // "Emergency fund", "New laptop"
+  targetAmount: number
+  currentAmount: number
+  currency: Currency
+  startDate?: string // period start (ISO) — goals can span days, months, a quarter, a year…
+  endDate?: string // period end (ISO)
+  completedAt?: string // ISO date the goal was reached, if it has been
+  showOnDashboard?: boolean // pinned to the dashboard's goals section
+  color?: string // theme chart token, e.g. "chart-1" — for the progress ring
 }
 ```
 

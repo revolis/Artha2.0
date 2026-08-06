@@ -74,6 +74,7 @@ function buildNotifications(
   goals: Goal[],
   entries: Entry[],
   settings: AppSettings,
+  rateUpdatedAt: string,
   now: Date
 ): AppNotification[] {
   const items: AppNotification[] = []
@@ -148,11 +149,11 @@ function buildNotifications(
   })
 
   items.push({
-    id: `rate-${settings.rateUpdatedAt}`,
+    id: `rate-${rateUpdatedAt}`,
     kind: "rate",
-    title: "Exchange rate updated",
-    body: "The USD to NPR reference rate was refreshed.",
-    datetime: settings.rateUpdatedAt,
+    title: "Exchange rates updated",
+    body: `Rates were last recorded on ${rateUpdatedAt}.`,
+    datetime: rateUpdatedAt,
     href: "/settings",
   })
 
@@ -182,7 +183,8 @@ export function timeAgo(datetime: string, now = new Date()): string {
 export function useNotifications(
   goals: Goal[],
   entries: Entry[],
-  settings: AppSettings
+  settings: AppSettings,
+  rateUpdatedAt: string
 ) {
   const read = React.useSyncExternalStore(
     subscribe,
@@ -192,8 +194,9 @@ export function useNotifications(
 
   // A stable "now" per render pass keeps the derived list from churning.
   const notifications = React.useMemo(
-    () => buildNotifications(goals, entries, settings, new Date()),
-    [goals, entries, settings]
+    () =>
+      buildNotifications(goals, entries, settings, rateUpdatedAt, new Date()),
+    [goals, entries, settings, rateUpdatedAt]
   )
 
   const readSet = React.useMemo(() => new Set(read), [read])

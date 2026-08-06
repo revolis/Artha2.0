@@ -1,6 +1,7 @@
 // Mock data for the design phase. No backend — everything the UI shows
 // comes from here (seeded into localStorage-backed stores by lib/local-store.ts).
 
+import { SEED_RATES, type RateTable } from "@/lib/rate-data"
 import type {
   AppSettings,
   Currency,
@@ -28,20 +29,8 @@ export const mockUser: UserProfile = {
   createdAt: "2024-01-15",
 }
 
-// Units of each currency per 1 USD. Only the USD↔NPR pair is meant to sync
-// daily later; the rest are fixed reference rates for the design phase.
-export const USD_RATES: Record<Currency, number> = {
-  USD: 1,
-  NPR: 139.5,
-  INR: 83.2,
-  EUR: 0.92,
-  GBP: 0.78,
-  AED: 3.67,
-}
-
 export const mockSettings: AppSettings = {
   displayCurrency: "USD",
-  rateUpdatedAt: "2026-08-04",
   language: "en",
   timezone: "Asia/Kathmandu",
   timeFormat: "12h",
@@ -64,6 +53,18 @@ export const mockSettings: AppSettings = {
 // user's choice without each one having to thread settings through.
 let displayCurrency: Currency = mockSettings.displayCurrency
 let privacyMode = mockSettings.privacyMode
+
+// The rates every conversion uses. Starts at the seeded real rates and is
+// replaced whenever the user records a newer set (see lib/use-rates.ts).
+let activeRates: RateTable = { ...SEED_RATES }
+
+export function setActiveRates(next: RateTable) {
+  activeRates = next
+}
+
+export function getActiveRates(): RateTable {
+  return activeRates
+}
 
 export function setDisplayCurrency(currency: Currency) {
   displayCurrency = currency
@@ -323,7 +324,7 @@ export function getAvgMonthlyIncome(
 }
 
 export function convertFromUsd(amountUsd: number, to: Currency): number {
-  return amountUsd * USD_RATES[to]
+  return amountUsd * activeRates[to]
 }
 
 export function convertCurrency(
@@ -332,7 +333,7 @@ export function convertCurrency(
   to: Currency
 ): number {
   if (from === to) return amount
-  return (amount / USD_RATES[from]) * USD_RATES[to]
+  return (amount / activeRates[from]) * activeRates[to]
 }
 
 const CURRENCY_LOCALES: Record<Currency, string> = {

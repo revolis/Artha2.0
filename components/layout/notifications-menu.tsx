@@ -27,6 +27,7 @@ import {
 } from "@/lib/use-notifications"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
+import { useRates } from "@/lib/use-rates"
 import { useSettings } from "@/lib/use-settings"
 import { cn } from "@/lib/utils"
 
@@ -53,8 +54,9 @@ export function NotificationsMenu() {
   const { goals } = useGoals()
   const { entries } = useEntryData()
   const { settings } = useSettings()
+  const { updatedAt } = useRates()
   const { notifications, readSet, unreadCount, markAllRead, markRead } =
-    useNotifications(goals, entries, settings)
+    useNotifications(goals, entries, settings, updatedAt)
   const [open, setOpen] = React.useState(false)
 
   function openItem(id: string, href: string) {
