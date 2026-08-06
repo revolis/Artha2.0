@@ -38,7 +38,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -80,6 +80,7 @@ import {
   useSettings,
 } from "@/lib/use-settings"
 import type { Currency, TimeFormat } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 const NAV_ITEMS: SettingsNavItem[] = [
   { id: "security", label: "Security", icon: ShieldCheck },
@@ -235,7 +236,18 @@ export function SettingsPage() {
                       </span>
                     </div>
                   </div>
-                  <Badge variant="secondary">Current sign-in method</Badge>
+                  {/* Signing out lives with the sign-in details rather than
+                      in a card of its own. */}
+                  <InteractiveHoverButton
+                    onClick={() => setSignOutOpen(true)}
+                    className={cn(
+                      "border-destructive/40 text-destructive",
+                      "[&>div:first-child>div]:bg-destructive",
+                      "[&>div:last-child]:text-destructive-foreground"
+                    )}
+                  >
+                    Sign out
+                  </InteractiveHoverButton>
                 </div>
 
                 {!settings.hasPassword ? (
@@ -502,29 +514,6 @@ export function SettingsPage() {
               </Card>
 
               <CurrencyConverter />
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Session</CardTitle>
-                  <CardDescription>
-                    Signed in as {profile.email}.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <SettingRow
-                    title="Sign out"
-                    description="Ends this session and returns you to the home page. Nothing you've saved is removed."
-                  >
-                    <Button
-                      variant="outline"
-                      onClick={() => setSignOutOpen(true)}
-                    >
-                      <LogOut data-icon="inline-start" />
-                      Sign out
-                    </Button>
-                  </SettingRow>
-                </CardContent>
-              </Card>
             </>
           ) : null}
 
