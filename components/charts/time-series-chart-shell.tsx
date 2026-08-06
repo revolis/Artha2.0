@@ -113,8 +113,10 @@ function resolveTimeSeriesYDomain(
 
   // "auto" fits the domain to the data instead of anchoring at zero, so a
   // running total that never goes near zero still fills the plot height.
+  // The padding stays small on purpose: every extra unit of range squeezes
+  // the space between lines that run close together.
   if (yBaseline === "auto" && minValue !== maxValue) {
-    const padding = (maxValue - minValue) * 0.08
+    const padding = (maxValue - minValue) * 0.03
     return [minValue - padding, maxValue + padding]
   }
 

@@ -346,6 +346,11 @@ export function PortfolioPage() {
                 className="w-full"
                 style={{ aspectRatio: "auto", height: 300 }}
                 margin={{ top: 24, right: 24, bottom: 32, left: 24 }}
+                // Same treatment as the dashboard card: fit the axis to the
+                // balance instead of anchoring at zero, and land on a new
+                // scale immediately when the range changes.
+                yBaseline="auto"
+                yDomainTween={false}
               >
                 <Grid horizontal />
                 <XAxis />

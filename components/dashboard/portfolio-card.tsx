@@ -31,10 +31,52 @@ const INCOME_COLOR = "var(--chart-line-secondary)"
 interface PortfolioCardProps {
   series: DualSeriesPoint[]
   momentum: MonthOverMonth
+  /** The same month-on-month comparison, before cash moved in or out. */
+  grossMomentum: MonthOverMonth
   /** Net income before any cash moved in or out. */
   netIncome: number
   cashOut: number
   cashIn: number
+}
+
+/** The month-on-month move, stated plainly rather than badged. */
+function Momentum({ momentum }: { momentum: MonthOverMonth }) {
+  const up = momentum.change >= 0
+
+  if (momentum.change === 0) {
+    return (
+      <span className="text-xs text-muted-foreground">
+        No change yet this month
+      </span>
+    )
+  }
+
+  return (
+    <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+      <span
+        className={cn(
+          "flex items-center gap-1 font-medium tabular-nums",
+          up ? "text-success" : "text-destructive"
+        )}
+      >
+        {up ? (
+          <TrendingUp className="size-3.5" />
+        ) : (
+          <TrendingDown className="size-3.5" />
+        )}
+        {momentum.percent !== null
+          ? `${up ? "+" : "−"}${Math.abs(momentum.percent).toFixed(2)}%`
+          : `${up ? "+" : "−"}${formatMoney(Math.abs(momentum.change), "USD")}`}
+      </span>
+      {momentum.percent !== null ? (
+        <span className="tabular-nums">
+          {up ? "+" : "−"}
+          {formatMoney(Math.abs(momentum.change), "USD")}
+        </span>
+      ) : null}
+      <span>vs last month</span>
+    </span>
+  )
 }
 
 /** Big figure with the cash-movement breakdown tucked behind a hover. */
@@ -91,17 +133,18 @@ function ValueStat({
 export function PortfolioCard({
   series,
   momentum,
+  grossMomentum,
   netIncome,
   cashOut,
   cashIn,
 }: PortfolioCardProps) {
-  const [range, setRange] = React.useState<PortfolioRange>("3m")
+  // A month keeps the axis tight — the wider the window, the further apart
+  // the highest and lowest values, and the closer together the two lines look.
+  const [range, setRange] = React.useState<PortfolioRange>("1m")
 
   const days =
     PORTFOLIO_RANGES.find((item) => item.value === range)?.days ?? null
   const visible = React.useMemo(() => sliceSeries(series, days), [series, days])
-
-  const up = momentum.change >= 0
 
   return (
     <Card size="sm">
@@ -114,37 +157,7 @@ export function PortfolioCard({
             cashIn={cashIn}
             explanation="What you hold after money moved to and from cash."
           >
-            {/* The month-on-month move, stated plainly rather than badged. */}
-            {momentum.change === 0 ? (
-              <span className="text-xs text-muted-foreground">
-                No change yet this month
-              </span>
-            ) : (
-              <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                <span
-                  className={cn(
-                    "flex items-center gap-1 font-medium tabular-nums",
-                    up ? "text-success" : "text-destructive"
-                  )}
-                >
-                  {up ? (
-                    <TrendingUp className="size-3.5" />
-                  ) : (
-                    <TrendingDown className="size-3.5" />
-                  )}
-                  {momentum.percent !== null
-                    ? `${up ? "+" : "−"}${Math.abs(momentum.percent).toFixed(2)}%`
-                    : `${up ? "+" : "−"}${formatMoney(Math.abs(momentum.change), "USD")}`}
-                </span>
-                {momentum.percent !== null ? (
-                  <span className="tabular-nums">
-                    {up ? "+" : "−"}
-                    {formatMoney(Math.abs(momentum.change), "USD")}
-                  </span>
-                ) : null}
-                <span>vs last month</span>
-              </span>
-            )}
+            <Momentum momentum={momentum} />
           </ValueStat>
 
           {/* The same year before any cash left or entered, so the gap between
@@ -156,7 +169,9 @@ export function PortfolioCard({
             cashOut={cashOut}
             cashIn={cashIn}
             explanation="Profit minus loss, fees and tax — before any cash moved."
-          />
+          >
+            <Momentum momentum={grossMomentum} />
+          </ValueStat>
 
           <Button
             variant="ghost"

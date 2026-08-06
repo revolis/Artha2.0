@@ -106,6 +106,11 @@ export function DashboardPage() {
     [entries, selectedYear]
   )
   const momentum = React.useMemo(() => getMonthOverMonth(series), [series])
+  // The same comparison for the figure before cash moved in or out.
+  const grossMomentum = React.useMemo(
+    () => getMonthOverMonth(series, "netIncome"),
+    [series]
+  )
   const stats = React.useMemo(
     () => getPortfolioStats(entries, selectedYear),
     [entries, selectedYear]
@@ -208,6 +213,7 @@ export function DashboardPage() {
       <PortfolioCard
         series={series}
         momentum={momentum}
+        grossMomentum={grossMomentum}
         netIncome={stats.netIncome}
         cashOut={stats.cashOut}
         cashIn={stats.cashIn}
