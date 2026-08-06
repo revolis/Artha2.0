@@ -62,7 +62,7 @@ export function CategoryContribution({
   const leader = slices[0]
 
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader>
         <CardTitle>Category contribution</CardTitle>
         <CardDescription>
@@ -71,7 +71,7 @@ export function CategoryContribution({
             : `No income recorded for ${year}`}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col items-center gap-6">
+      <CardContent className="flex flex-col items-center gap-4">
         {pieData.length === 0 ? (
           <p className="self-start text-sm text-muted-foreground">
             Add entries with a category to see how your income splits up.
@@ -84,8 +84,8 @@ export function CategoryContribution({
               data={pieData}
               hoveredIndex={hoveredIndex}
               onHoverChange={setHoveredIndex}
-              size={220}
-              innerRadius={70}
+              size={196}
+              innerRadius={62}
               padAngle={0.02}
               cornerRadius={4}
             >
@@ -102,16 +102,20 @@ export function CategoryContribution({
               />
             </PieChart>
 
+            {/* Two columns of single-line rows. Left to itself the legend
+                stacks each marker above its label, which made it taller than
+                the chart it belongs to. */}
             <Legend
-              className="w-full"
+              className="grid w-full gap-x-3 gap-y-0.5 sm:grid-cols-2"
               hoveredIndex={hoveredIndex}
               items={pieData}
               onHoverChange={setHoveredIndex}
             >
-              <LegendItem>
-                <LegendMarker />
-                <LegendLabel />
+              <LegendItem className="flex min-w-0 items-center gap-2 px-1.5 py-1">
+                <LegendMarker className="size-2 shrink-0" />
+                <LegendLabel className="truncate text-xs font-medium" />
                 <LegendValue
+                  className="ml-auto text-xs tabular-nums"
                   formatValue={(value) =>
                     totalIncome > 0
                       ? `${((value / totalIncome) * 100).toFixed(0)}%`

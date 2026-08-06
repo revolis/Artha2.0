@@ -60,8 +60,8 @@ function TrendChart({
       data={data}
       xDataKey="label"
       className="w-full"
-      aspectRatio="5 / 2"
-      margin={{ top: 24, right: 16, bottom: 36, left: 56 }}
+      aspectRatio="8 / 3"
+      margin={{ top: 16, right: 16, bottom: 32, left: 52 }}
       barGap={0.28}
     >
       <Grid horizontal />
@@ -114,7 +114,7 @@ export function NetPLTrend({
     timeframes.find((item) => item.value === timeframe)?.label ?? "Monthly"
 
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader>
         <CardTitle>Net P/L trend</CardTitle>
         <CardDescription>Timeframe: {activeLabel}</CardDescription>
@@ -123,7 +123,7 @@ export function NetPLTrend({
         <Tabs
           value={timeframe}
           onValueChange={(value) => setTimeframe(value as TrendTimeframe)}
-          className="flex flex-col gap-6"
+          className="flex flex-col gap-4"
         >
           <TabsList className="w-fit max-w-full overflow-x-auto">
             {timeframes.map((item) => (
@@ -143,7 +143,7 @@ export function NetPLTrend({
           ))}
         </Tabs>
 
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-xs">
+        <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
           <span className="flex items-center gap-1.5">
             <span
               aria-hidden
