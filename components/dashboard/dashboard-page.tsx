@@ -35,6 +35,7 @@ import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
 import type { Entry } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -185,7 +186,18 @@ export function DashboardPage() {
               <ArrowRight data-icon="inline-end" />
             </Button>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {/* One or two pinned goals sit centred rather than stranded on the
+              left; three or more fill the row as a normal grid. The max widths
+              keep the card roughly the same size whichever way it lands. */}
+          <div
+            className={cn(
+              "grid gap-4",
+              pinnedGoals.length === 1 && "mx-auto w-full max-w-xs",
+              pinnedGoals.length === 2 &&
+                "mx-auto w-full max-w-2xl sm:grid-cols-2",
+              pinnedGoals.length >= 3 && "md:grid-cols-2 xl:grid-cols-3"
+            )}
+          >
             {pinnedGoals.map((goal) => (
               <GoalCard key={goal.id} goal={goal} />
             ))}

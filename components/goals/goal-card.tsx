@@ -58,8 +58,8 @@ export function GoalCard({ goal, actions }: GoalCardProps) {
   const [hovered, setHovered] = React.useState<SliceKey | null>(null)
 
   return (
-    <Card size="sm" className="gap-3">
-      <CardContent className="relative flex flex-col items-center gap-3">
+    <Card size="sm" className="gap-2.5">
+      <CardContent className="relative flex flex-col items-center gap-2.5">
         {actions ? (
           <div className="absolute top-0 right-(--card-spacing) z-10">
             <DropdownMenu>
@@ -123,14 +123,22 @@ export function GoalCard({ goal, actions }: GoalCardProps) {
           className="mt-1"
         />
 
-        {/* Name and period sit under the arc, quietly. */}
-        <div className="flex w-full flex-col items-center gap-0.5 text-center">
-          <span className="max-w-full truncate text-sm font-semibold tracking-tight">
-            {goal.title}
-          </span>
-          <span className="text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
-            {formatPeriod(goal)}
-          </span>
+        {/* Target leads, then a rule, then the name and period — quietly. */}
+        <div className="flex w-full flex-col gap-2">
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="text-muted-foreground">Target</span>
+            <span className="font-bold tabular-nums">
+              {formatMoney(goal.targetAmount, goal.currency)}
+            </span>
+          </div>
+          <div className="flex flex-col items-center gap-0.5 border-t pt-2 text-center">
+            <span className="max-w-full truncate text-sm font-semibold tracking-tight">
+              {goal.title}
+            </span>
+            <span className="text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+              {formatPeriod(goal)}
+            </span>
+          </div>
         </div>
 
         {/* Legend doubles as the figures table — one row per part of the arc,
@@ -146,7 +154,7 @@ export function GoalCard({ goal, actions }: GoalCardProps) {
               onFocus={() => setHovered(slice.key)}
               onBlur={() => setHovered(null)}
               className={cn(
-                "flex items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs transition-all duration-200 outline-none",
+                "flex items-center gap-2 rounded-md px-1.5 py-0.5 text-left text-xs transition-all duration-200 outline-none",
                 hovered === slice.key && "bg-accent",
                 hovered !== null && hovered !== slice.key && "opacity-40"
               )}
@@ -165,12 +173,6 @@ export function GoalCard({ goal, actions }: GoalCardProps) {
               </span>
             </button>
           ))}
-          <div className="mt-1 flex items-center gap-2 border-t px-1.5 pt-2 text-xs">
-            <span className="text-muted-foreground">Target</span>
-            <span className="ml-auto font-medium tabular-nums">
-              {formatMoney(goal.targetAmount, goal.currency)}
-            </span>
-          </div>
         </div>
       </CardContent>
     </Card>

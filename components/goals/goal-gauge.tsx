@@ -274,7 +274,7 @@ export function GoalGauge({
       // zero size before a resize lands. The aspect ratio matches the viewBox
       // exactly, which keeps the floating label's percentage position true.
       className={cn(
-        "relative mx-auto w-full max-w-[200px]",
+        "relative mx-auto w-full max-w-[188px]",
         "aspect-[260/213]",
         className
       )}
