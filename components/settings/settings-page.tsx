@@ -24,6 +24,7 @@ import {
   TriangleAlert,
 } from "lucide-react"
 
+import { CurrencyConverter } from "@/components/currency/currency-converter"
 import { OtpDialog, generateOtp } from "@/components/settings/otp-dialog"
 import {
   SettingsNav,
@@ -373,125 +374,133 @@ export function SettingsPage() {
           ) : null}
 
           {section === "general" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>General</CardTitle>
-                <CardDescription>
-                  Language, region and how figures are shown.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FieldGroup>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field>
-                      <FieldLabel htmlFor="language">Language</FieldLabel>
-                      <Select
-                        items={LANGUAGE_OPTIONS}
-                        value={settings.language}
-                        onValueChange={(value) =>
-                          updateSettings({ language: value as string })
-                        }
-                      >
-                        <SelectTrigger id="language">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {LANGUAGE_OPTIONS.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </Field>
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>General</CardTitle>
+                  <CardDescription>
+                    Language, region and how figures are shown.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FieldGroup>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field>
+                        <FieldLabel htmlFor="language">Language</FieldLabel>
+                        <Select
+                          items={LANGUAGE_OPTIONS}
+                          value={settings.language}
+                          onValueChange={(value) =>
+                            updateSettings({ language: value as string })
+                          }
+                        >
+                          <SelectTrigger id="language">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              {LANGUAGE_OPTIONS.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </Field>
 
-                    <Field>
-                      <FieldLabel htmlFor="tz">Timezone</FieldLabel>
-                      <Select
-                        items={TIMEZONE_OPTIONS.map((zone) => ({
-                          value: zone,
-                          label: zone,
-                        }))}
-                        value={settings.timezone}
-                        onValueChange={(value) =>
-                          updateSettings({ timezone: value as string })
-                        }
-                      >
-                        <SelectTrigger id="tz">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {TIMEZONE_OPTIONS.map((zone) => (
-                              <SelectItem key={zone} value={zone}>
-                                {zone}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </Field>
+                      <Field>
+                        <FieldLabel htmlFor="tz">Timezone</FieldLabel>
+                        <Select
+                          items={TIMEZONE_OPTIONS.map((zone) => ({
+                            value: zone,
+                            label: zone,
+                          }))}
+                          value={settings.timezone}
+                          onValueChange={(value) =>
+                            updateSettings({ timezone: value as string })
+                          }
+                        >
+                          <SelectTrigger id="tz">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              {TIMEZONE_OPTIONS.map((zone) => (
+                                <SelectItem key={zone} value={zone}>
+                                  {zone}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </Field>
 
-                    <Field>
-                      <FieldLabel htmlFor="time-format">Time format</FieldLabel>
-                      <ToggleGroup
-                        id="time-format"
-                        variant="outline"
-                        value={[settings.timeFormat]}
-                        onValueChange={(value: string[]) => {
-                          if (value[0]) {
+                      <Field>
+                        <FieldLabel htmlFor="time-format">
+                          Time format
+                        </FieldLabel>
+                        <ToggleGroup
+                          id="time-format"
+                          variant="outline"
+                          value={[settings.timeFormat]}
+                          onValueChange={(value: string[]) => {
+                            if (value[0]) {
+                              updateSettings({
+                                timeFormat: value[0] as TimeFormat,
+                              })
+                            }
+                          }}
+                        >
+                          <ToggleGroupItem value="12h">12-hour</ToggleGroupItem>
+                          <ToggleGroupItem value="24h">24-hour</ToggleGroupItem>
+                        </ToggleGroup>
+                      </Field>
+
+                      <Field>
+                        <FieldLabel htmlFor="currency">
+                          Display currency
+                        </FieldLabel>
+                        <Select
+                          items={CURRENCY_OPTIONS}
+                          value={settings.displayCurrency}
+                          onValueChange={(value) =>
                             updateSettings({
-                              timeFormat: value[0] as TimeFormat,
+                              displayCurrency: value as Currency,
                             })
                           }
-                        }}
-                      >
-                        <ToggleGroupItem value="12h">12-hour</ToggleGroupItem>
-                        <ToggleGroupItem value="24h">24-hour</ToggleGroupItem>
-                      </ToggleGroup>
-                    </Field>
+                        >
+                          <SelectTrigger id="currency">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              {CURRENCY_OPTIONS.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Every amount across Artha is shown in this currency —
+                          e.g. {formatMoney(1000, "USD")}.
+                        </p>
+                      </Field>
+                    </div>
+                  </FieldGroup>
+                </CardContent>
+              </Card>
 
-                    <Field>
-                      <FieldLabel htmlFor="currency">
-                        Display currency
-                      </FieldLabel>
-                      <Select
-                        items={CURRENCY_OPTIONS}
-                        value={settings.displayCurrency}
-                        onValueChange={(value) =>
-                          updateSettings({ displayCurrency: value as Currency })
-                        }
-                      >
-                        <SelectTrigger id="currency">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {CURRENCY_OPTIONS.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground">
-                        Every amount across Artha is shown in this currency —
-                        e.g. {formatMoney(1000, "USD")}.
-                      </p>
-                    </Field>
-                  </div>
-                </FieldGroup>
-              </CardContent>
-            </Card>
+              <CurrencyConverter />
+            </>
           ) : null}
 
           {section === "appearance" ? (

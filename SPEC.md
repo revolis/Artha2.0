@@ -99,8 +99,12 @@ interface AppSettings {
 
 Theme is owned by next-themes, not stored here.
 
-> Decided: the USD→NPR rate will be **synced daily** (added later, in the
-> functionality phase). Until then, mock data uses a fixed rate.
+> Decided: exchange rates will be **synced once a day** (added later, in the
+> functionality phase). Google has no public rates API and its results can't be
+> scraped, so the sync will use a free rates feed instead — the numbers are the
+> same ones Google shows, since both come from the interbank market. Until
+> then, `USD_RATES` in `lib/mock-data.ts` holds fixed sample rates and the
+> Currency Converter lets you type your own rate for any one-off calculation.
 
 ### Entry (the core object)
 

@@ -11,6 +11,7 @@ import { StatCard } from "@/components/stats/stat-card"
 import { NetPLTrend } from "@/components/dashboard/net-pl-trend"
 import { PortfolioCard } from "@/components/dashboard/portfolio-card"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
+import { CurrencyConverter } from "@/components/currency/currency-converter"
 import { YearSwitcher } from "@/components/dashboard/year-switcher"
 import { EntryFormDialog } from "@/components/entries/entry-form-dialog"
 import { GoalCard } from "@/components/goals/goal-card"
@@ -231,6 +232,8 @@ export function DashboardPage() {
         <NetPLTrend entries={entries} year={selectedYear} />
         <CategoryContribution entries={entries} year={selectedYear} />
       </div>
+
+      <CurrencyConverter />
 
       <RecentTransactions
         entries={yearEntries}
