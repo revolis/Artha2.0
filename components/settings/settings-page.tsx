@@ -11,6 +11,7 @@ import {
   Info,
   KeyRound,
   LifeBuoy,
+  LogOut,
   Mail,
   MessageSquare,
   Monitor,
@@ -154,6 +155,7 @@ export function SettingsPage() {
   const [passwordOpen, setPasswordOpen] = React.useState(false)
   const [emailOpen, setEmailOpen] = React.useState(false)
   const [deleteOpen, setDeleteOpen] = React.useState(false)
+  const [signOutOpen, setSignOutOpen] = React.useState(false)
 
   const [newPassword, setNewPassword] = React.useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
@@ -500,6 +502,29 @@ export function SettingsPage() {
               </Card>
 
               <CurrencyConverter />
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Session</CardTitle>
+                  <CardDescription>
+                    Signed in as {profile.email}.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <SettingRow
+                    title="Sign out"
+                    description="Ends this session and returns you to the home page. Nothing you've saved is removed."
+                  >
+                    <Button
+                      variant="outline"
+                      onClick={() => setSignOutOpen(true)}
+                    >
+                      <LogOut data-icon="inline-start" />
+                      Sign out
+                    </Button>
+                  </SettingRow>
+                </CardContent>
+              </Card>
             </>
           ) : null}
 
@@ -917,6 +942,36 @@ export function SettingsPage() {
               }}
             >
               Continue to delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ------------------------------------------------------- Sign out */}
+      <Dialog open={signOutOpen} onOpenChange={setSignOutOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LogOut className="size-4" />
+              Sign out of Artha?
+            </DialogTitle>
+            <DialogDescription>
+              You&apos;ll be taken back to the home page. Your entries, goals
+              and settings all stay exactly as they are.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSignOutOpen(false)}>
+              Stay signed in
+            </Button>
+            <Button
+              onClick={() => {
+                setSignOutOpen(false)
+                router.push("/")
+              }}
+            >
+              <LogOut data-icon="inline-start" />
+              Sign out
             </Button>
           </DialogFooter>
         </DialogContent>
