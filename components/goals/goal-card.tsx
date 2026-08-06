@@ -30,9 +30,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Progress } from "@/components/ui/progress"
+import { GoalGauge, SLICE_FILL } from "@/components/goals/goal-gauge"
 import {
-  getGoalPercent,
+  getGoalSlices,
   getGoalStatus,
   isGoalCompleted,
   type GoalStatusTone,
@@ -79,24 +79,26 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, actions }: GoalCardProps) {
-  const percent = getGoalPercent(goal)
-  const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
   const status = getGoalStatus(goal)
   const StatusIcon = statusIcons[status.tone]
+  const slices = getGoalSlices(goal)
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-1.5">
-          {goal.title}
+        {/* Period sits above as a quiet eyebrow so the name carries the card. */}
+        <CardDescription className="text-[10px] font-medium tracking-[0.16em] uppercase">
+          {formatPeriod(goal)}
+        </CardDescription>
+        <CardTitle className="flex items-center gap-1.5 text-base tracking-tight">
+          <span className="truncate">{goal.title}</span>
           {goal.showOnDashboard ? (
             <Pin
-              className="size-3.5 text-muted-foreground"
+              className="size-3.5 shrink-0 text-muted-foreground"
               aria-label="Shown on dashboard"
             />
           ) : null}
         </CardTitle>
-        <CardDescription>{formatPeriod(goal)}</CardDescription>
         {actions ? (
           <CardAction>
             <DropdownMenu>
@@ -154,33 +156,31 @@ export function GoalCard({ goal, actions }: GoalCardProps) {
         ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="flex items-baseline justify-between">
-          <span className="text-sm text-muted-foreground">Progress</span>
-          <span className="text-lg font-semibold">
-            {percent.toFixed(percent > 0 && percent < 1 ? 1 : 0)}%
-          </span>
-        </div>
-        <Progress value={percent} />
-        <div className="grid grid-cols-3 gap-2">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-muted-foreground">Achieved</span>
-            <span className="text-sm font-medium">
-              {formatMoney(goal.currentAmount, goal.currency)}
-            </span>
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-muted-foreground">Remaining</span>
-            <span className="text-sm font-medium">
-              {formatMoney(remaining, goal.currency)}
-            </span>
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-muted-foreground">Target</span>
-            <span className="text-sm font-medium">
+        <GoalGauge goal={goal} />
+
+        {/* Legend doubles as the figures table — one row per part of the arc. */}
+        <div className="flex flex-col gap-1.5">
+          {slices.map((slice) => (
+            <div key={slice.key} className="flex items-center gap-2 text-xs">
+              <span
+                aria-hidden
+                className="size-2 shrink-0 rounded-full"
+                style={{ background: SLICE_FILL[slice.key] }}
+              />
+              <span className="text-muted-foreground">{slice.label}</span>
+              <span className="ml-auto font-medium tabular-nums">
+                {formatMoney(slice.amount, goal.currency)}
+              </span>
+            </div>
+          ))}
+          <div className="mt-1 flex items-center gap-2 border-t pt-2 text-xs">
+            <span className="text-muted-foreground">Target</span>
+            <span className="ml-auto font-medium tabular-nums">
               {formatMoney(goal.targetAmount, goal.currency)}
             </span>
           </div>
         </div>
+
         <div
           className={cn(
             "flex items-center gap-1.5 text-xs",

@@ -11,6 +11,63 @@ export function getGoalPercent(goal: Goal): number {
   return Math.min(100, (goal.currentAmount / goal.targetAmount) * 100)
 }
 
+/** Unclamped — goes past 100 when the goal was overshot. */
+export function getGoalRawPercent(goal: Goal): number {
+  if (goal.targetAmount <= 0) return 0
+  return (goal.currentAmount / goal.targetAmount) * 100
+}
+
+export interface GoalSlice {
+  key: "completed" | "remaining" | "exceed"
+  label: string
+  amount: number
+  /** Share of the target, so 120 means 20% past it. */
+  percent: number
+}
+
+/**
+ * The goal split into the parts the gauge draws. "exceed" only appears once
+ * the goal is past its target, and "remaining" disappears at that point.
+ */
+export function getGoalSlices(goal: Goal): GoalSlice[] {
+  const target = Math.max(0, goal.targetAmount)
+  const current = Math.max(0, goal.currentAmount)
+  const raw = getGoalRawPercent(goal)
+
+  const completed = Math.min(current, target)
+  const remaining = Math.max(0, target - current)
+  const exceed = Math.max(0, current - target)
+
+  const slices: GoalSlice[] = [
+    {
+      key: "completed",
+      label: "Completed",
+      amount: completed,
+      percent: Math.min(raw, 100),
+    },
+  ]
+
+  if (remaining > 0) {
+    slices.push({
+      key: "remaining",
+      label: "Remaining",
+      amount: remaining,
+      percent: Math.max(0, 100 - raw),
+    })
+  }
+
+  if (exceed > 0) {
+    slices.push({
+      key: "exceed",
+      label: "Exceeded",
+      amount: exceed,
+      percent: raw - 100,
+    })
+  }
+
+  return slices
+}
+
 export function isGoalCompleted(goal: Goal): boolean {
   return goal.targetAmount > 0 && goal.currentAmount >= goal.targetAmount
 }
