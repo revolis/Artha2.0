@@ -1,16 +1,17 @@
 "use client"
 
 // Notifications for the design phase. Nothing is pushed from a server — the
-// list is derived from the data already on the device (goals, entries,
-// settings) and filtered by the user's in-app notification preferences.
-// Which ones have been read is remembered in localStorage.
+// list is derived from the data already on the device (goals, entries, rates)
+// and filtered by the user's in-app notification preferences. Which ones have
+// been read is remembered in localStorage.
 
 import * as React from "react"
 
-import { formatMoney } from "@/lib/mock-data"
+import { formatMoney, getNetAmount } from "@/lib/mock-data"
 import type { AppSettings, Entry, Goal, NotificationKey } from "@/lib/types"
 
-export type NotificationKind = "goal" | "entry" | "report" | "rate"
+export type NotificationKind =
+  "goal" | "entry" | "report" | "rate" | "summary" | "news"
 
 export interface AppNotification {
   id: string
@@ -62,24 +63,56 @@ function writeRead(next: string[]) {
   for (const listener of listeners) listener()
 }
 
-/** Which preference switch decides whether a kind of notification shows. */
+/**
+ * Which preference switch decides whether a kind of notification shows.
+ * Every key in Settings → Notifications appears here — if one didn't, its
+ * switch would silently do nothing.
+ */
 const KIND_PREFS: Record<NotificationKind, NotificationKey> = {
   goal: "goalMilestones",
   entry: "largeEntries",
   report: "monthlyReport",
   rate: "rateSync",
+  summary: "weeklySummary",
+  news: "productNews",
+}
+
+/** What's new in Artha. Fixed dates so the list doesn't shuffle about. */
+const PRODUCT_NEWS: {
+  id: string
+  date: string
+  title: string
+  body: string
+}[] = [
+  {
+    id: "news-live-rates",
+    date: "2026-08-06",
+    title: "Live exchange rates",
+    body: "The Fiat Currency card now pulls today's market rates and applies them across the site.",
+  },
+  {
+    id: "news-goal-gauge",
+    date: "2026-08-04",
+    title: "Goals got a new look",
+    body: "Each goal now shows completed, remaining and anything past target on one arc.",
+  },
+]
+
+function isoDay(date: Date): string {
+  return date.toISOString().slice(0, 10)
 }
 
 function buildNotifications(
   goals: Goal[],
   entries: Entry[],
   settings: AppSettings,
-  rateUpdatedAt: string,
+  rate: { updatedAt: string; isLive: boolean },
   now: Date
 ): AppNotification[] {
   const items: AppNotification[] = []
-  const today = now.toISOString().slice(0, 10)
+  const today = isoDay(now)
 
+  // ---- Goals -------------------------------------------------------------
   for (const goal of goals) {
     if (goal.completedAt) {
       items.push({
@@ -117,10 +150,8 @@ function buildNotifications(
     }
   }
 
-  // The three biggest profits of the last 90 days are worth a mention.
-  const cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10)
+  // ---- Large entries -----------------------------------------------------
+  const cutoff = isoDay(new Date(now.getTime() - 90 * 86_400_000))
   const bigWins = entries
     .filter((entry) => entry.type === "profit" && entry.datetime >= cutoff)
     .sort((a, b) => b.amount - a.amount)
@@ -137,25 +168,59 @@ function buildNotifications(
     })
   }
 
-  // Last month's report, available from the 1st of this month.
-  const lastMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  // ---- Weekly summary ----------------------------------------------------
+  const weekStart = isoDay(new Date(now.getTime() - 7 * 86_400_000))
+  const weekEntries = entries.filter((entry) => entry.datetime >= weekStart)
+  const weekNet = weekEntries.reduce(
+    (sum, entry) => sum + getNetAmount(entry),
+    0
+  )
   items.push({
-    id: `report-${lastMonth.toISOString().slice(0, 7)}`,
+    id: `summary-${weekStart}`,
+    kind: "summary",
+    title: "Your week in review",
+    body:
+      weekEntries.length === 0
+        ? "No entries logged in the last seven days."
+        : `${weekEntries.length} ${weekEntries.length === 1 ? "entry" : "entries"}, ${weekNet >= 0 ? "up" : "down"} ${formatMoney(Math.abs(weekNet), "USD")} on the week.`,
+    datetime: today,
+    href: "/analytics",
+  })
+
+  // ---- Monthly report ----------------------------------------------------
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  items.push({
+    id: `report-${isoDay(monthStart).slice(0, 7)}`,
     kind: "report",
     title: "Monthly report ready",
     body: `Your ${new Date(now.getFullYear(), now.getMonth() - 1, 1).toLocaleDateString("en-US", { month: "long" })} summary is ready to export.`,
-    datetime: lastMonth.toISOString().slice(0, 10),
+    datetime: isoDay(monthStart),
     href: "/reports",
   })
 
+  // ---- Exchange rates ----------------------------------------------------
   items.push({
-    id: `rate-${rateUpdatedAt}`,
+    id: `rate-${rate.updatedAt}-${rate.isLive ? "live" : "seed"}`,
     kind: "rate",
-    title: "Exchange rates updated",
-    body: `Rates were last recorded on ${rateUpdatedAt}.`,
-    datetime: rateUpdatedAt,
+    title: rate.isLive ? "Exchange rates updated" : "Rates not updated yet",
+    body: rate.isLive
+      ? `Market rates last fetched for ${rate.updatedAt}.`
+      : "Still using the built-in rates — press Update on the Fiat Currency card.",
+    datetime: rate.updatedAt,
     href: "/settings",
   })
+
+  // ---- Product news ------------------------------------------------------
+  for (const news of PRODUCT_NEWS) {
+    items.push({
+      id: news.id,
+      kind: "news",
+      title: news.title,
+      body: news.body,
+      datetime: news.date,
+      href: "/about",
+    })
+  }
 
   return items
     .filter((item) => settings.notifications[KIND_PREFS[item.kind]].inApp)
@@ -180,11 +245,23 @@ export function timeAgo(datetime: string, now = new Date()): string {
   })
 }
 
+/** Which bucket a notification falls into, for the panel's section headings. */
+export function bucketOf(datetime: string, now = new Date()): string {
+  const then = new Date(datetime).getTime()
+  if (Number.isNaN(then)) return "Earlier"
+  const days = (now.getTime() - then) / 86_400_000
+  if (days < 1) return "Today"
+  if (days < 7) return "This week"
+  if (days < 30) return "This month"
+  return "Earlier"
+}
+
 export function useNotifications(
   goals: Goal[],
   entries: Entry[],
   settings: AppSettings,
-  rateUpdatedAt: string
+  rateUpdatedAt: string,
+  rateIsLive: boolean
 ) {
   const read = React.useSyncExternalStore(
     subscribe,
@@ -192,11 +269,16 @@ export function useNotifications(
     getServerReadSnapshot
   )
 
-  // A stable "now" per render pass keeps the derived list from churning.
   const notifications = React.useMemo(
     () =>
-      buildNotifications(goals, entries, settings, rateUpdatedAt, new Date()),
-    [goals, entries, settings, rateUpdatedAt]
+      buildNotifications(
+        goals,
+        entries,
+        settings,
+        { updatedAt: rateUpdatedAt, isLive: rateIsLive },
+        new Date()
+      ),
+    [goals, entries, settings, rateUpdatedAt, rateIsLive]
   )
 
   const readSet = React.useMemo(() => new Set(read), [read])
@@ -214,5 +296,16 @@ export function useNotifications(
     writeRead([...current, id])
   }, [])
 
-  return { notifications, readSet, unreadCount, markAllRead, markRead }
+  const markUnread = React.useCallback((id: string) => {
+    writeRead(getReadSnapshot().filter((item) => item !== id))
+  }, [])
+
+  return {
+    notifications,
+    readSet,
+    unreadCount,
+    markAllRead,
+    markRead,
+    markUnread,
+  }
 }
