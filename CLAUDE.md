@@ -13,6 +13,9 @@ Avoid jargon in explanations.
 
 1. **Design first, functionality later.** Build every page with mock data only.
    No database, no auth, no API calls until the owner explicitly says so.
+   _Exception, approved:_ exchange rates are fetched live from a public feed
+   (`lib/use-rates.ts`). That is the only network call in the project —
+   everything else is still local mock data.
 2. **One page per session.** Never touch pages that aren't the subject of the
    current session.
 3. **Use shadcn components via the CLI** — `pnpm dlx shadcn@latest add <name>`.

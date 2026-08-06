@@ -105,33 +105,30 @@ Rates are **real, never invented**. They live outside the mock data:
 ```ts
 type RateTable = Record<Currency, number> // units per 1 USD
 
-interface RateSnapshot {
-  date: string // ISO date the rates applied on
-  rates: RateTable
-}
-
 interface RateState {
   rates: RateTable // what every conversion on the site uses
-  updatedAt: string // ISO date the current rates were recorded
-  history: RateSnapshot[] // every reading, oldest first
+  updatedAt: string // ISO date the rates apply to
+  source: "seed" | "live" // built-in defaults, or fetched
 }
 ```
 
-- `lib/rate-data.ts` — the seeded real rates and 13 months of real monthly
-  readings, sourced from the daily currency-api dataset. USD/NPR is 152.03,
-  the mid-market rate on 5 Aug 2026.
-- `lib/use-rates.ts` — the live store (localStorage), and the only writer of
-  the module-level rate table that `convertCurrency` / `formatMoney` read.
-- The Currency Converter shows today's rates and records new ones. One
-  reading per date; saving twice in a day replaces the earlier one.
-- The chart plots recorded readings only — no interpolation, so a sparse
-  history simply draws fewer points.
+- `lib/rate-data.ts` — the built-in starting rates and each currency's real
+  symbol. Only used before the first fetch, or if the network is unavailable.
+- `lib/use-rates.ts` — the live store (localStorage) and the fetch. It is the
+  only writer of the module-level rate table that `convertCurrency` /
+  `formatMoney` read, so one update moves every amount on the site.
+- The Fiat Currency card (dashboard, and Settings → General) shows only the
+  pair you've selected and carries the Update button.
+- Rates come from the daily currency-api dataset on jsDelivr: plain JSON, no
+  key, CORS-open. A failed fetch keeps the last good rates rather than
+  clearing them.
 
-> Decided: rates will be **synced once a day** in the functionality phase.
-> Google has no public rates API and its page can't be scraped, so the sync
-> will use a free rates feed — the same interbank numbers Google quotes.
-> Until then the user records rates by hand from the converter, which is also
-> the fallback if a sync ever fails.
+> **This is the project's only network call.** Everything else is still local
+> mock data. Google has no public rates API and its page can't be scraped, so
+> the feed above supplies the same interbank numbers Google quotes. Providers
+> disagree by small fractions, and the CDN can serve the previous day's file,
+> so the card always states the date the rates actually apply to rather than
+> claiming they're today's.
 
 ### Entry (the core object)
 

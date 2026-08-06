@@ -1,37 +1,38 @@
 "use client"
 
-// The exchange rates the whole app converts with, plus the record of every
-// reading. Seeded from real rates, kept in localStorage, and updated by hand
-// from the Currency Converter until the daily sync is connected.
+// The exchange rates the whole app converts with. Seeded from real rates,
+// refreshed from a live feed when the user presses Update, and kept in
+// localStorage so the last fetched set is what the site uses next time.
 
 import * as React from "react"
 
 import { setActiveRates } from "@/lib/mock-data"
-import {
-  SEED_RATE_HISTORY,
-  SEED_RATES,
-  SEED_RATES_DATE,
-  type RateSnapshot,
-  type RateTable,
-} from "@/lib/rate-data"
+import { SEED_RATES, SEED_RATES_DATE, type RateTable } from "@/lib/rate-data"
 import type { Currency } from "@/lib/types"
 
 const STORAGE_KEY = "artha.rates"
 
+/**
+ * Daily mid-market rates, served from a CDN as plain JSON. No key, no signup,
+ * and CORS-open so the browser can read it directly.
+ */
+const RATES_URL =
+  "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json"
+
+export type RateSource = "seed" | "live"
+
 export interface RateState {
   rates: RateTable
-  /** ISO date the current rates were recorded. */
+  /** ISO date the rates apply to. */
   updatedAt: string
-  /** Every reading, oldest first. */
-  history: RateSnapshot[]
+  /** Whether these came off the wire or are still the built-in defaults. */
+  source: RateSource
 }
 
 const SEED_STATE: RateState = {
   rates: SEED_RATES,
   updatedAt: SEED_RATES_DATE,
-  // The current rates are themselves a reading, so the chart ends on the same
-  // number the headline quotes.
-  history: [...SEED_RATE_HISTORY, { date: SEED_RATES_DATE, rates: SEED_RATES }],
+  source: "seed",
 }
 
 let cache: RateState | null = null
@@ -46,7 +47,7 @@ function load(): RateState {
         // Merge over the seed so a currency added later still has a rate.
         rates: { ...SEED_STATE.rates, ...(parsed.rates ?? {}) },
         updatedAt: parsed.updatedAt ?? SEED_STATE.updatedAt,
-        history: parsed.history?.length ? parsed.history : SEED_STATE.history,
+        source: parsed.source === "live" ? "live" : "seed",
       }
     }
   } catch {
@@ -91,20 +92,53 @@ export function todayISO(now = new Date()): string {
     .slice(0, 10)
 }
 
-/**
- * Records a set of rates for a date. One reading per date — saving twice in a
- * day replaces the earlier one rather than cluttering the history.
- */
-export function saveRates(rates: RateTable, date = todayISO()) {
-  const current = getSnapshot()
-  const history = current.history.filter((entry) => entry.date !== date)
-  history.push({ date, rates })
-  history.sort((a, b) => a.date.localeCompare(b.date))
-
-  write({ rates, updatedAt: date, history })
+interface RatesResponse {
+  date?: string
+  usd?: Record<string, number>
 }
 
-/** Puts the seeded real rates back, discarding anything recorded since. */
+/**
+ * Pulls today's mid-market rates and applies them everywhere. Throws if the
+ * feed can't be reached or gives back something unusable, so the caller can
+ * show the failure rather than silently keeping stale numbers.
+ */
+export async function fetchLiveRates(): Promise<RateState> {
+  const response = await fetch(RATES_URL, { cache: "no-store" })
+  if (!response.ok) {
+    throw new Error(`Rates feed returned ${response.status}`)
+  }
+
+  const payload = (await response.json()) as RatesResponse
+  const table = payload.usd
+  if (!table) {
+    throw new Error("Rates feed returned an unexpected shape")
+  }
+
+  const next: RateTable = { ...SEED_RATES }
+  let matched = 0
+  for (const code of Object.keys(next) as Currency[]) {
+    const value = table[code.toLowerCase()]
+    if (typeof value === "number" && value > 0) {
+      next[code] = value
+      matched += 1
+    }
+  }
+  // USD is always 1, so anything less than two means the payload was wrong.
+  if (matched < 2) {
+    throw new Error("Rates feed had none of the currencies we track")
+  }
+  next.USD = 1
+
+  const state: RateState = {
+    rates: next,
+    updatedAt: payload.date ?? todayISO(),
+    source: "live",
+  }
+  write(state)
+  return state
+}
+
+/** Puts the built-in rates back. */
 export function resetRates() {
   write(SEED_STATE)
 }
@@ -115,7 +149,7 @@ export function useRates() {
     getSnapshot,
     getServerSnapshot
   )
-  return { ...state, saveRates, resetRates }
+  return { ...state, fetchLiveRates, resetRates }
 }
 
 /** How many whole days ago a date was. */
