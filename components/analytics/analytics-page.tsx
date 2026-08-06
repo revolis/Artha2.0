@@ -1,8 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { Bar, BarChart, Cell, CartesianGrid, XAxis, YAxis } from "recharts"
 
+import {
+  ACTIVITY_ICONS,
+  ActivityStats,
+  type ActivityStat,
+} from "@/components/analytics/activity-stats"
+import { Bar } from "@/components/charts/bar"
+import { BarChart } from "@/components/charts/bar-chart"
+import { BarXAxis } from "@/components/charts/bar-x-axis"
+import { Grid } from "@/components/charts/grid"
+import { ChartTooltip } from "@/components/charts/tooltip"
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -12,12 +21,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart"
 import { Progress } from "@/components/ui/progress"
 import {
   Select,
@@ -50,17 +53,20 @@ import {
   isIncome,
   type MonthPerformance,
   type PerformanceRow,
+  type TrendPoint,
 } from "@/lib/analytics"
 import { formatMoney, getEntryYear, getNetAmount } from "@/lib/mock-data"
 import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
+import { useGoals } from "@/lib/use-goals"
+import { useProfile } from "@/lib/use-profile"
 import type { Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-const chartConfig = {
-  net: { label: "Net" },
-} satisfies ChartConfig
+const INCOME_COLOR = "var(--success)"
+const EXPENSE_COLOR = "var(--destructive)"
+const NET_COLOR = "var(--chart-line-primary)"
 
 function signed(value: number): string {
   const sign = value > 0 ? "+" : value < 0 ? "−" : ""
@@ -89,9 +95,9 @@ function DetailRow({
   value: React.ReactNode
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 py-2">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium tabular-nums">{value}</span>
+    <div className="flex items-baseline justify-between gap-4 py-1.5">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-xs font-medium tabular-nums">{value}</span>
     </div>
   )
 }
@@ -108,12 +114,12 @@ function MonthCard({
   emptyText: string
 }) {
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader>
-        <CardDescription className="text-xs font-medium tracking-wider uppercase">
+        <CardDescription className="text-[10px] font-medium tracking-[0.16em] uppercase">
           {eyebrow}
         </CardDescription>
-        <CardTitle className="text-lg">
+        <CardTitle className="text-base">
           {month ? `${month.label} ${year}` : "Not available"}
         </CardTitle>
       </CardHeader>
@@ -121,10 +127,10 @@ function MonthCard({
         {!month ? (
           <p className="text-sm text-muted-foreground">{emptyText}</p>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5">
             <span
               className={cn(
-                "text-3xl font-semibold tabular-nums",
+                "text-2xl font-semibold tabular-nums",
                 toneFor(month.net)
               )}
             >
@@ -284,6 +290,8 @@ export function AnalyticsPage() {
   // Subscribing re-renders every amount when the display currency changes.
   useSettings()
   const { entries, sources } = useEntryData()
+  const { goals } = useGoals()
+  const { profile } = useProfile()
   const currentYear = new Date().getFullYear()
   const [year, setYear] = React.useState(currentYear)
 
@@ -300,9 +308,61 @@ export function AnalyticsPage() {
     [sources]
   )
 
+  // Account activity — spans every year, not just the one selected.
+  const activityStats = React.useMemo<ActivityStat[]>(() => {
+    const memberSince = new Date(`${profile.createdAt}T00:00:00`)
+    return [
+      {
+        label: "Member since",
+        value: new Intl.DateTimeFormat("en-US", {
+          month: "long",
+          year: "numeric",
+        }).format(memberSince),
+        sub: "Account opened",
+        icon: ACTIVITY_ICONS.memberSince,
+      },
+      {
+        label: "Entries logged",
+        value: entries.length,
+        sub: "All time",
+        icon: ACTIVITY_ICONS.entries,
+      },
+      {
+        label: "Years active",
+        value: new Set(entries.map(getEntryYear)).size,
+        sub: "With activity",
+        icon: ACTIVITY_ICONS.years,
+      },
+      {
+        label: "Sources tracked",
+        value: sources.length,
+        sub: "Platforms and people",
+        icon: ACTIVITY_ICONS.sources,
+      },
+      {
+        label: "Goals set",
+        value: goals.length,
+        sub: "Targets created",
+        icon: ACTIVITY_ICONS.goals,
+      },
+    ]
+  }, [entries, sources, goals, profile.createdAt])
+
   const months = React.useMemo(
     () => getMonthlyPerformance(entries, year),
     [entries, year]
+  )
+  // The chart wants plain records; MonthPerformance carries extras the cards
+  // use, so the bars get their own narrowed copy.
+  const chartMonths = React.useMemo<TrendPoint[]>(
+    () =>
+      months.map((month) => ({
+        label: month.label,
+        income: month.income,
+        expense: month.expense,
+        net: month.net,
+      })),
+    [months]
   )
   const { best, lowest } = React.useMemo(
     () => getMonthExtremes(months),
@@ -427,59 +487,78 @@ export function AnalyticsPage() {
         />
       </div>
 
-      <Card>
+      <Card size="sm">
         <CardHeader>
           <CardTitle>Monthly performance</CardTitle>
           <CardDescription>
-            Net result per month. Bars above the line are profitable months.
+            Income against expense each month, with the net alongside.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
           {activeMonths.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No profit or loss entries recorded in {year}.
             </p>
           ) : (
-            <ChartContainer config={chartConfig} className="h-72 w-full">
-              <BarChart data={months} margin={{ left: 4, right: 4 }}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="label"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  width={64}
-                  tickFormatter={(value: number) =>
-                    formatMoney(value, "USD").replace(".00", "")
-                  }
-                />
+            <>
+              <BarChart
+                data={chartMonths}
+                xDataKey="label"
+                className="w-full"
+                aspectRatio="8 / 3"
+                margin={{ top: 16, right: 16, bottom: 32, left: 16 }}
+                barGap={0.28}
+              >
+                <Grid horizontal />
+                <Bar dataKey="income" fill={INCOME_COLOR} />
+                <Bar dataKey="expense" fill={EXPENSE_COLOR} />
+                <Bar dataKey="net" fill={NET_COLOR} />
+                <BarXAxis />
+                {/* Custom tooltip — every figure formatted as currency. */}
                 <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value) => signed(Number(value))}
-                    />
-                  }
+                  rows={(point) => [
+                    {
+                      color: INCOME_COLOR,
+                      label: "Income",
+                      value: formatMoney(Number(point.income), "USD"),
+                    },
+                    {
+                      color: EXPENSE_COLOR,
+                      label: "Expense",
+                      value: formatMoney(Number(point.expense), "USD"),
+                    },
+                    {
+                      color: NET_COLOR,
+                      label: "Net",
+                      value: signed(Number(point.net)),
+                    },
+                  ]}
                 />
-                {/* Animation left on leaves the bars unrendered here. */}
-                <Bar dataKey="net" radius={6} isAnimationActive={false}>
-                  {months.map((month) => (
-                    <Cell
-                      key={month.label}
-                      fill={
-                        month.net >= 0 ? "var(--success)" : "var(--destructive)"
-                      }
-                    />
-                  ))}
-                </Bar>
               </BarChart>
-            </ChartContainer>
+
+              <div className="flex flex-wrap items-center gap-4 text-xs">
+                {[
+                  { color: INCOME_COLOR, label: "Income" },
+                  { color: EXPENSE_COLOR, label: "Expense" },
+                  { color: NET_COLOR, label: "Net" },
+                ].map((item) => (
+                  <span key={item.label} className="flex items-center gap-1.5">
+                    <span
+                      aria-hidden
+                      className="size-2.5 rounded-[3px]"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    {item.label}
+                  </span>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
+
+      {/* Account activity, revealed as you reach it. */}
+      <ActivityStats stats={activityStats} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <MonthCard
@@ -497,7 +576,7 @@ export function AnalyticsPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
+        <Card size="sm">
           <CardHeader>
             <CardTitle>Top income transactions</CardTitle>
             <CardDescription>
@@ -513,7 +592,7 @@ export function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card size="sm">
           <CardHeader>
             <CardTitle>Top expense transactions</CardTitle>
             <CardDescription>
@@ -531,7 +610,7 @@ export function AnalyticsPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card size="sm">
         <CardHeader>
           <CardTitle>Platform and source performance</CardTitle>
           <CardDescription>
@@ -562,7 +641,7 @@ export function AnalyticsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card size="sm">
         <CardHeader>
           <CardTitle>Timing patterns</CardTitle>
           <CardDescription>
