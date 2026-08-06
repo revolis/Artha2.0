@@ -123,15 +123,17 @@ export function GoalCard({ goal, actions }: GoalCardProps) {
           className="mt-1"
         />
 
-        {/* Target leads, then a rule, then the name and period — quietly. */}
-        <div className="flex w-full flex-col gap-2">
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="text-muted-foreground">Target</span>
-            <span className="font-bold tabular-nums">
-              {formatMoney(goal.targetAmount, goal.currency)}
-            </span>
-          </div>
-          <div className="flex flex-col items-center gap-0.5 border-t pt-2 text-center">
+        {/* Target amount, a short rule, then the name and period — all centred
+            and given room to breathe. */}
+        <div className="flex w-full flex-col items-center gap-2.5 text-center">
+          <span className="text-sm font-bold tabular-nums">
+            <span className="sr-only">Target </span>
+            {formatMoney(goal.targetAmount, goal.currency)}
+          </span>
+
+          <span aria-hidden className="h-px w-14 rounded-full bg-border" />
+
+          <div className="flex w-full flex-col items-center gap-0.5">
             <span className="max-w-full truncate text-sm font-semibold tracking-tight">
               {goal.title}
             </span>
