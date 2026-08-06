@@ -1,15 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-  Activity,
-  CalendarCheck,
-  Info,
-  Target,
-  TrendingDown,
-  TrendingUp,
-  Trophy,
-} from "lucide-react"
+import { Activity, Info } from "lucide-react"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { GrowthContributors } from "@/components/portfolio/growth-contributors"
@@ -17,13 +9,7 @@ import { Area, AreaChart } from "@/components/charts/area-chart"
 import { Grid } from "@/components/charts/grid"
 import { XAxis } from "@/components/charts/x-axis"
 import { ChartTooltip } from "@/components/charts/tooltip"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
   EmptyDescription,
@@ -32,7 +18,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
@@ -46,14 +31,12 @@ import {
   buildDualDailySeries,
   getContributors,
   getPortfolioDelta,
-  getPortfolioInsights,
   getPortfolioStats,
 } from "@/lib/portfolio"
 import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import type { Entry } from "@/lib/types"
 import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
-import { cn } from "@/lib/utils"
 
 type Preset = "7d" | "30d" | "90d" | "ytd" | "custom"
 
@@ -76,34 +59,6 @@ function formatDay(value: Date | string): string {
     day: "numeric",
     year: "numeric",
   }).format(date)
-}
-
-// One metric inside the Insights card.
-function Insight({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  tone,
-}: {
-  label: string
-  value: string
-  sub: string
-  icon: React.ComponentType<{ className?: string }>
-  tone?: string
-}) {
-  return (
-    <div className="flex flex-col gap-1.5 rounded-2xl bg-muted/50 p-4">
-      <span className="flex items-center gap-1.5 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-        <Icon className="size-3.5" />
-        {label}
-      </span>
-      <span className={cn("text-xl font-semibold tabular-nums", tone)}>
-        {value}
-      </span>
-      <span className="text-xs text-muted-foreground">{sub}</span>
-    </div>
-  )
 }
 
 export function PortfolioPage() {
@@ -152,19 +107,6 @@ export function PortfolioPage() {
       ),
     ],
     [entries, year, sourceById]
-  )
-
-  const topSource = React.useMemo(
-    () =>
-      contributors
-        .filter((item) => item.kind === "source")
-        .sort((a, b) => b.gross - a.gross)[0],
-    [contributors]
-  )
-
-  const insights = React.useMemo(
-    () => getPortfolioInsights(entries, year, topSource, stats.grossIncome),
-    [entries, year, topSource, stats.grossIncome]
   )
 
   // Monthly points behind each summary card. Portfolio value is cumulative —
@@ -216,13 +158,6 @@ export function PortfolioPage() {
 
   const first = series[0]
   const last = series[series.length - 1]
-  const change = first && last ? last.portfolio - first.portfolio : 0
-  const percent =
-    first && Math.abs(first.portfolio) > 0.01
-      ? (change / Math.abs(first.portfolio)) * 100
-      : null
-  const rangeLabel = presets.find((p) => p.value === preset)?.label ?? "Range"
-  const momentumDelta = insights.thisMonthNet - insights.lastMonthNet
 
   return (
     <AppShell>
@@ -232,7 +167,7 @@ export function PortfolioPage() {
             Portfolio
           </span>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Portfolio for {year}
+            Portfolio Overview for {year}
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -273,9 +208,16 @@ export function PortfolioPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-1.5">
-            Assets Analysis
+        <CardContent className="flex flex-col gap-5">
+          {/* The portfolio's size, in the chart's own line colour rather than
+              a profit-or-loss green. */}
+          <div className="flex flex-wrap items-baseline gap-3">
+            <span
+              className="text-4xl font-semibold tabular-nums"
+              style={{ color: PORTFOLIO_COLOR }}
+            >
+              {formatMoney(last ? last.portfolio : 0, "USD")}
+            </span>
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -293,37 +235,6 @@ export function PortfolioPage() {
                 selling USD for cash removes it; buying USD adds it back.
               </TooltipContent>
             </Tooltip>
-          </CardTitle>
-          <CardDescription className="text-xs font-medium tracking-wider uppercase">
-            {rangeLabel} Change
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <div className="flex flex-wrap items-baseline gap-3">
-            <span
-              className={cn(
-                "text-4xl font-semibold tabular-nums",
-                change >= 0 ? "text-success" : "text-destructive"
-              )}
-            >
-              {change >= 0 ? "+" : "−"}
-              {formatMoney(Math.abs(change), "USD")}
-            </span>
-            {percent !== null ? (
-              <span
-                className={cn(
-                  "text-lg font-medium tabular-nums",
-                  change >= 0 ? "text-success" : "text-destructive"
-                )}
-              >
-                {change >= 0 ? "+" : ""}
-                {percent.toFixed(2)}%
-              </span>
-            ) : (
-              <span className="text-sm text-muted-foreground">
-                Started the range at zero
-              </span>
-            )}
           </div>
 
           {series.length < 2 ? (
@@ -467,105 +378,6 @@ export function PortfolioPage() {
       </div>
 
       <GrowthContributors items={contributors} />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Insights</CardTitle>
-          <CardDescription>
-            Patterns worth knowing about your {year}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <Insight
-              label="Win rate"
-              value={
-                insights.winRate !== null
-                  ? `${insights.winRate.toFixed(0)}%`
-                  : "—"
-              }
-              sub={`${insights.wins} wins · ${insights.losses} losses`}
-              icon={Target}
-            />
-            <Insight
-              label="Best day"
-              value={
-                insights.bestDay
-                  ? formatMoney(insights.bestDay.value, "USD")
-                  : "—"
-              }
-              sub={
-                insights.bestDay
-                  ? formatDay(insights.bestDay.date)
-                  : "No profit days yet"
-              }
-              icon={TrendingUp}
-              tone="text-success"
-            />
-            <Insight
-              label="Worst day"
-              value={
-                insights.worstDay
-                  ? formatMoney(insights.worstDay.value, "USD")
-                  : "—"
-              }
-              sub={
-                insights.worstDay
-                  ? formatDay(insights.worstDay.date)
-                  : "No losing days yet"
-              }
-              icon={TrendingDown}
-              tone="text-destructive"
-            />
-            <Insight
-              label="Average win"
-              value={formatMoney(insights.avgWin, "USD")}
-              sub="Per profit entry"
-              icon={Trophy}
-            />
-            <Insight
-              label="Active days"
-              value={String(insights.activeDays)}
-              sub="Days with at least one entry"
-              icon={CalendarCheck}
-            />
-            <Insight
-              label="Month momentum"
-              value={`${momentumDelta >= 0 ? "+" : "−"}${formatMoney(Math.abs(momentumDelta), "USD")}`}
-              sub={`This month ${formatMoney(insights.thisMonthNet, "USD")} vs last ${formatMoney(insights.lastMonthNet, "USD")}`}
-              icon={Activity}
-              tone={
-                momentumDelta > 0
-                  ? "text-success"
-                  : momentumDelta < 0
-                    ? "text-destructive"
-                    : undefined
-              }
-            />
-          </div>
-
-          {insights.concentration !== null ? (
-            <div className="flex flex-col gap-2 rounded-2xl border p-4">
-              <span className="flex items-center gap-1.5 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                <Info className="size-3.5" />
-                Source concentration
-              </span>
-              <p className="text-sm">
-                <span className="font-medium">{insights.topSourceName}</span>{" "}
-                brings in{" "}
-                <span className="font-medium">
-                  {insights.concentration.toFixed(0)}%
-                </span>{" "}
-                of your gross income.
-                {insights.concentration > 50
-                  ? " That is a lot riding on one source — worth spreading out."
-                  : " Reasonably spread across sources."}
-              </p>
-              <Progress value={insights.concentration} />
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
     </AppShell>
   )
 }
