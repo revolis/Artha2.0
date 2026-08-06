@@ -4,7 +4,6 @@ import * as React from "react"
 import NumberFlow from "@number-flow/react"
 
 import { createNotchPath } from "@/components/charts/notch-gauge-shared"
-import { useElementSize } from "@/components/charts/use-element-size"
 import { getGoalRawPercent, getGoalSlices, type GoalSlice } from "@/lib/goals"
 import { convertCurrency } from "@/lib/mock-data"
 import type { Currency, Goal } from "@/lib/types"
@@ -20,6 +19,11 @@ const END_ANGLE = 400
 const TOTAL_NOTCHES = 44
 const SPACING = 0 // percent of the sweep given over to gaps
 const CORNER_RADIUS = 7
+
+// Internal drawing units. The sweep runs 140°→400°, which spans the full width
+// but only reaches 0.64r below centre, so ~0.82 is the arc's natural ratio.
+const VIEW_W = 260
+const VIEW_H = 213
 
 type SliceKey = GoalSlice["key"]
 
@@ -174,19 +178,21 @@ function GaugeCenter({
  */
 export function GoalGauge({
   goal,
+  hovered,
+  onHoverChange,
   className,
 }: {
   goal: Goal
+  /** Controlled by the card so the legend and the arc light up together. */
+  hovered: SliceKey | null
+  onHoverChange: (slice: SliceKey | null) => void
   className?: string
 }) {
   // Read through the hook rather than the module getters: it hands back the
   // seed values during hydration, so server and client agree on the first
   // render and the stored settings arrive on the next one.
   const { settings } = useSettings()
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const { width } = useElementSize(containerRef)
   const mounted = useHasMounted()
-  const [hovered, setHovered] = React.useState<SliceKey | null>(null)
 
   const rawPercent = getGoalRawPercent(goal)
   const slices = React.useMemo(() => getGoalSlices(goal), [goal])
@@ -195,18 +201,15 @@ export function GoalGauge({
     [slices]
   )
 
-  const height = Math.round(width * 0.82)
   const assignment = React.useMemo(
     () => assignNotches(slices, rawPercent),
     [slices, rawPercent]
   )
 
   const notches = React.useMemo<NotchDatum[]>(() => {
-    if (width <= 0) return []
-
-    const size = Math.min(width, height)
-    const centerX = width / 2
-    const centerY = height / 2
+    const size = Math.min(VIEW_W, VIEW_H)
+    const centerX = VIEW_W / 2
+    const centerY = VIEW_H / 2
     const outerRadius = size * 0.46
     const innerRadius = outerRadius - size * 0.15
 
@@ -243,7 +246,7 @@ export function GoalGauge({
         cy: centerY + Math.sin(radians) * midRadius,
       }
     })
-  }, [width, height, assignment])
+  }, [assignment])
 
   // Where the floating label sits: over the middle notch of the hovered part.
   const anchor = React.useMemo(() => {
@@ -267,52 +270,54 @@ export function GoalGauge({
 
   return (
     <div
-      ref={containerRef}
-      className={cn("relative w-full", className)}
-      style={{ height: height || undefined }}
+      // Fixed viewBox scaled by CSS — no measuring, so nothing can render at
+      // zero size before a resize lands. The aspect ratio matches the viewBox
+      // exactly, which keeps the floating label's percentage position true.
+      className={cn(
+        "relative mx-auto w-full max-w-[200px]",
+        "aspect-[260/213]",
+        className
+      )}
     >
-      {width > 0 ? (
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          width={width}
-          height={height}
-          className="overflow-visible"
-          role="img"
-          aria-label={`${goal.title}: ${Math.round(rawPercent)}% of target`}
-        >
-          {notches.map((notch) => {
-            const dimmed = hovered !== null && hovered !== notch.slice
-            return (
-              <path
-                key={notch.index}
-                d={notch.path}
-                fill={SLICE_FILL[notch.slice]}
-                className={cn(
-                  "cursor-pointer transition-[opacity,transform] duration-300 ease-out",
-                  // A short stagger so the arc draws itself in on load.
-                  !mounted && "opacity-0"
-                )}
-                style={{
-                  opacity: !mounted
-                    ? 0
-                    : dimmed
-                      ? 0.18
-                      : notch.slice === "remaining"
-                        ? 0.85
-                        : 1,
-                  transitionDelay: mounted
-                    ? undefined
-                    : `${notch.index * 12}ms`,
-                  transformBox: "fill-box",
-                  transformOrigin: "center",
-                }}
-                onMouseEnter={() => setHovered(notch.slice)}
-                onMouseLeave={() => setHovered(null)}
-              />
-            )
-          })}
-        </svg>
-      ) : null}
+      <svg
+        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="absolute inset-0 size-full"
+        role="img"
+        aria-label={`${goal.title}: ${Math.round(rawPercent)}% of target`}
+      >
+        {notches.map((notch) => {
+          const dimmed = hovered !== null && hovered !== notch.slice
+          return (
+            <path
+              key={notch.index}
+              d={notch.path}
+              fill={SLICE_FILL[notch.slice]}
+              className={cn(
+                "cursor-pointer transition-[opacity,transform] duration-300 ease-out",
+                // A short stagger so the arc draws itself in on load.
+                !mounted && "opacity-0"
+              )}
+              style={{
+                opacity: !mounted
+                  ? 0
+                  : dimmed
+                    ? 0.18
+                    : // The unfilled track sits back a little, but comes
+                      // fully forward when it is the part being pointed at.
+                      notch.slice === "remaining" && hovered !== "remaining"
+                      ? 0.85
+                      : 1,
+                transitionDelay: mounted ? undefined : `${notch.index * 12}ms`,
+                transformBox: "fill-box",
+                transformOrigin: "center",
+              }}
+              onMouseEnter={() => onHoverChange(notch.slice)}
+              onMouseLeave={() => onHoverChange(null)}
+            />
+          )
+        })}
+      </svg>
 
       <GaugeCenter
         amount={mounted ? centerAmount : 0}
@@ -327,7 +332,10 @@ export function GoalGauge({
       {activeSlice && anchor ? (
         <div
           className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 animate-in rounded-lg border bg-popover px-2.5 py-1.5 text-center shadow-md duration-150 fade-in-0 zoom-in-95"
-          style={{ left: anchor.x, top: anchor.y }}
+          style={{
+            left: `${(anchor.x / VIEW_W) * 100}%`,
+            top: `${(anchor.y / VIEW_H) * 100}%`,
+          }}
         >
           <div className="flex items-center gap-1.5 text-[11px] font-medium">
             <span

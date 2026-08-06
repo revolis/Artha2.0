@@ -1,27 +1,17 @@
 "use client"
 
+import * as React from "react"
 import {
   CheckCircle2,
-  CircleAlert,
-  Clock,
   Copy,
   LayoutDashboard,
   MoreVertical,
   Pencil,
-  Pin,
   Trash2,
-  TriangleAlert,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,12 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { GoalGauge, SLICE_FILL } from "@/components/goals/goal-gauge"
-import {
-  getGoalSlices,
-  getGoalStatus,
-  isGoalCompleted,
-  type GoalStatusTone,
-} from "@/lib/goals"
+import { getGoalSlices, isGoalCompleted, type GoalSlice } from "@/lib/goals"
 import { formatMoney } from "@/lib/mock-data"
 import type { Goal } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -51,19 +36,7 @@ function formatPeriod(goal: Goal): string {
   return `${fmt.format(new Date(`${goal.startDate}T00:00:00`))} – ${fmt.format(new Date(`${goal.endDate}T00:00:00`))}`
 }
 
-const statusIcons: Record<GoalStatusTone, typeof CheckCircle2> = {
-  success: CheckCircle2,
-  warning: TriangleAlert,
-  overdue: CircleAlert,
-  neutral: Clock,
-}
-
-const statusClasses: Record<GoalStatusTone, string> = {
-  success: "text-foreground",
-  warning: "text-foreground",
-  overdue: "text-destructive",
-  neutral: "text-muted-foreground",
-}
+type SliceKey = GoalSlice["key"]
 
 interface GoalCardActions {
   onEdit: (goal: Goal) => void
@@ -79,28 +52,16 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, actions }: GoalCardProps) {
-  const status = getGoalStatus(goal)
-  const StatusIcon = statusIcons[status.tone]
   const slices = getGoalSlices(goal)
+  // Shared so pointing at the arc lights the matching legend row and back,
+  // the same link the pie chart has with its legend.
+  const [hovered, setHovered] = React.useState<SliceKey | null>(null)
 
   return (
-    <Card>
-      <CardHeader>
-        {/* Period sits above as a quiet eyebrow so the name carries the card. */}
-        <CardDescription className="text-[10px] font-medium tracking-[0.16em] uppercase">
-          {formatPeriod(goal)}
-        </CardDescription>
-        <CardTitle className="flex items-center gap-1.5 text-base tracking-tight">
-          <span className="truncate">{goal.title}</span>
-          {goal.showOnDashboard ? (
-            <Pin
-              className="size-3.5 shrink-0 text-muted-foreground"
-              aria-label="Shown on dashboard"
-            />
-          ) : null}
-        </CardTitle>
+    <Card size="sm" className="gap-3">
+      <CardContent className="relative flex flex-col items-center gap-3">
         {actions ? (
-          <CardAction>
+          <div className="absolute top-0 right-(--card-spacing) z-10">
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
@@ -152,43 +113,64 @@ export function GoalCard({ goal, actions }: GoalCardProps) {
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-          </CardAction>
+          </div>
         ) : null}
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <GoalGauge goal={goal} />
 
-        {/* Legend doubles as the figures table — one row per part of the arc. */}
-        <div className="flex flex-col gap-1.5">
+        <GoalGauge
+          goal={goal}
+          hovered={hovered}
+          onHoverChange={setHovered}
+          className="mt-1"
+        />
+
+        {/* Name and period sit under the arc, quietly. */}
+        <div className="flex w-full flex-col items-center gap-0.5 text-center">
+          <span className="max-w-full truncate text-sm font-semibold tracking-tight">
+            {goal.title}
+          </span>
+          <span className="text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+            {formatPeriod(goal)}
+          </span>
+        </div>
+
+        {/* Legend doubles as the figures table — one row per part of the arc,
+            and hovering a row lights its notches up. */}
+        <div className="flex w-full flex-col gap-0.5">
           {slices.map((slice) => (
-            <div key={slice.key} className="flex items-center gap-2 text-xs">
+            <button
+              key={slice.key}
+              type="button"
+              aria-label={`${slice.label}: ${formatMoney(slice.amount, goal.currency)}`}
+              onMouseEnter={() => setHovered(slice.key)}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered(slice.key)}
+              onBlur={() => setHovered(null)}
+              className={cn(
+                "flex items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs transition-all duration-200 outline-none",
+                hovered === slice.key && "bg-accent",
+                hovered !== null && hovered !== slice.key && "opacity-40"
+              )}
+            >
               <span
                 aria-hidden
-                className="size-2 shrink-0 rounded-full"
-                style={{ background: SLICE_FILL[slice.key] }}
+                className="size-2 shrink-0 rounded-full transition-transform duration-200"
+                style={{
+                  background: SLICE_FILL[slice.key],
+                  transform: hovered === slice.key ? "scale(1.35)" : undefined,
+                }}
               />
               <span className="text-muted-foreground">{slice.label}</span>
               <span className="ml-auto font-medium tabular-nums">
                 {formatMoney(slice.amount, goal.currency)}
               </span>
-            </div>
+            </button>
           ))}
-          <div className="mt-1 flex items-center gap-2 border-t pt-2 text-xs">
+          <div className="mt-1 flex items-center gap-2 border-t px-1.5 pt-2 text-xs">
             <span className="text-muted-foreground">Target</span>
             <span className="ml-auto font-medium tabular-nums">
               {formatMoney(goal.targetAmount, goal.currency)}
             </span>
           </div>
-        </div>
-
-        <div
-          className={cn(
-            "flex items-center gap-1.5 text-xs",
-            statusClasses[status.tone]
-          )}
-        >
-          <StatusIcon className="size-3.5 shrink-0" />
-          <span>{status.message}</span>
         </div>
       </CardContent>
     </Card>
