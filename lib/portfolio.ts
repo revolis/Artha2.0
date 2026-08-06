@@ -76,6 +76,32 @@ export function buildDualDailySeries(
   return series
 }
 
+export const PORTFOLIO_RANGES = [
+  { value: "1m", label: "1M", days: 30 },
+  { value: "3m", label: "3M", days: 92 },
+  { value: "6m", label: "6M", days: 183 },
+  { value: "ytd", label: "YTD", days: null },
+] as const
+
+export type PortfolioRange = (typeof PORTFOLIO_RANGES)[number]["value"]
+
+/**
+ * The tail end of the series. A running total that climbs steeply late in the
+ * year squashes every earlier month against the axis — narrowing the window
+ * rescales the chart to that stretch so the detail is readable again.
+ */
+export function sliceSeries(
+  series: DualSeriesPoint[],
+  days: number | null
+): DualSeriesPoint[] {
+  if (days === null || series.length === 0) return series
+  const last = series[series.length - 1].date
+  const cutoff = new Date(last.getTime() - days * 86_400_000)
+  const sliced = series.filter((point) => point.date >= cutoff)
+  // Never hand back something too short to draw.
+  return sliced.length > 1 ? sliced : series
+}
+
 export interface MonthOverMonth {
   current: number
   previous: number

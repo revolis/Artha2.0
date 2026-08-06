@@ -1,16 +1,28 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
+import { ArrowRight, TrendingDown, TrendingUp } from "lucide-react"
 
 import { Area, AreaChart } from "@/components/charts/area-chart"
 import { Grid } from "@/components/charts/grid"
 import { ChartTooltip } from "@/components/charts/tooltip"
 import { XAxis } from "@/components/charts/x-axis"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { formatMoney } from "@/lib/mock-data"
-import type { DualSeriesPoint, MonthOverMonth } from "@/lib/portfolio"
+import {
+  PORTFOLIO_RANGES,
+  sliceSeries,
+  type DualSeriesPoint,
+  type MonthOverMonth,
+  type PortfolioRange,
+} from "@/lib/portfolio"
 import { cn } from "@/lib/utils"
 
 const PORTFOLIO_COLOR = "var(--chart-line-primary)"
@@ -25,6 +37,57 @@ interface PortfolioCardProps {
   cashIn: number
 }
 
+/** Big figure with the cash-movement breakdown tucked behind a hover. */
+function ValueStat({
+  label,
+  value,
+  muted,
+  cashOut,
+  cashIn,
+  explanation,
+  children,
+}: {
+  label: string
+  value: number
+  muted?: boolean
+  cashOut: number
+  cashIn: number
+  explanation: string
+  children?: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+        {label}
+      </span>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <span
+              className={cn(
+                "w-fit cursor-help text-3xl font-semibold tabular-nums underline decoration-muted-foreground/30 decoration-dotted underline-offset-8",
+                muted && "text-muted-foreground"
+              )}
+            />
+          }
+        >
+          {formatMoney(value, "USD")}
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-64">
+          <span className="flex flex-col gap-1">
+            <span>{explanation}</span>
+            <span className="tabular-nums">
+              −{formatMoney(cashOut, "USD")} cashed out · +
+              {formatMoney(cashIn, "USD")} cashed in
+            </span>
+          </span>
+        </TooltipContent>
+      </Tooltip>
+      {children}
+    </div>
+  )
+}
+
 export function PortfolioCard({
   series,
   momentum,
@@ -32,83 +95,136 @@ export function PortfolioCard({
   cashOut,
   cashIn,
 }: PortfolioCardProps) {
+  const [range, setRange] = React.useState<PortfolioRange>("3m")
+
+  const days =
+    PORTFOLIO_RANGES.find((item) => item.value === range)?.days ?? null
+  const visible = React.useMemo(() => sliceSeries(series, days), [series, days])
+
   const up = momentum.change >= 0
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Net Portfolio Value
-            </span>
-            <span className="text-4xl font-semibold tabular-nums">
-              {formatMoney(momentum.current, "USD")}
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              {momentum.change === 0 ? (
-                <span className="text-sm text-muted-foreground">
-                  No change yet this month
+    <Card size="sm">
+      <CardContent className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-4">
+          <ValueStat
+            label="Net Portfolio Value"
+            value={momentum.current}
+            cashOut={cashOut}
+            cashIn={cashIn}
+            explanation="What you hold after money moved to and from cash."
+          >
+            {/* The month-on-month move, stated plainly rather than badged. */}
+            {momentum.change === 0 ? (
+              <span className="text-xs text-muted-foreground">
+                No change yet this month
+              </span>
+            ) : (
+              <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                <span
+                  className={cn(
+                    "flex items-center gap-1 font-medium tabular-nums",
+                    up ? "text-success" : "text-destructive"
+                  )}
+                >
+                  {up ? (
+                    <TrendingUp className="size-3.5" />
+                  ) : (
+                    <TrendingDown className="size-3.5" />
+                  )}
+                  {momentum.percent !== null
+                    ? `${up ? "+" : "−"}${Math.abs(momentum.percent).toFixed(2)}%`
+                    : `${up ? "+" : "−"}${formatMoney(Math.abs(momentum.change), "USD")}`}
                 </span>
-              ) : (
-                <>
-                  {momentum.percent !== null ? (
-                    <Badge variant={up ? "secondary" : "destructive"}>
-                      {up ? "+" : "−"}
-                      {Math.abs(momentum.percent).toFixed(2)}%
-                    </Badge>
-                  ) : null}
-                  <span
-                    className={cn(
-                      "text-sm font-medium tabular-nums",
-                      up ? "text-success" : "text-destructive"
-                    )}
-                  >
+                {momentum.percent !== null ? (
+                  <span className="tabular-nums">
                     {up ? "+" : "−"}
                     {formatMoney(Math.abs(momentum.change), "USD")}
                   </span>
-                  <span className="text-sm text-muted-foreground">
-                    vs last month
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
+                ) : null}
+                <span>vs last month</span>
+              </span>
+            )}
+          </ValueStat>
 
           {/* The same year before any cash left or entered, so the gap between
               the two figures is exactly the P2P movement. */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Gross Portfolio Value
-            </span>
-            <span className="text-4xl font-semibold text-muted-foreground tabular-nums">
-              {formatMoney(netIncome, "USD")}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              −{formatMoney(cashOut, "USD")} cashed out · +
-              {formatMoney(cashIn, "USD")} cashed in
-            </span>
-          </div>
+          <ValueStat
+            label="Gross Portfolio Value"
+            value={netIncome}
+            muted
+            cashOut={cashOut}
+            cashIn={cashIn}
+            explanation="Profit minus loss, fees and tax — before any cash moved."
+          />
 
           <Button
-            variant="link"
+            variant="ghost"
             size="sm"
-            className="px-0"
+            className="ml-auto"
             render={<Link href="/portfolio" />}
             nativeButton={false}
           >
             View full portfolio
+            <ArrowRight data-icon="inline-end" />
           </Button>
         </div>
 
         {series.length > 1 ? (
           <>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-4 text-xs">
+                <span className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className="h-0.5 w-4 rounded-full"
+                    style={{ backgroundColor: PORTFOLIO_COLOR }}
+                  />
+                  Net
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className="h-0.5 w-4 rounded-full"
+                    style={{ backgroundColor: INCOME_COLOR }}
+                  />
+                  Gross
+                </span>
+              </div>
+
+              {/* Narrowing the window rescales the chart, so a steep recent
+                  climb stops flattening everything before it. */}
+              <div className="flex items-center gap-1 rounded-lg border p-0.5">
+                {PORTFOLIO_RANGES.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setRange(item.value)}
+                    className={cn(
+                      "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                      range === item.value
+                        ? "bg-secondary text-secondary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <AreaChart
-              data={series}
+              data={visible}
               xDataKey="date"
               className="w-full"
-              style={{ aspectRatio: "auto", height: 260 }}
-              margin={{ top: 20, right: 24, bottom: 30, left: 24 }}
+              style={{ aspectRatio: "auto", height: 190 }}
+              margin={{ top: 16, right: 20, bottom: 26, left: 20 }}
+              // Portfolio totals live far from zero, so anchoring the axis
+              // there wastes most of the height and flattens the line.
+              yBaseline="auto"
+              // Switching range should land on the new scale straight away
+              // rather than easing into it.
+              yDomainTween={false}
             >
               <Grid horizontal />
               <XAxis />
@@ -129,24 +245,6 @@ export function PortfolioCard({
                 ]}
               />
             </AreaChart>
-            <div className="flex flex-wrap items-center gap-4 text-xs">
-              <span className="flex items-center gap-1.5">
-                <span
-                  aria-hidden
-                  className="h-0.5 w-4 rounded-full"
-                  style={{ backgroundColor: PORTFOLIO_COLOR }}
-                />
-                Net portfolio value
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span
-                  aria-hidden
-                  className="h-0.5 w-4 rounded-full"
-                  style={{ backgroundColor: INCOME_COLOR }}
-                />
-                Gross Portfolio Value
-              </span>
-            </div>
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
