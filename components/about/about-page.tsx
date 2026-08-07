@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import {
   Check,
@@ -11,6 +10,7 @@ import {
   Wallet,
 } from "@/components/icons"
 
+import { ArthaMark } from "@/components/layout/artha-mark"
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -75,14 +75,7 @@ export function AboutPage() {
 
       <Card>
         <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-          <Image
-            src={SITE.logoPath}
-            alt=""
-            width={72}
-            height={72}
-            className="size-18 rounded-3xl object-contain"
-            priority
-          />
+          <ArthaMark className="size-18 text-foreground" />
           <div className="flex flex-col gap-1">
             <span className="text-2xl font-semibold tracking-[0.18em]">
               {SITE.name}

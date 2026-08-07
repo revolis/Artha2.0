@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import {
@@ -31,6 +30,7 @@ import {
   SettingsNav,
   type SettingsNavItem,
 } from "@/components/settings/settings-nav"
+import { ArthaMark } from "@/components/layout/artha-mark"
 import { AppShell } from "@/components/layout/app-shell"
 import {
   Accordion,
@@ -712,13 +712,7 @@ export function SettingsPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-5">
                 <div className="flex items-center gap-4">
-                  <Image
-                    src={SITE.logoPath}
-                    alt=""
-                    width={56}
-                    height={56}
-                    className="size-14 rounded-2xl object-contain"
-                  />
+                  <ArthaMark className="size-14 text-foreground" />
                   <div className="flex flex-col">
                     <span className="text-lg font-semibold tracking-[0.15em]">
                       {SITE.name}

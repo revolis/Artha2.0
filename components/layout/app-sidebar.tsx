@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { SidebarLeftIcon, Tick02Icon } from "@hugeicons/core-free-icons"
 
+import { ArthaMark } from "@/components/layout/artha-mark"
 import { NavIcon } from "@/components/layout/nav-icon"
 import { Button } from "@/components/ui/button"
 import {
@@ -123,14 +123,7 @@ export function AppSidebar({
           href="/dashboard"
           className="flex min-w-0 items-center gap-2 overflow-hidden"
         >
-          <Image
-            src={SITE.logoPath}
-            alt=""
-            width={32}
-            height={32}
-            className="size-8 shrink-0 rounded-lg object-contain"
-            priority
-          />
+          <ArthaMark className="size-8 shrink-0 text-sidebar-foreground" />
           <span
             className={cn(
               "truncate text-sm font-semibold tracking-[0.2em] text-sidebar-foreground transition-all duration-200",
