@@ -37,15 +37,18 @@ function formatStatValue(
   return `${prefix ?? ""}${formatted}${suffix ?? ""}`
 }
 
+/**
+ * Local fix: this must start `false` on the server *and* on the hydrating
+ * render. Reading `customElements` in the initialiser made the two disagree —
+ * the server has no custom elements so it rendered plain text, while the
+ * browser already had `number-flow-react` registered by hydration time and
+ * rendered the element instead, which React reports as a hydration failure.
+ */
 function useNumberFlowElementReady(): boolean {
-  const [ready, setReady] = useState(
-    () =>
-      typeof customElements !== "undefined" &&
-      Boolean(customElements.get("number-flow-react"))
-  )
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (ready) {
+    if (typeof customElements === "undefined") {
       return
     }
     let cancelled = false
@@ -57,7 +60,7 @@ function useNumberFlowElementReady(): boolean {
     return () => {
       cancelled = true
     }
-  }, [ready])
+  }, [])
 
   return ready
 }
