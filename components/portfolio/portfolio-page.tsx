@@ -269,17 +269,20 @@ export function PortfolioPage() {
                     runs above the net line whenever you've cashed out. */}
                 <Area dataKey="netIncome" fill={INCOME_COLOR} />
                 <Area dataKey="portfolio" fill={PORTFOLIO_COLOR} />
+                {/* Row order has to match the <Area> order above: the tooltip
+                    colours each line's dot from the row at the same index. It
+                    also puts gross on top, the way the lines sit on the chart. */}
                 <ChartTooltip
                   rows={(point) => [
-                    {
-                      color: PORTFOLIO_COLOR,
-                      label: "Net Portfolio Value",
-                      value: formatMoney(Number(point.portfolio), "USD"),
-                    },
                     {
                       color: INCOME_COLOR,
                       label: "Gross Portfolio Value",
                       value: formatMoney(Number(point.netIncome), "USD"),
+                    },
+                    {
+                      color: PORTFOLIO_COLOR,
+                      label: "Net Portfolio Value",
+                      value: formatMoney(Number(point.portfolio), "USD"),
                     },
                   ]}
                 />
