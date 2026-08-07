@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   useAnimationFrame,
@@ -7,53 +7,53 @@ import {
   useScroll,
   useSpring,
   useVelocity,
-} from "motion/react";
-import { useEffect, useRef } from "react";
+} from "motion/react"
+import { useEffect, useRef } from "react"
 // Points at the project's own cn — the registry shipped an identical copy.
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 export interface MarqueeProps {
   /** Content of one marquee segment. Can be a single small element or a long strip. */
-  children: React.ReactNode;
-  className?: string;
+  children: React.ReactNode
+  className?: string
   /** Class for the outer clipping container. */
-  containerClassName?: string;
+  containerClassName?: string
   /**
    * Scroll speed in pixels per second. Higher = faster.
    * @default 80
    */
-  speed?: number;
+  speed?: number
   /**
    * Gap between repeated segments, any CSS length string.
    * @default "4rem"
    */
-  gap?: string;
+  gap?: string
   /**
    * Scroll direction.
    * @default "left"
    */
-  direction?: "left" | "right" | "up" | "down";
+  direction?: "left" | "right" | "up" | "down"
   /**
    * Multiply speed by scroll velocity (and flip direction on scroll-up).
    * @default false
    */
-  scrollVelocity?: boolean;
+  scrollVelocity?: boolean
   /**
    * Max speed multiplier when scrollVelocity is enabled.
    * @default 5
    */
-  maxVelocity?: number;
+  maxVelocity?: number
   /**
    * Pause (with easing, not a snap) on hover.
    * @default false
    */
-  pauseOnHover?: boolean;
+  pauseOnHover?: boolean
   /**
    * How many segment copies to render.
    * "auto" measures the container and fills 2× it.
    * @default "auto"
    */
-  repeat?: number | "auto";
+  repeat?: number | "auto"
 }
 
 export default function Marquee({
@@ -68,121 +68,121 @@ export default function Marquee({
   pauseOnHover = false,
   repeat = "auto",
 }: MarqueeProps) {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = useReducedMotion()
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const segmentRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null)
+  const segmentRef = useRef<HTMLDivElement>(null)
 
   // How many copies are rendered (updated by ResizeObserver)
-  const countRef = useRef<number>(typeof repeat === "number" ? repeat : 4);
+  const countRef = useRef<number>(typeof repeat === "number" ? repeat : 4)
 
   // Motion value for translation — never stored in React state
-  const baseX = useMotionValue(0);
-  const isHovered = useRef(false);
+  const baseX = useMotionValue(0)
+  const isHovered = useRef(false)
   // 0 = fully paused, 1 = full speed — lerped in rAF
-  const speedMultiplier = useRef(1);
+  const speedMultiplier = useRef(1)
 
   // Scroll velocity pipeline (motion values only — no setState)
-  const { scrollY } = useScroll();
-  const scrollVelocityMV = useVelocity(scrollY);
+  const { scrollY } = useScroll()
+  const scrollVelocityMV = useVelocity(scrollY)
   const smoothVelocity = useSpring(scrollVelocityMV, {
     damping: 50,
     stiffness: 400,
-  });
+  })
 
-  const isVertical = direction === "up" || direction === "down";
-  const directionSign = direction === "left" || direction === "up" ? 1 : -1;
+  const isVertical = direction === "up" || direction === "down"
+  const directionSign = direction === "left" || direction === "up" ? 1 : -1
 
   // ResizeObserver — recompute copy count when container or segment resize
   useEffect(() => {
-    if (repeat !== "auto" || shouldReduceMotion) return;
+    if (repeat !== "auto" || shouldReduceMotion) return
 
-    const container = containerRef.current;
-    const segment = segmentRef.current;
-    if (!container || !segment) return;
+    const container = containerRef.current
+    const segment = segmentRef.current
+    if (!container || !segment) return
 
     function recompute() {
-      if (!container || !segment) return;
+      if (!container || !segment) return
       const containerSize = isVertical
         ? container.offsetHeight
-        : container.offsetWidth;
+        : container.offsetWidth
       const segmentSize = isVertical
         ? segment.offsetHeight
-        : segment.offsetWidth;
+        : segment.offsetWidth
       if (segmentSize > 0) {
         countRef.current = Math.max(
           2,
-          Math.ceil((containerSize * 2) / segmentSize) + 1,
-        );
+          Math.ceil((containerSize * 2) / segmentSize) + 1
+        )
       }
     }
 
-    recompute();
-    const ro = new ResizeObserver(recompute);
-    ro.observe(container);
-    ro.observe(segment);
-    return () => ro.disconnect();
-  }, [repeat, isVertical, shouldReduceMotion]);
+    recompute()
+    const ro = new ResizeObserver(recompute)
+    ro.observe(container)
+    ro.observe(segment)
+    return () => ro.disconnect()
+  }, [repeat, isVertical, shouldReduceMotion])
 
   // Hover handlers
   const onMouseEnter = () => {
-    if (pauseOnHover) isHovered.current = true;
-  };
+    if (pauseOnHover) isHovered.current = true
+  }
   const onMouseLeave = () => {
-    if (pauseOnHover) isHovered.current = false;
-  };
+    if (pauseOnHover) isHovered.current = false
+  }
 
   // Main animation loop — all in motion values, zero React state
   useAnimationFrame((_, delta) => {
-    if (shouldReduceMotion) return;
+    if (shouldReduceMotion) return
 
-    const segment = segmentRef.current;
-    if (!segment) return;
+    const segment = segmentRef.current
+    if (!segment) return
 
-    const segmentSize = isVertical ? segment.offsetHeight : segment.offsetWidth;
-    if (segmentSize === 0) return;
+    const segmentSize = isVertical ? segment.offsetHeight : segment.offsetWidth
+    if (segmentSize === 0) return
 
     // Lerp speedMultiplier toward target (eased pause on hover)
-    const targetMultiplier = isHovered.current ? 0 : 1;
+    const targetMultiplier = isHovered.current ? 0 : 1
     speedMultiplier.current +=
-      (targetMultiplier - speedMultiplier.current) * 0.1;
+      (targetMultiplier - speedMultiplier.current) * 0.1
 
     // Velocity boost from scroll
-    let velocityBoost = 1;
-    let velocityFlip = 1;
+    let velocityBoost = 1
+    let velocityFlip = 1
     if (scrollVelocity) {
-      const v = smoothVelocity.get();
-      velocityBoost = Math.min(Math.abs(v) / 200, maxVelocity);
-      velocityBoost = Math.max(velocityBoost, 1);
-      if (v < -50) velocityFlip = -1;
+      const v = smoothVelocity.get()
+      velocityBoost = Math.min(Math.abs(v) / 200, maxVelocity)
+      velocityBoost = Math.max(velocityBoost, 1)
+      if (v < -50) velocityFlip = -1
     }
 
-    const pxPerMs = speed / 1000;
+    const pxPerMs = speed / 1000
     const delta_px =
       pxPerMs *
       delta *
       directionSign *
       velocityFlip *
       speedMultiplier.current *
-      velocityBoost;
+      velocityBoost
 
-    let next = baseX.get() - delta_px;
+    let next = baseX.get() - delta_px
 
     // Wrap: keep translation within [-segmentSize, 0)
     if (directionSign > 0) {
       // moving left/up — translate goes negative
-      if (next <= -segmentSize) next += segmentSize;
+      if (next <= -segmentSize) next += segmentSize
     } else {
       // moving right/down — translate goes positive
-      if (next >= 0) next -= segmentSize;
-      if (next < -segmentSize) next += segmentSize;
+      if (next >= 0) next -= segmentSize
+      if (next < -segmentSize) next += segmentSize
     }
 
-    baseX.set(next);
-  });
+    baseX.set(next)
+  })
 
-  const copies = repeat !== "auto" ? repeat : countRef.current;
-  const items = Array.from({ length: copies });
+  const copies = repeat !== "auto" ? repeat : countRef.current
+  const items = Array.from({ length: copies })
 
   if (shouldReduceMotion) {
     // Static strip — no animation
@@ -196,7 +196,7 @@ export default function Marquee({
           className={cn(
             isVertical ? "flex flex-col" : "flex flex-row",
             "w-max",
-            className,
+            className
           )}
           style={{ gap }}
         >
@@ -209,7 +209,7 @@ export default function Marquee({
           ))}
         </div>
       </section>
-    );
+    )
   }
 
   return (
@@ -232,11 +232,11 @@ export default function Marquee({
         {children}
       </MotionTrack>
     </section>
-  );
+  )
 }
 
 // Split into a separate component to isolate motion subscription
-import { type MotionValue, motion } from "motion/react";
+import { type MotionValue, motion } from "motion/react"
 
 function MotionTrack({
   baseX,
@@ -247,13 +247,13 @@ function MotionTrack({
   items,
   children,
 }: {
-  baseX: MotionValue<number>;
-  isVertical: boolean;
-  gap: string;
-  className?: string;
-  segmentRef: React.RefObject<HTMLDivElement | null>;
-  items: unknown[];
-  children: React.ReactNode;
+  baseX: MotionValue<number>
+  isVertical: boolean
+  gap: string
+  className?: string
+  segmentRef: React.RefObject<HTMLDivElement | null>
+  items: unknown[]
+  children: React.ReactNode
 }) {
   return (
     <motion.div
@@ -261,7 +261,7 @@ function MotionTrack({
       className={cn(
         isVertical ? "flex flex-col" : "flex flex-row",
         "w-max will-change-transform",
-        className,
+        className
       )}
     >
       {/* First segment — measured for loop math */}
@@ -288,5 +288,5 @@ function MotionTrack({
         </div>
       ))}
     </motion.div>
-  );
+  )
 }

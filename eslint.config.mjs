@@ -19,6 +19,10 @@ const eslintConfig = defineConfig([
     "components/shimmering-text.tsx",
     // Same deal for registry components pulled from lab.moumen.dev.
     "components/lab/**",
+    // And for the landing-page pieces from @animate-ui, @sona-ui and @magicui.
+    "components/animate-ui/**",
+    "components/ui/marquee/**",
+    "components/ui/dot-pattern.tsx",
   ]),
 ])
 
