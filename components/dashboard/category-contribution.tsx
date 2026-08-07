@@ -22,14 +22,25 @@ import {
 import { getPerformanceBreakdown } from "@/lib/analytics"
 import type { Entry } from "@/lib/types"
 
-// Slices cycle through the theme's categorical chart tokens.
+// Ten distinct slice colours from five theme tokens: each token at full
+// strength, then a softer version of it. With a couple of dozen categories in
+// play, cycling five colours alone would give neighbouring slices the same fill.
 const SLICE_COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",
   "var(--chart-3)",
   "var(--chart-4)",
   "var(--chart-5)",
+  "color-mix(in oklab, var(--chart-1) 55%, var(--card))",
+  "color-mix(in oklab, var(--chart-2) 55%, var(--card))",
+  "color-mix(in oklab, var(--chart-3) 55%, var(--card))",
+  "color-mix(in oklab, var(--chart-4) 55%, var(--card))",
+  "color-mix(in oklab, var(--chart-5) 55%, var(--card))",
 ]
+
+// Everything past this many categories is rolled into a single "Other" slice,
+// so a long tail of 1% earners doesn't turn the legend into a wall of text.
+const MAX_SLICES = 9
 
 export function CategoryContribution({
   entries,
@@ -48,15 +59,23 @@ export function CategoryContribution({
     [entries, year]
   )
 
-  const pieData = React.useMemo(
-    () =>
-      slices.map((slice, index) => ({
-        label: slice.name,
-        value: slice.income,
-        color: SLICE_COLORS[index % SLICE_COLORS.length],
-      })),
-    [slices]
-  )
+  const pieData = React.useMemo(() => {
+    const top = slices.slice(0, MAX_SLICES).map((slice, index) => ({
+      label: slice.name,
+      value: slice.income,
+      color: SLICE_COLORS[index % SLICE_COLORS.length],
+    }))
+    const rest = slices.slice(MAX_SLICES)
+    if (rest.length === 0) return top
+    return [
+      ...top,
+      {
+        label: `Other (${rest.length})`,
+        value: rest.reduce((sum, slice) => sum + slice.income, 0),
+        color: "var(--muted-foreground)",
+      },
+    ]
+  }, [slices])
 
   const totalIncome = slices.reduce((sum, slice) => sum + slice.income, 0)
   const leader = slices[0]

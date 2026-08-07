@@ -57,5 +57,13 @@ export function createLocalStore<T>(storageKey: string, seed: T[]) {
   }
 }
 
-export const useEntries = createLocalStore<Entry>("artha.entries", mockEntries)
-export const useSources = createLocalStore<Source>("artha.sources", mockSources)
+// The key carries a version. Bumping it hands everyone the new demo ledger
+// instead of whatever an earlier visit left in the browser.
+export const useEntries = createLocalStore<Entry>(
+  "artha.entries.v2",
+  mockEntries
+)
+export const useSources = createLocalStore<Source>(
+  "artha.sources.v2",
+  mockSources
+)

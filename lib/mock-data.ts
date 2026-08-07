@@ -1,6 +1,7 @@
 // Mock data for the design phase. No backend — everything the UI shows
 // comes from here (seeded into localStorage-backed stores by lib/local-store.ts).
 
+import { demoEntries } from "@/lib/demo-entries"
 import { SEED_RATES, type RateTable } from "@/lib/rate-data"
 import type {
   AppSettings,
@@ -114,9 +115,58 @@ export const mockSources: Source[] = [
     name: "Local P2P — Ram",
     socialHandle: "@ram_trades",
   },
+  {
+    id: "s_6",
+    name: "Bybit",
+    socialHandle: "@Bybit_Official",
+    platformUrl: "https://www.bybit.com",
+  },
+  {
+    id: "s_7",
+    name: "OKX",
+    socialHandle: "@okx",
+    platformUrl: "https://www.okx.com",
+  },
+  {
+    id: "s_8",
+    name: "KuCoin",
+    socialHandle: "@kucoincom",
+    platformUrl: "https://www.kucoin.com",
+  },
+  {
+    id: "s_9",
+    name: "Hyperliquid",
+    socialHandle: "@HyperliquidX",
+    platformUrl: "https://app.hyperliquid.xyz",
+  },
+  {
+    id: "s_10",
+    name: "Kraken",
+    socialHandle: "@krakenfx",
+    platformUrl: "https://www.kraken.com",
+  },
+  {
+    id: "s_11",
+    name: "Interactive Brokers",
+    socialHandle: "@IBKR",
+    platformUrl: "https://www.interactivebrokers.com",
+  },
+  {
+    id: "s_12",
+    name: "Upwork",
+    socialHandle: "@Upwork",
+    platformUrl: "https://www.upwork.com",
+  },
+  {
+    id: "s_13",
+    name: "Local P2P — Sita",
+    socialHandle: "@sita_p2p",
+  },
 ]
 
-export const mockEntries: Entry[] = [
+// A handful of entries written by hand, kept because they read like real ones.
+// They sit alongside the generated demo ledger in `mockEntries` below.
+const handwrittenEntries: Entry[] = [
   // 2026
   {
     id: "e_26_11",
@@ -294,6 +344,13 @@ export const mockEntries: Entry[] = [
   },
 ]
 
+// Everything the app shows, newest first: the handwritten entries above plus
+// the generated demo ledger, which fills all three years with activity.
+export const mockEntries: Entry[] = [
+  ...handwrittenEntries,
+  ...demoEntries,
+].sort((a, b) => b.datetime.localeCompare(a.datetime))
+
 // Money in minus money out. Profit adds; loss, fee, and tax subtract;
 // p2p and transfer just move money around, so they don't count.
 export function getNetAmount(entry: Entry): number {
@@ -367,8 +424,8 @@ export const mockGoals: Goal[] = [
   {
     id: "g_1",
     title: "Target Of 2k26",
-    targetAmount: 14999.98,
-    currentAmount: 3237.88,
+    targetAmount: 25000,
+    currentAmount: 14292.97,
     currency: "USD",
     startDate: "2026-01-01",
     endDate: "2026-12-31",
@@ -378,7 +435,7 @@ export const mockGoals: Goal[] = [
     id: "g_2",
     title: "Emergency Fund",
     targetAmount: 5000,
-    currentAmount: 4100,
+    currentAmount: 5750,
     currency: "USD",
     startDate: "2026-01-01",
     endDate: "2026-06-30",
@@ -388,7 +445,7 @@ export const mockGoals: Goal[] = [
     id: "g_3",
     title: "New Laptop",
     targetAmount: 1800,
-    currentAmount: 540,
+    currentAmount: 640,
     currency: "USD",
     startDate: "2026-07-01",
     endDate: "2026-09-30",
@@ -402,5 +459,14 @@ export const mockGoals: Goal[] = [
     startDate: "2026-03-01",
     endDate: "2026-06-30",
     completedAt: "2026-05-20",
+  },
+  {
+    id: "g_5",
+    title: "Tax Reserve",
+    targetAmount: 2500,
+    currentAmount: 1180,
+    currency: "USD",
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
   },
 ]
