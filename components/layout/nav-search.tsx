@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { Search, X } from "lucide-react"
+import { Search, X } from "@/components/icons"
 import {
   ArrowDataTransferHorizontalIcon,
   HashIcon,

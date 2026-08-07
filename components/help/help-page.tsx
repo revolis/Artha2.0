@@ -9,7 +9,7 @@ import {
   MessageSquare,
   Search,
   Target,
-} from "lucide-react"
+} from "@/components/icons"
 
 import { AppShell } from "@/components/layout/app-shell"
 import {

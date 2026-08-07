@@ -1,14 +1,14 @@
 "use client"
 
 import * as React from "react"
-import type { LucideIcon } from "lucide-react"
+import type { AppIcon } from "@/components/icons"
 
 import { cn } from "@/lib/utils"
 
 export interface SettingsNavItem {
   id: string
   label: string
-  icon: LucideIcon
+  icon: AppIcon
   destructive?: boolean
   /** Starts a new group, drawn with a divider above it. */
   startsGroup?: boolean

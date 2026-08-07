@@ -131,21 +131,16 @@ export function AppSidebar({
             className="size-8 shrink-0 rounded-lg object-contain"
             priority
           />
-          <div
+          <span
             className={cn(
-              "flex min-w-0 flex-col transition-all duration-200",
+              "truncate text-sm font-semibold tracking-[0.2em] text-sidebar-foreground transition-all duration-200",
               expanded
                 ? "translate-x-0 opacity-100"
                 : "pointer-events-none -translate-x-2 opacity-0"
             )}
           >
-            <span className="truncate text-xs font-semibold tracking-[0.2em] text-sidebar-foreground">
-              {SITE.name}
-            </span>
-            <span className="truncate text-[10px] text-muted-foreground">
-              {SITE.tagline}
-            </span>
-          </div>
+            {SITE.name}
+          </span>
         </Link>
 
         <DropdownMenu>

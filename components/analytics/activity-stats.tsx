@@ -8,8 +8,8 @@ import {
   ListChecks,
   Store,
   Target,
-  type LucideIcon,
-} from "lucide-react"
+  type AppIcon,
+} from "@/components/icons"
 
 import { useInView } from "@/lib/use-in-view"
 
@@ -19,7 +19,7 @@ export interface ActivityStat {
   value: number | string
   suffix?: string
   sub: string
-  icon: LucideIcon
+  icon: AppIcon
 }
 
 /**

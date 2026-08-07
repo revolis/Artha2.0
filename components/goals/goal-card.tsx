@@ -8,7 +8,7 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-} from "lucide-react"
+} from "@/components/icons"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"

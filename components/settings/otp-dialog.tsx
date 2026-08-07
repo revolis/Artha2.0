@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck } from "@/components/icons"
 
 import { Button } from "@/components/ui/button"
 import {

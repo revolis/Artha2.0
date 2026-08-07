@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, TrendingDown, TrendingUp } from "lucide-react"
+import { Search, TrendingDown, TrendingUp } from "@/components/icons"
 
 import { Badge } from "@/components/ui/badge"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"

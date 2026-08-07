@@ -8,7 +8,7 @@ import {
   Infinity as InfinityIcon,
   Sparkles,
   X,
-} from "lucide-react"
+} from "@/components/icons"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"

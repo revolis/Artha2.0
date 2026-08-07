@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight } from "@/components/icons"
 
 import { AvgMonthlyIncome } from "@/components/dashboard/avg-monthly-income"
 import { CategoryContribution } from "@/components/dashboard/category-contribution"

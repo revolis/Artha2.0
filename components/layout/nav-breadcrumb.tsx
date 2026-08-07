@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home } from "lucide-react"
+import { Home } from "@/components/icons"
 
 import {
   Breadcrumb,

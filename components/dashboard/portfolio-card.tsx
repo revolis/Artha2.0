@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ArrowRight, TrendingDown, TrendingUp } from "lucide-react"
+import { ArrowRight, TrendingDown, TrendingUp } from "@/components/icons"
 
 import { Area, AreaChart } from "@/components/charts/area-chart"
 import { Grid } from "@/components/charts/grid"

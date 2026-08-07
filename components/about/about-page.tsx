@@ -9,7 +9,7 @@ import {
   Loader,
   PencilLine,
   Wallet,
-} from "lucide-react"
+} from "@/components/icons"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"

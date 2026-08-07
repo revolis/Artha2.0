@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Copy, MoreVertical, Pencil, Trash2 } from "lucide-react"
+import { Copy, MoreVertical, Pencil, Trash2 } from "@/components/icons"
 
 import { entryTypeLabels } from "@/components/entries/entry-form-dialog"
 import { Button } from "@/components/ui/button"

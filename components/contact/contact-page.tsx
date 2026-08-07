@@ -12,7 +12,7 @@ import {
   Mail,
   Send,
   ShieldAlert,
-} from "lucide-react"
+} from "@/components/icons"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"

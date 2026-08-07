@@ -14,7 +14,7 @@ import {
   Target,
   TrendingUp,
   Undo2,
-} from "lucide-react"
+} from "@/components/icons"
 
 import { NavIconButton } from "@/components/layout/nav-icon-button"
 import { Button } from "@/components/ui/button"

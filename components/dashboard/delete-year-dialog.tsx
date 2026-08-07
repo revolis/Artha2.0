@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { FileDown, TriangleAlert } from "lucide-react"
+import { FileDown, TriangleAlert } from "@/components/icons"
 
 import { Button } from "@/components/ui/button"
 import {

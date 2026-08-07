@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ImagePlus, X } from "lucide-react"
+import { ImagePlus, X } from "@/components/icons"
 
 import {
   CreatableCombobox,

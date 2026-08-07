@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { PanelLeft } from "lucide-react"
+import { PanelLeft } from "@/components/icons"
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { NavBreadcrumb } from "@/components/layout/nav-breadcrumb"

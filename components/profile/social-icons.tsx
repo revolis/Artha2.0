@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Globe, Link2, Mail } from "lucide-react"
+import { Globe, Link2, Mail } from "@/components/icons"
 
 // lucide v1 dropped every brand glyph, so the real logos live here as raw
 // SVG paths (Simple Icons, CC0 — no extra dependency). Each entry is matched

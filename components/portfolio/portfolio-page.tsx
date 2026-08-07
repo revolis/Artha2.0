@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Activity, Info } from "lucide-react"
+import { Activity, Info } from "@/components/icons"
 
 import { AppShell } from "@/components/layout/app-shell"
 import { GrowthContributors } from "@/components/portfolio/growth-contributors"

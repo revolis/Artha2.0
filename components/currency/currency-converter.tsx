@@ -1,7 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { ArrowUpDown, Check, Loader2, Pencil, RefreshCw } from "lucide-react"
+import {
+  ArrowUpDown,
+  Check,
+  Loader2,
+  Pencil,
+  RefreshCw,
+} from "@/components/icons"
 
 import { Button } from "@/components/ui/button"
 import {

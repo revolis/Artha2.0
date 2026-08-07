@@ -23,7 +23,7 @@ import {
   ShieldCheck,
   Sun,
   TriangleAlert,
-} from "lucide-react"
+} from "@/components/icons"
 
 import { CurrencyConverter } from "@/components/currency/currency-converter"
 import { OtpDialog, generateOtp } from "@/components/settings/otp-dialog"

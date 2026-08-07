@@ -9,7 +9,7 @@ import {
   Plus,
   Trash2,
   Upload,
-} from "lucide-react"
+} from "@/components/icons"
 
 import {
   AVATAR_PRESETS,

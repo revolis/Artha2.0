@@ -10,7 +10,7 @@ import {
   Pencil,
   Trash2,
   Wallet,
-} from "lucide-react"
+} from "@/components/icons"
 
 import { EntryFormDialog } from "@/components/entries/entry-form-dialog"
 import { AppShell } from "@/components/layout/app-shell"
