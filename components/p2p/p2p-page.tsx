@@ -4,14 +4,18 @@ import * as React from "react"
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  ChevronDown,
   Copy,
   MoreVertical,
-  Paperclip,
   Pencil,
   Trash2,
   Wallet,
 } from "@/components/icons"
 
+import {
+  AttachmentCount,
+  EntryDetailRow,
+} from "@/components/entries/entry-detail-row"
 import { EntryFormDialog } from "@/components/entries/entry-form-dialog"
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
@@ -54,6 +58,8 @@ import { autoBuckets, toStatPoints, trendOf } from "@/lib/stat-series"
 import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
+import { tagStyle } from "@/lib/tag-colors"
+import { cn } from "@/lib/utils"
 
 type Timeframe = "year" | "month" | "all" | "custom"
 
@@ -118,6 +124,8 @@ export function P2PPage() {
   const [customTo, setCustomTo] = React.useState("")
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<Entry | null>(null)
+  // One row open at a time, same as the Entries table.
+  const [expanded, setExpanded] = React.useState<string | null>(null)
 
   const sourceById = React.useMemo(
     () => new Map(sources.map((s) => [s.id, s])),
@@ -361,12 +369,14 @@ export function P2PPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10" />
                   <TableHead>Date</TableHead>
                   <TableHead>Direction</TableHead>
                   <TableHead className="text-right">USD Amount</TableHead>
                   <TableHead className="text-right">Rate</TableHead>
                   <TableHead className="text-right">Cash Amount</TableHead>
                   <TableHead>Source</TableHead>
+                  <TableHead>Tags</TableHead>
                   <TableHead>Note</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
@@ -379,89 +389,142 @@ export function P2PPage() {
                     ? sourceById.get(entry.sourceId)
                     : undefined
                   const isSold = p2p.direction === "usd-to-cash"
+                  const hasDetail =
+                    Boolean(entry.note) || (entry.attachments?.length ?? 0) > 0
+                  const isOpen = expanded === entry.id
                   return (
-                    <TableRow key={entry.id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{date}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {time}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {isSold ? (
-                            <ArrowUpRight className="text-destructive" />
-                          ) : (
-                            <ArrowDownLeft className="text-success" />
-                          )}
-                          {isSold ? "Sold USD" : "Bought USD"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {formatMoney(entry.amount, "USD")}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {p2p.rate}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatCash(p2p.cashAmount, p2p.cashCurrency)}
-                      </TableCell>
-                      <TableCell>{source?.name ?? "—"}</TableCell>
-                      <TableCell className="max-w-48">
-                        <div className="flex items-center gap-1.5">
-                          <span className="truncate text-muted-foreground">
-                            {entry.note ?? "—"}
-                          </span>
-                          {entry.attachments?.length ? (
-                            <span className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground">
-                              <Paperclip className="size-3" />
-                              {entry.attachments.length}
-                            </span>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            render={
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                aria-label="Trade options"
+                    <React.Fragment key={entry.id}>
+                      <TableRow>
+                        <TableCell className="pr-0">
+                          {hasDetail ? (
+                            <button
+                              type="button"
+                              aria-expanded={isOpen}
+                              aria-label={
+                                isOpen
+                                  ? "Hide note and images"
+                                  : "Show note and images"
+                              }
+                              onClick={() =>
+                                setExpanded(isOpen ? null : entry.id)
+                              }
+                              className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            >
+                              <ChevronDown
+                                className={cn(
+                                  "size-4 transition-transform duration-200",
+                                  isOpen && "rotate-180"
+                                )}
                               />
-                            }
-                          >
-                            <MoreVertical />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuGroup>
-                              <DropdownMenuItem onClick={() => openEdit(entry)}>
-                                <Pencil />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDuplicate(entry)}
-                              >
-                                <Copy />
-                                Duplicate
-                              </DropdownMenuItem>
-                            </DropdownMenuGroup>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuGroup>
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => handleDelete(entry)}
-                              >
-                                <Trash2 />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuGroup>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
+                            </button>
+                          ) : null}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{date}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {time}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {isSold ? (
+                              <ArrowUpRight className="text-destructive" />
+                            ) : (
+                              <ArrowDownLeft className="text-success" />
+                            )}
+                            {isSold ? "Sold USD" : "Bought USD"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-medium tabular-nums">
+                          {formatMoney(entry.amount, "USD")}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {p2p.rate}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatCash(p2p.cashAmount, p2p.cashCurrency)}
+                        </TableCell>
+                        <TableCell>{source?.name ?? "—"}</TableCell>
+                        <TableCell>
+                          {entry.tags.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {/* Each tag keeps its own colour, derived from its
+                              text so it never changes between renders. */}
+                              {entry.tags.slice(0, 2).map((tag) => (
+                                <Badge
+                                  key={tag}
+                                  variant="outline"
+                                  style={tagStyle(tag)}
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {entry.tags.length > 2 ? (
+                                <Badge variant="outline">
+                                  +{entry.tags.length - 2}
+                                </Badge>
+                              ) : null}
+                            </div>
+                          ) : (
+                            "—"
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-48">
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate text-muted-foreground">
+                              {entry.note ?? "—"}
+                            </span>
+                            <AttachmentCount entry={entry} />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              render={
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label="Trade options"
+                                />
+                              }
+                            >
+                              <MoreVertical />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuGroup>
+                                <DropdownMenuItem
+                                  onClick={() => openEdit(entry)}
+                                >
+                                  <Pencil />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDuplicate(entry)}
+                                >
+                                  <Copy />
+                                  Duplicate
+                                </DropdownMenuItem>
+                              </DropdownMenuGroup>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuGroup>
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={() => handleDelete(entry)}
+                                >
+                                  <Trash2 />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                      {isOpen ? (
+                        <EntryDetailRow entry={entry} colSpan={10} />
+                      ) : null}
+                    </React.Fragment>
                   )
                 })}
               </TableBody>
