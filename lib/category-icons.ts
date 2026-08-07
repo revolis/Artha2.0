@@ -3,87 +3,87 @@
 // the user invents today gets a stable icon immediately and keeps it forever.
 
 import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  Award,
-  Banknote,
-  Boxes,
-  Briefcase,
-  Building2,
-  CircleDollarSign,
-  ClipboardCheck,
-  Coins,
-  Compass,
-  Cpu,
-  Gift,
-  Globe,
-  Handshake,
-  Hourglass,
-  Landmark,
-  Laptop,
-  Layers,
-  LineChart,
-  Lock,
-  Package,
-  PackageOpen,
-  Palette,
-  PiggyBank,
-  Receipt,
-  Rocket,
-  Sparkles,
-  Sprout,
-  Target,
-  TrendingUp,
-  Users,
-  Wallet,
-  Zap,
-  type LucideIcon,
-} from "lucide-react"
+  Award01Icon,
+  BankIcon,
+  BanknoteIcon,
+  Briefcase01Icon,
+  Building01Icon,
+  ChartLineData01Icon,
+  Coins01Icon,
+  CompassIcon,
+  CpuIcon,
+  DollarCircleIcon,
+  Download01Icon,
+  FlashIcon,
+  GiftIcon,
+  Globe02Icon,
+  HandshakeIcon,
+  HourglassIcon,
+  Invoice01Icon,
+  LaptopIcon,
+  Layers01Icon,
+  Leaf01Icon,
+  PackageIcon,
+  PackageOpenIcon,
+  PaintBoardIcon,
+  PiggyBankIcon,
+  Rocket01Icon,
+  SparklesIcon,
+  SquareLock01Icon,
+  Target01Icon,
+  TaskDone01Icon,
+  TradeUpIcon,
+  Upload01Icon,
+  UserGroupIcon,
+  Wallet01Icon,
+} from "@hugeicons/core-free-icons"
+import type { IconSvgElement } from "@hugeicons/react"
+
+import { makeIcon, type AppIcon } from "@/components/icons"
 
 // First match wins, so the more specific patterns come first. Related-but-
 // distinct concepts get their own icon rather than sharing one, so two
 // categories rarely land on the same glyph.
-const KEYWORD_ICONS: [RegExp, LucideIcon][] = [
-  [/pre[-\s]?market/i, Hourglass],
-  [/launch(pool|pad)/i, Sprout],
-  [/ido|ico|presale/i, Rocket],
-  [/alpha/i, Sparkles],
-  [/airdrop/i, Gift],
-  [/surprise|drop/i, PackageOpen],
-  [/fee|charge|commission/i, Receipt],
-  [/tax|vat|duty/i, Landmark],
-  [/earn|apr|apy|interest|yield|savings/i, PiggyBank],
-  [/stak|lock/i, Lock],
-  [/predict|bet|wager/i, Target],
-  [/withdraw/i, ArrowUpFromLine],
-  [/deposit|top[-\s]?up/i, ArrowDownToLine],
-  [/p2p|fiat|cash|remit/i, Banknote],
-  [/salary|payroll|wage|job/i, Briefcase],
-  [/freelance|client|contract|consult|gig/i, Laptop],
-  [/referral|affiliate|invite/i, Users],
-  [/mining|node|validator|hardware/i, Cpu],
-  [/trade|trading|spot|futures|margin/i, LineChart],
-  [/quest|task|bounty/i, ClipboardCheck],
-  [/bonus|reward|prize|win/i, Award],
-  [/nft|art|collect/i, Palette],
-  [/loan|lend|debt|borrow/i, Handshake],
-  [/gift|donation/i, Gift],
-  [/exchange|binance|bitget|bybit|okx|kucoin/i, Building2],
+const KEYWORD_ICONS: [RegExp, IconSvgElement][] = [
+  [/pre[-\s]?market/i, HourglassIcon],
+  [/launch(pool|pad)/i, Leaf01Icon],
+  [/ido|ico|presale/i, Rocket01Icon],
+  [/alpha/i, SparklesIcon],
+  [/airdrop/i, GiftIcon],
+  [/surprise|drop/i, PackageOpenIcon],
+  [/fee|charge|commission/i, Invoice01Icon],
+  [/tax|vat|duty/i, BankIcon],
+  [/earn|apr|apy|interest|yield|savings/i, PiggyBankIcon],
+  [/stak|lock/i, SquareLock01Icon],
+  [/predict|bet|wager/i, Target01Icon],
+  [/withdraw/i, Upload01Icon],
+  [/deposit|top[-\s]?up/i, Download01Icon],
+  [/p2p|fiat|cash|remit/i, BanknoteIcon],
+  [/salary|payroll|wage|job/i, Briefcase01Icon],
+  [/freelance|client|contract|consult|gig/i, LaptopIcon],
+  [/referral|affiliate|invite/i, UserGroupIcon],
+  [/mining|node|validator|hardware/i, CpuIcon],
+  [/trade|trading|spot|futures|margin/i, ChartLineData01Icon],
+  [/quest|task|bounty/i, TaskDone01Icon],
+  [/bonus|reward|prize|win/i, Award01Icon],
+  [/nft|art|collect/i, PaintBoardIcon],
+  [/loan|lend|debt|borrow/i, HandshakeIcon],
+  [/gift|donation/i, GiftIcon],
+  [/exchange|binance|bitget|bybit|okx|kucoin/i, Building01Icon],
 ]
 
 // Deterministic pool for categories that match no keyword.
-const FALLBACK_ICONS: LucideIcon[] = [
-  Coins,
-  Wallet,
-  TrendingUp,
-  Layers,
-  Sparkles,
-  Boxes,
-  CircleDollarSign,
-  Globe,
-  Zap,
-  Package,
-  Compass,
+const FALLBACK_ICONS: IconSvgElement[] = [
+  Coins01Icon,
+  Wallet01Icon,
+  TradeUpIcon,
+  Layers01Icon,
+  SparklesIcon,
+  PackageIcon,
+  DollarCircleIcon,
+  Globe02Icon,
+  FlashIcon,
+  CompassIcon,
 ]
 
 function hashString(value: string): number {
@@ -94,10 +94,25 @@ function hashString(value: string): number {
   return Math.abs(hash)
 }
 
-export function getCategoryIcon(name?: string): LucideIcon {
-  if (!name || name.trim() === "") return Coins
-  for (const [pattern, icon] of KEYWORD_ICONS) {
-    if (pattern.test(name)) return icon
+// Components are built once at module load, not per render — otherwise every
+// row would mount a brand-new component type and lose its DOM each time.
+const iconCache = new Map<IconSvgElement, AppIcon>()
+
+function componentFor(glyph: IconSvgElement): AppIcon {
+  let component = iconCache.get(glyph)
+  if (!component) {
+    component = makeIcon(glyph)
+    iconCache.set(glyph, component)
   }
-  return FALLBACK_ICONS[hashString(name.toLowerCase()) % FALLBACK_ICONS.length]
+  return component
+}
+
+export function getCategoryIcon(name?: string): AppIcon {
+  if (!name || name.trim() === "") return componentFor(Coins01Icon)
+  for (const [pattern, glyph] of KEYWORD_ICONS) {
+    if (pattern.test(name)) return componentFor(glyph)
+  }
+  return componentFor(
+    FALLBACK_ICONS[hashString(name.toLowerCase()) % FALLBACK_ICONS.length]
+  )
 }

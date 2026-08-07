@@ -1,9 +1,16 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Copy, MoreVertical, Pencil, Trash2 } from "@/components/icons"
+import {
+  Copy,
+  MoreVertical,
+  Paperclip,
+  Pencil,
+  Trash2,
+} from "@/components/icons"
 
 import { entryTypeLabels } from "@/components/entries/entry-form-dialog"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -22,8 +29,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
+import { normaliseAttachments } from "@/lib/attachments"
 import { getCategoryIcon } from "@/lib/category-icons"
 import { formatMoney, getNetAmount } from "@/lib/mock-data"
+import { tagStyle } from "@/lib/tag-colors"
 import type { Entry, Source } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -52,6 +61,15 @@ function formatWhen(datetime: string, now = new Date()): string {
     day: "numeric",
     ...(when.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }),
   }).format(when)
+}
+
+// The clock time, shown under the relative date so "Jun 30" still tells you
+// when in the day it happened.
+function formatExactTime(datetime: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(datetime))
 }
 
 interface RecentTransactionsProps {
@@ -101,44 +119,103 @@ export function RecentTransactions({
                 : undefined
               const title =
                 entry.category ?? sourceName ?? entryTypeLabels[entry.type]
-              // Avoid repeating the title when a source shares the category name.
+              // The type has its own badge now, so the source line is dropped
+              // rather than repeated when it matches the title.
               const subtitle =
-                sourceName && sourceName !== title
-                  ? sourceName
-                  : entryTypeLabels[entry.type]
+                sourceName && sourceName !== title ? sourceName : null
               const Icon = getCategoryIcon(entry.category ?? sourceName)
               const net = getNetAmount(entry)
+
+              const attachments = normaliseAttachments(entry.attachments)
 
               return (
                 <div
                   key={entry.id}
-                  className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
+                  className="flex items-start gap-4 py-3 first:pt-0 last:pb-0"
                 >
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted">
+                  <div className="mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted">
                     <Icon className="size-5 text-muted-foreground" />
                   </div>
 
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-medium">{title}</span>
-                    <span className="truncate text-sm text-muted-foreground">
-                      {subtitle}
-                    </span>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate font-medium">{title}</span>
+                      <Badge variant="secondary" className="shrink-0">
+                        {entryTypeLabels[entry.type]}
+                      </Badge>
+                    </div>
+
+                    {/* Where it came from, plus its tags — each in its own
+                        colour, the same one used on the Entries table. */}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                      {subtitle ? (
+                        <span className="truncate">{subtitle}</span>
+                      ) : null}
+                      {entry.tags.slice(0, 2).map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="outline"
+                          className="shrink-0 px-1.5 py-0 text-[10px]"
+                          style={tagStyle(tag)}
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                      {entry.tags.length > 2 ? (
+                        <span className="text-xs">
+                          +{entry.tags.length - 2}
+                        </span>
+                      ) : null}
+                      {attachments.length > 0 ? (
+                        <span className="flex shrink-0 items-center gap-0.5 text-xs">
+                          <Paperclip className="size-3" />
+                          {attachments.length}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {/* The rate and cash side of a P2P trade — the whole point
+                        of the entry, and previously invisible here. */}
+                    {entry.p2p ? (
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {entry.p2p.direction === "usd-to-cash"
+                          ? "Sold USD"
+                          : "Bought USD"}
+                        {" · "}
+                        {entry.p2p.cashCurrency}{" "}
+                        {entry.p2p.cashAmount.toLocaleString("en-US", {
+                          maximumFractionDigits: 2,
+                        })}
+                        {" @ "}
+                        {entry.p2p.rate}
+                      </span>
+                    ) : null}
+
+                    {entry.note ? (
+                      <span className="line-clamp-1 text-xs text-muted-foreground/80">
+                        {entry.note}
+                      </span>
+                    ) : null}
                   </div>
 
-                  <span className="hidden shrink-0 text-sm text-muted-foreground sm:block">
-                    {formatWhen(entry.datetime)}
-                  </span>
-
-                  <span
-                    className={cn(
-                      "shrink-0 font-semibold tabular-nums",
-                      net > 0 && "text-success",
-                      net < 0 && "text-destructive"
-                    )}
-                  >
-                    {net > 0 ? "+" : net < 0 ? "−" : ""}
-                    {formatMoney(entry.amount, "USD")}
-                  </span>
+                  <div className="flex shrink-0 flex-col items-end gap-0.5">
+                    <span
+                      className={cn(
+                        "font-semibold tabular-nums",
+                        net > 0 && "text-success",
+                        net < 0 && "text-destructive"
+                      )}
+                    >
+                      {net > 0 ? "+" : net < 0 ? "−" : ""}
+                      {formatMoney(entry.amount, "USD")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatWhen(entry.datetime)}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground/70">
+                      {formatExactTime(entry.datetime)}
+                    </span>
+                  </div>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger
