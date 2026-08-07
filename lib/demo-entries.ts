@@ -1,5 +1,6 @@
-// A full demo ledger — 200+ entries spread across 2024, 2025 and 2026 — so
-// every chart, table and heatmap in the app has something real-looking to draw.
+// A full demo ledger — spread across 2024 to 2027 — so every chart, table and
+// heatmap in the app has something real-looking to draw, whichever year the
+// year switcher is pointed at.
 //
 // The entries are generated rather than typed out one by one, but they are not
 // random in the usual sense: everything comes from a fixed seed, so the ledger
@@ -7,14 +8,15 @@
 // That second part matters — genuinely random data would differ between the
 // two and React would complain the moment the page loaded.
 //
-// Nothing here reads the clock. The newest entry is a fixed date, so the demo
-// never drifts into the future.
+// Nothing here reads the clock, so the ledger stays put no matter when the
+// site is opened.
 
 import type { Entry, EntryType } from "@/lib/types"
 
-// The last day the demo covers. Kept as a constant rather than "today" so the
-// data stays put no matter when the site is opened.
-const LAST_DAY = { year: 2026, month: 7, day: 7 } // 7 August 2026
+// Where the present sits in the demo. The month this falls in is cut short at
+// this day, so the ongoing year doesn't look finished. Years after it are
+// dated ahead on purpose — the year switcher can reach them.
+const TODAY = { year: 2026, month: 7, day: 7 } // 7 August 2026
 
 /** Seeded random-number generator (mulberry32). Same seed, same sequence. */
 function makeRandom(seed: number) {
@@ -566,12 +568,18 @@ const P2P_BUY_NOTES = [
   "Put spare cash back into the exchange.",
 ]
 
-// NPR per USD, drifting upward across the three years the way it really has.
-const RATE_BASE: Record<number, number> = { 2024: 132, 2025: 138, 2026: 146.5 }
+// NPR per USD, drifting upward across the years the way it really has.
+const RATE_BASE: Record<number, number> = {
+  2024: 132,
+  2025: 138,
+  2026: 146.5,
+  2027: 152.5,
+}
 const RATE_DRIFT: Record<number, number> = {
   2024: 0.48,
   2025: 0.55,
   2026: 0.78,
+  2027: 0.6,
 }
 
 interface YearPlan {
@@ -589,6 +597,13 @@ const YEAR_PLANS: YearPlan[] = [
   { year: 2025, scale: 0.62, perMonth: [6, 6, 7, 7, 8, 7, 6, 7, 8, 8, 7, 8] },
   // This year, up to the demo's last day.
   { year: 2026, scale: 1, perMonth: [12, 11, 13, 12, 14, 13, 12, 6] },
+  // A year ahead, so the year switcher has a full twelve months to show
+  // there too. Dated in the future on purpose — it's a demo ledger.
+  {
+    year: 2027,
+    scale: 1.22,
+    perMonth: [12, 11, 13, 12, 14, 13, 12, 13, 14, 13, 12, 14],
+  },
 ]
 
 function daysInMonth(year: number, month: number): number {
@@ -660,11 +675,8 @@ function build(): Entry[] {
       const growth = 1 + monthsElapsed * 0.011
       monthsElapsed += 1
 
-      const isFinalMonth =
-        plan.year === LAST_DAY.year && month === LAST_DAY.month
-      const lastDay = isFinalMonth
-        ? LAST_DAY.day
-        : daysInMonth(plan.year, month)
+      const isCurrentMonth = plan.year === TODAY.year && month === TODAY.month
+      const lastDay = isCurrentMonth ? TODAY.day : daysInMonth(plan.year, month)
 
       const types = typesForMonth(count, month)
 

@@ -366,13 +366,13 @@ export function getEntryYear(entry: Entry): number {
 }
 
 // Average monthly income for a year, in USD, from real entries.
-// Past years divide by 12; the current year divides by months elapsed so far.
+// The current year divides by the months elapsed so far; any other year
+// divides by 12, whether it's behind us or planned ahead.
 export function getAvgMonthlyIncome(
   entries: Entry[],
   year: number,
   now = new Date()
 ): number {
-  if (year > now.getFullYear()) return 0
   const total = entries
     .filter((entry) => getEntryYear(entry) === year)
     .reduce((sum, entry) => sum + getNetAmount(entry), 0)

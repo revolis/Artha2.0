@@ -327,7 +327,13 @@ const BarInner = memo(function BarInner({
               barHeight = Math.max(0, barHeight - stackGap)
             }
           } else {
-            y = valuePos
+            // Local patch: measure a non-stacked bar from the zero line rather
+            // than the bottom of the chart. A value below zero used to produce
+            // a negative height, which SVG rejects outright and logs; now it
+            // hangs below the baseline the way it should.
+            const baselineY = scale(0) ?? innerHeight
+            y = Math.min(valuePos, baselineY)
+            barHeight = Math.abs(baselineY - valuePos)
             // For grouped bars, offset x position
             const effectiveGroupGap = seriesCount > 1 ? groupGap : 0
             x = bandPos + seriesIndex * (barWidth + effectiveGroupGap)
@@ -343,15 +349,12 @@ const BarInner = memo(function BarInner({
           // perspective trim (sub-pixel on a 3px bar; keeps the front aligned
           // with bar-depth, which also skips trim for floored bars).
           let isFloored = false
-          if (
-            !stacked &&
-            minBarHeight > 0 &&
-            value >= 0 &&
-            barHeight < minBarHeight
-          ) {
+          if (!stacked && minBarHeight > 0 && barHeight < minBarHeight) {
             const baselineY = scale(0) ?? innerHeight
             barHeight = minBarHeight
-            y = baselineY - minBarHeight
+            // Local patch: a barely-negative value floors downward from the
+            // baseline, so it still reads as a loss rather than a tiny gain.
+            y = value < 0 ? baselineY : baselineY - minBarHeight
             isFloored = true
           }
 
