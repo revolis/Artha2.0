@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils"
 
 const SECTIONS = [
   { href: "#dashboard", label: "Dashboard" },
-  { href: "#features", label: "Features" },
   { href: "#pages", label: "Workspace" },
   { href: "#how", label: "Method" },
   { href: "#faq", label: "FAQ" },

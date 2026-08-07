@@ -1,9 +1,7 @@
 import type { Metadata } from "next"
 
-import { ByTheNumbers } from "@/components/landing/by-the-numbers"
 import { DashboardPreview } from "@/components/landing/dashboard-preview"
 import { Faq } from "@/components/landing/faq"
-import { FeatureGrid } from "@/components/landing/feature-grid"
 import { FinalCta } from "@/components/landing/final-cta"
 import { Hero } from "@/components/landing/hero"
 import { HowItWorks } from "@/components/landing/how-it-works"
@@ -22,15 +20,15 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh flex-col bg-background">
+    // No background of its own: an opaque wrapper here would paint over the
+    // site-wide star field, which sits behind the page content.
+    <div className="flex min-h-svh flex-col">
       <LandingNav />
       <main className="flex-1">
         <Hero />
         <DashboardPreview />
         <TracksMarquee />
-        <FeatureGrid />
         <WavyBand />
-        <ByTheNumbers />
         <WaveDivider />
         <PageTour />
         <HowItWorks />
