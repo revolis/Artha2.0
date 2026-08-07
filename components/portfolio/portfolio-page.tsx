@@ -265,20 +265,20 @@ export function PortfolioPage() {
               >
                 <Grid horizontal />
                 <XAxis />
-                {/* Net income sits behind — it ignores cash moving in and out,
-                    so it runs above the portfolio line whenever you cash out. */}
+                {/* Gross sits behind — it ignores cash moving in and out, so it
+                    runs above the net line whenever you've cashed out. */}
                 <Area dataKey="netIncome" fill={INCOME_COLOR} />
                 <Area dataKey="portfolio" fill={PORTFOLIO_COLOR} />
                 <ChartTooltip
                   rows={(point) => [
                     {
                       color: PORTFOLIO_COLOR,
-                      label: "Portfolio",
+                      label: "Net Portfolio Value",
                       value: formatMoney(Number(point.portfolio), "USD"),
                     },
                     {
                       color: INCOME_COLOR,
-                      label: "Net income",
+                      label: "Gross Portfolio Value",
                       value: formatMoney(Number(point.netIncome), "USD"),
                     },
                   ]}
@@ -291,7 +291,7 @@ export function PortfolioPage() {
                     className="h-0.5 w-4 rounded-full"
                     style={{ backgroundColor: PORTFOLIO_COLOR }}
                   />
-                  Portfolio value
+                  Net Portfolio Value
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span
@@ -299,7 +299,7 @@ export function PortfolioPage() {
                     className="h-0.5 w-4 rounded-full"
                     style={{ backgroundColor: INCOME_COLOR }}
                   />
-                  Net income
+                  Gross Portfolio Value
                 </span>
               </div>
               <Separator />

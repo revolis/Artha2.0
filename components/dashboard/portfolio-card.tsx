@@ -196,7 +196,7 @@ export function PortfolioCard({
                     className="h-0.5 w-4 rounded-full"
                     style={{ backgroundColor: PORTFOLIO_COLOR }}
                   />
-                  Net
+                  Net Portfolio Value
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span
@@ -204,7 +204,7 @@ export function PortfolioCard({
                     className="h-0.5 w-4 rounded-full"
                     style={{ backgroundColor: INCOME_COLOR }}
                   />
-                  Gross
+                  Gross Portfolio Value
                 </span>
               </div>
 
@@ -244,18 +244,21 @@ export function PortfolioCard({
             >
               <Grid horizontal />
               <XAxis />
+              {/* Gross is drawn first so it sits behind. It ignores cash moving
+                  in and out, so it runs above the net line whenever you've
+                  taken more cash out than you've put back. */}
               <Area dataKey="netIncome" fill={INCOME_COLOR} />
               <Area dataKey="portfolio" fill={PORTFOLIO_COLOR} />
               <ChartTooltip
                 rows={(point) => [
                   {
                     color: PORTFOLIO_COLOR,
-                    label: "Portfolio",
+                    label: "Net Portfolio Value",
                     value: formatMoney(Number(point.portfolio), "USD"),
                   },
                   {
                     color: INCOME_COLOR,
-                    label: "Before cash moves",
+                    label: "Gross Portfolio Value",
                     value: formatMoney(Number(point.netIncome), "USD"),
                   },
                 ]}

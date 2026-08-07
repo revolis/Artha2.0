@@ -161,10 +161,11 @@
   --chart-background: oklch(1 0 0);
   --chart-foreground: oklch(0.145 0.004 285);
   --chart-foreground-muted: oklch(0.55 0.014 260);
-  /* Neutral on purpose. These drive the area-chart lines; pointing them at
-       --chart-1/--chart-2 would inherit the categorical pie palette. */
+  /* The two area-chart lines. The lead line stays neutral so it never fights
+       the rest of the card; the second one carries a hue, because two greys a
+       few steps apart are impossible to match back to a legend swatch. */
   --chart-line-primary: oklch(0.42 0 0);
-  --chart-line-secondary: oklch(0.68 0 0);
+  --chart-line-secondary: oklch(0.66 0.13 85);
   --chart-crosshair: oklch(0.4 0.1828 274.34);
   --chart-grid: oklch(0.9 0 0);
   --chart-brush-border: var(--chart-grid);
@@ -226,7 +227,7 @@
   --chart-foreground: oklch(0.45 0 0);
   --chart-foreground-muted: oklch(0.65 0.01 260);
   --chart-line-primary: oklch(0.87 0 0);
-  --chart-line-secondary: oklch(0.56 0 0);
+  --chart-line-secondary: oklch(0.78 0.13 85);
   --chart-crosshair: oklch(0.45 0 0);
   --chart-grid: oklch(0.25 0 0);
   --chart-brush-border: var(--chart-grid);
