@@ -12,6 +12,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { NavIcon } from "@/components/layout/nav-icon"
 import { findNavLocation } from "@/lib/nav-config"
 
 /**
@@ -55,7 +56,9 @@ export function NavBreadcrumb() {
             <BreadcrumbSeparator className="hidden md:inline-flex" />
             <BreadcrumbItem className="min-w-0">
               <BreadcrumbPage className="flex min-w-0 items-center gap-1.5 font-medium">
-                <location.item.icon className="size-3.5 shrink-0 text-muted-foreground" />
+                <span className="size-3.5 shrink-0 text-muted-foreground">
+                  <NavIcon icon={location.item.icon} />
+                </span>
                 <span className="truncate">{location.item.title}</span>
               </BreadcrumbPage>
             </BreadcrumbItem>

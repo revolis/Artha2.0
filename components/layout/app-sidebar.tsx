@@ -4,8 +4,9 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Check, PanelLeft } from "lucide-react"
+import { SidebarLeftIcon, Tick02Icon } from "@hugeicons/core-free-icons"
 
+import { NavIcon } from "@/components/layout/nav-icon"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -24,6 +25,15 @@ import { NAV_SECTIONS as sections } from "@/lib/nav-config"
 import { SITE } from "@/lib/site"
 import { SIDEBAR_MODES, type SidebarMode } from "@/lib/use-sidebar-mode"
 import { cn } from "@/lib/utils"
+
+// Support renders separately, as a row of icons pinned below the scroll area.
+const SUPPORT_TITLE = "Support"
+const mainSections = sections.filter(
+  (section) => section.title !== SUPPORT_TITLE
+)
+const supportSection = sections.find(
+  (section) => section.title === SUPPORT_TITLE
+)
 
 interface AppSidebarProps {
   mode: SidebarMode
@@ -154,7 +164,9 @@ export function AppSidebar({
               />
             }
           >
-            <PanelLeft />
+            <span className="size-4">
+              <NavIcon icon={SidebarLeftIcon} />
+            </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             {/* The label must live inside the group — Base UI throws if a
@@ -166,7 +178,14 @@ export function AppSidebar({
                   key={option.value}
                   onClick={() => onModeChange(option.value)}
                 >
-                  <Check className={cn(option.value !== mode && "invisible")} />
+                  <span
+                    className={cn(
+                      "size-4 shrink-0",
+                      option.value !== mode && "invisible"
+                    )}
+                  >
+                    <NavIcon icon={Tick02Icon} />
+                  </span>
                   <span className="flex flex-col">
                     <span>{option.label}</span>
                     <span className="text-xs text-muted-foreground">
@@ -182,7 +201,10 @@ export function AppSidebar({
 
       <div
         ref={navRef}
-        className="relative flex-1 overflow-x-hidden overflow-y-auto px-3 pb-4"
+        // Reserving the scrollbar gutter on both sides keeps the icons on the
+        // rail's true centre line — otherwise the scrollbar steals width from
+        // one side only and everything sits slightly left.
+        className="relative flex-1 [scrollbar-width:thin] [scrollbar-gutter:stable_both-edges] overflow-x-hidden overflow-y-auto px-3 pb-4"
       >
         {/* Single pill that glides between items instead of one highlight per row. */}
         <div
@@ -191,10 +213,10 @@ export function AppSidebar({
           className="pointer-events-none absolute inset-x-3 top-0 rounded-xl bg-sidebar-accent opacity-0 transition-[transform,height,opacity] duration-300 ease-out"
         />
 
-        {sections.map((section) => (
+        {mainSections.map((section) => (
           <div
             key={section.title}
-            className="flex flex-col gap-1 pt-4 first:pt-0"
+            className="flex w-full flex-col gap-1 pt-4 first:pt-0"
           >
             <span
               className={cn(
@@ -221,19 +243,22 @@ export function AppSidebar({
                   onMouseEnter={() => setHoveredKey(key)}
                   onFocus={() => setHoveredKey(key)}
                   className={cn(
-                    "relative z-10 flex h-10 items-center gap-3 rounded-xl px-3 text-sm transition-colors",
+                    "relative z-10 flex h-10 w-full items-center rounded-xl text-sm transition-colors",
+                    // Collapsed rows drop their padding so the icon lands on
+                    // the rail's centre line rather than sitting left of it.
+                    expanded ? "gap-3 px-3" : "justify-center px-0",
                     isActive
                       ? "font-medium text-sidebar-accent-foreground"
                       : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                   )}
                 >
-                  <item.icon className="size-4 shrink-0" />
+                  <span className="size-[18px] shrink-0">
+                    <NavIcon icon={item.icon} />
+                  </span>
                   <span
                     className={cn(
                       "truncate transition-all duration-200",
-                      expanded
-                        ? "translate-x-0 opacity-100"
-                        : "pointer-events-none -translate-x-2 opacity-0"
+                      expanded ? "opacity-100" : "hidden"
                     )}
                   >
                     {item.title}
@@ -254,6 +279,41 @@ export function AppSidebar({
           </div>
         ))}
       </div>
+
+      {/* Support is icons only — the names live in tooltips, so three links
+          cost one row instead of three. */}
+      {supportSection ? (
+        <div className="shrink-0 border-t px-3 py-3">
+          <div className="flex flex-wrap items-center justify-center gap-1">
+            {supportSection.items.map((item) => {
+              const isActive = pathname.startsWith(item.href)
+              return (
+                <Tooltip key={item.href}>
+                  <TooltipTrigger
+                    render={
+                      <Link
+                        href={item.href}
+                        aria-label={item.title}
+                        className={cn(
+                          "flex size-9 items-center justify-center rounded-xl transition-colors",
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                        )}
+                      />
+                    }
+                  >
+                    <span className="size-[18px]">
+                      <NavIcon icon={item.icon} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{item.title}</TooltipContent>
+                </Tooltip>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
     </aside>
   )
 }

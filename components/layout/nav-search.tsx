@@ -2,16 +2,16 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { Search, X } from "lucide-react"
 import {
-  ArrowLeftRight,
-  Hash,
-  Search,
-  Store,
-  Tag,
-  X,
-  type LucideIcon,
-} from "lucide-react"
+  ArrowDataTransferHorizontalIcon,
+  HashIcon,
+  Store01Icon,
+  Tag01Icon,
+} from "@hugeicons/core-free-icons"
+import type { IconSvgElement } from "@hugeicons/react"
 
+import { NavIcon } from "@/components/layout/nav-icon"
 import { NavIconButton } from "@/components/layout/nav-icon-button"
 import { NAV_ITEMS } from "@/lib/nav-config"
 import { formatMoney } from "@/lib/mock-data"
@@ -25,7 +25,7 @@ interface SearchResult {
   title: string
   subtitle?: string
   href: string
-  icon: LucideIcon
+  icon: IconSvgElement
 }
 
 const GROUP_ORDER = ["Pages", "Entries", "Categories", "Sources", "Tags"]
@@ -75,7 +75,7 @@ export function NavSearch() {
           title: category,
           subtitle: "Category",
           href: `/entries?q=${encodeURIComponent(category)}`,
-          icon: Hash,
+          icon: HashIcon,
         })
       }
     }
@@ -91,7 +91,7 @@ export function NavSearch() {
           title: source.name,
           subtitle: source.socialHandle ?? "Source",
           href: `/entries?q=${encodeURIComponent(source.name)}`,
-          icon: Store,
+          icon: Store01Icon,
         })
       }
     }
@@ -104,7 +104,7 @@ export function NavSearch() {
           title: tag,
           subtitle: "Tag",
           href: `/entries?q=${encodeURIComponent(tag)}`,
-          icon: Tag,
+          icon: Tag01Icon,
         })
       }
     }
@@ -132,7 +132,7 @@ export function NavSearch() {
         title: entry.note || entry.category || "Entry",
         subtitle: `${entry.datetime.slice(0, 10)} · ${formatMoney(entry.amount, "USD")}${source ? ` · ${source.name}` : ""}`,
         href: `/entries?q=${encodeURIComponent(term)}`,
-        icon: ArrowLeftRight,
+        icon: ArrowDataTransferHorizontalIcon,
       })
     }
 
@@ -279,11 +279,9 @@ export function NavSearch() {
                         index === active ? "bg-accent" : "hover:bg-accent/60"
                       )}
                     >
-                      {/* createElement rather than a capitalised local: the icon
-                          comes from the result, it isn't defined here. */}
-                      {React.createElement(result.icon, {
-                        className: "size-4 shrink-0 text-muted-foreground",
-                      })}
+                      <span className="size-4 shrink-0 text-muted-foreground">
+                        <NavIcon icon={result.icon} />
+                      </span>
                       <span className="flex min-w-0 flex-col">
                         <span className="truncate text-sm">{result.title}</span>
                         {result.subtitle ? (

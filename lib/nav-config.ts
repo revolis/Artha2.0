@@ -3,27 +3,27 @@
 // against it — so a page only has to be added here once.
 
 import {
-  ArrowLeftRight,
-  ArrowUpDown,
-  BarChart3,
-  CalendarDays,
-  CreditCard,
-  FileText,
-  HelpCircle,
-  Info,
-  LayoutDashboard,
-  LineChart,
-  Mail,
-  Settings,
-  Target,
-  User,
-  type LucideIcon,
-} from "lucide-react"
+  Analytics01Icon,
+  ArrowDataTransferVerticalIcon,
+  Calendar03Icon,
+  ChartLineData01Icon,
+  CreditCardIcon,
+  DashboardSquare01Icon,
+  Exchange01Icon,
+  File01Icon,
+  HelpCircleIcon,
+  InformationCircleIcon,
+  Mail01Icon,
+  Settings02Icon,
+  Target01Icon,
+  UserCircleIcon,
+} from "@hugeicons/core-free-icons"
+import type { IconSvgElement } from "@hugeicons/react"
 
 export interface NavItem {
   title: string
   href: string
-  icon: LucideIcon
+  icon: IconSvgElement
 }
 
 export interface NavSection {
@@ -35,35 +35,40 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Overview",
     items: [
-      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { title: "Entries", href: "/entries", icon: ArrowUpDown },
-      { title: "Fiat/P2P", href: "/p2p", icon: ArrowLeftRight },
-      { title: "Portfolio", href: "/portfolio", icon: LineChart },
-      { title: "Analytics", href: "/analytics", icon: BarChart3 },
+      { title: "Dashboard", href: "/dashboard", icon: DashboardSquare01Icon },
+      {
+        title: "Entries",
+        href: "/entries",
+        icon: ArrowDataTransferVerticalIcon,
+      },
+      { title: "Fiat/P2P", href: "/p2p", icon: Exchange01Icon },
+      { title: "Portfolio", href: "/portfolio", icon: ChartLineData01Icon },
+      { title: "Analytics", href: "/analytics", icon: Analytics01Icon },
     ],
   },
   {
     title: "Planning",
     items: [
-      { title: "Goals", href: "/goals", icon: Target },
-      { title: "Year Heatmap", href: "/heatmap", icon: CalendarDays },
-      { title: "Reports", href: "/reports", icon: FileText },
+      { title: "Goals", href: "/goals", icon: Target01Icon },
+      { title: "Year Heatmap", href: "/heatmap", icon: Calendar03Icon },
+      { title: "Reports", href: "/reports", icon: File01Icon },
     ],
   },
   {
     title: "Account",
     items: [
-      { title: "Profile", href: "/profile", icon: User },
-      { title: "Billing", href: "/billing", icon: CreditCard },
-      { title: "Settings", href: "/settings", icon: Settings },
+      { title: "Profile", href: "/profile", icon: UserCircleIcon },
+      { title: "Billing", href: "/billing", icon: CreditCardIcon },
+      { title: "Settings", href: "/settings", icon: Settings02Icon },
     ],
   },
   {
+    // Rendered as a single row of icons at the foot of the sidebar.
     title: "Support",
     items: [
-      { title: "Help Centre", href: "/help", icon: HelpCircle },
-      { title: "Contact Us", href: "/contact", icon: Mail },
-      { title: "About Us", href: "/about", icon: Info },
+      { title: "Help Centre", href: "/help", icon: HelpCircleIcon },
+      { title: "Contact Us", href: "/contact", icon: Mail01Icon },
+      { title: "About Us", href: "/about", icon: InformationCircleIcon },
     ],
   },
 ]
