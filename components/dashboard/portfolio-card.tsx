@@ -138,9 +138,10 @@ export function PortfolioCard({
   cashOut,
   cashIn,
 }: PortfolioCardProps) {
-  // A month keeps the axis tight — the wider the window, the further apart
-  // the highest and lowest values, and the closer together the two lines look.
-  const [range, setRange] = React.useState<PortfolioRange>("1m")
+  // Opens on the year so the dashboard shows the whole story by default. The
+  // shorter windows are there when you want the two lines further apart — a
+  // wider window means a wider axis, which squeezes the gap between them.
+  const [range, setRange] = React.useState<PortfolioRange>("ytd")
 
   const days =
     PORTFOLIO_RANGES.find((item) => item.value === range)?.days ?? null
