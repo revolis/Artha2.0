@@ -1,17 +1,24 @@
 "use client"
 
-import { MoreVertical, Plus, Trash2 } from "@/components/icons"
+import * as React from "react"
 
+import { MoreVertical, Plus, Trash2 } from "@/components/icons"
+import WheelList, {
+  type WheelState,
+} from "@/components/lab/inertial-wheel-list"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 const YEAR_RANGE = 15 // how many years back and forward the picker offers
@@ -31,14 +38,27 @@ export function YearSwitcher({
   onSelectYear,
   onRequestDeleteYear,
 }: YearSwitcherProps) {
+  const [pickerOpen, setPickerOpen] = React.useState(false)
+  const [pickedYear, setPickedYear] = React.useState(currentYear)
+
   // Oldest year first, so past years sit to the left like tabs.
   const sortedYears = [...years].sort((a, b) => a - b)
 
-  // Full pickable range: scroll up for previous years, down for upcoming ones.
-  const pickableYears = Array.from(
-    { length: YEAR_RANGE * 2 + 1 },
-    (_, i) => currentYear - YEAR_RANGE + i
+  // Full pickable range: spin up for previous years, down for upcoming ones.
+  // Memoised because the wheel re-emits whenever this array's identity
+  // changes, and a fresh array each render would loop.
+  const yearOptions = React.useMemo(
+    () =>
+      Array.from({ length: YEAR_RANGE * 2 + 1 }, (_, i) =>
+        String(currentYear - YEAR_RANGE + i)
+      ),
+    [currentYear]
   )
+
+  // Stable for the same reason; only commit once the spin has settled.
+  const handleWheelChange = React.useCallback((state: WheelState) => {
+    if (state.settled) setPickedYear(Number(state.value))
+  }, [])
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -93,46 +113,41 @@ export function YearSwitcher({
           </div>
         )
       })}
-      <DropdownMenu>
-        <DropdownMenuTrigger
+      {/* A popover rather than a menu: the wheel is a listbox with its own
+          scrolling and arrow-key handling, which a menu would fight over. */}
+      <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+        <PopoverTrigger
           render={<Button size="sm" variant="ghost" className="rounded-full" />}
         >
           <Plus data-icon="inline-start" />
           Add Year
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <ScrollArea className="h-56">
-            {/* The label must live inside the group — Base UI throws if a
-                group part is rendered without a Group ancestor. */}
-            <DropdownMenuGroup className="p-1">
-              <DropdownMenuLabel className="px-3 pt-2 text-xs text-muted-foreground">
-                Scroll up for past, down for upcoming
-              </DropdownMenuLabel>
-              {pickableYears.map((year) => (
-                <DropdownMenuItem
-                  key={year}
-                  className={cn(
-                    "justify-center",
-                    year === currentYear && "font-semibold text-primary"
-                  )}
-                  ref={
-                    year === currentYear
-                      ? (node: HTMLDivElement | null) =>
-                          node?.scrollIntoView({ block: "center" })
-                      : undefined
-                  }
-                  onClick={() => onSelectYear(year)}
-                >
-                  {year}
-                  {year === currentYear && (
-                    <span className="text-xs text-muted-foreground">· now</span>
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-          </ScrollArea>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-auto p-3">
+          <div className="flex flex-col items-center gap-3">
+            <span className="text-xs text-muted-foreground">
+              Spin for past or upcoming years
+            </span>
+
+            <WheelList
+              items={yearOptions}
+              label="Year"
+              initialIndex={YEAR_RANGE}
+              onStateChange={handleWheelChange}
+            />
+
+            <Button
+              className="w-full"
+              onClick={() => {
+                onSelectYear(pickedYear)
+                setPickerOpen(false)
+              }}
+            >
+              Add {pickedYear}
+              {pickedYear === currentYear ? " · now" : ""}
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }
