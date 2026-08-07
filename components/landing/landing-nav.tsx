@@ -3,23 +3,22 @@
 import * as React from "react"
 import Link from "next/link"
 
-import { ArrowRight } from "@/components/icons"
 import { ArthaMark } from "@/components/layout/artha-mark"
 import { ThemeToggler } from "@/components/layout/theme-toggler"
 import { Button } from "@/components/ui/button"
+import { MagnetizeButton } from "@/components/ui/magnetize-button"
+import TextRoll from "@/components/ui/text-roll"
 import { cn } from "@/lib/utils"
 
 const SECTIONS = [
-  { href: "#preview", label: "Live preview" },
+  { href: "#dashboard", label: "Dashboard" },
   { href: "#features", label: "Features" },
-  { href: "#pages", label: "Pages" },
-  { href: "#how", label: "How it works" },
+  { href: "#pages", label: "Workspace" },
+  { href: "#how", label: "Method" },
   { href: "#faq", label: "FAQ" },
 ]
 
 export function LandingNav() {
-  // Only the scrolled state changes, so a scroll listener is enough — no need
-  // for an observer here.
   const [scrolled, setScrolled] = React.useState(false)
 
   React.useEffect(() => {
@@ -49,28 +48,36 @@ export function LandingNav() {
           </span>
         </Link>
 
-        <div className="hidden flex-1 items-center justify-center gap-1 md:flex">
+        <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
           {SECTIONS.map((section) => (
             <a
               key={section.href}
               href={section.href}
-              className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              {section.label}
+              {/* Each letter rolls to its duplicate on hover. */}
+              <TextRoll>{section.label}</TextRoll>
             </a>
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2 md:ml-0">
+        <div className="ml-auto flex items-center gap-2 lg:ml-0">
           <ThemeToggler />
           <Button
+            variant="ghost"
             size="sm"
+            className="hidden sm:inline-flex"
             render={<Link href="/dashboard" />}
             nativeButton={false}
           >
-            Live Demo
-            <ArrowRight data-icon="inline-end" />
+            Live demo
           </Button>
+          {/* Log in and Sign up are presentational for now — the pages behind
+              them come later, so neither navigates yet. */}
+          <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
+            Log in
+          </Button>
+          <MagnetizeButton size="sm">Sign up</MagnetizeButton>
         </div>
       </nav>
     </header>

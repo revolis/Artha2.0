@@ -12,42 +12,39 @@ import { demoLedger } from "@/lib/landing-stats"
 
 const FAQS = [
   {
-    q: "Do I need an account to try it?",
-    a: "No. The demo is the real application with a ledger already in it — press Live Demo and you're in. There's no sign-up form anywhere on the site.",
+    q: "What can I track in Artha?",
+    a: "Earnings and losses across crypto, equities and cash work, alongside the costs that come with them — platform fees, network charges, tax set aside — and every conversion between digital balances and physical cash.",
   },
   {
-    q: "Where is my data kept?",
-    a: "In your own browser's storage, on your own machine. There is no server and no database behind Artha, which is why there's nothing to log into and nothing to leak. Clearing your browser data clears the ledger with it.",
+    q: "Does it connect to my exchange or my bank?",
+    a: "No, and that is a deliberate design decision. Automated imports miss precisely the things that matter most: peer-to-peer trades at a negotiated rate, freelance income, cash settled in person. You enter what happened, so the ledger reflects reality rather than whatever an API chose to report.",
   },
   {
-    q: "Does it connect to my exchange or bank?",
-    a: "No, and that's deliberate. You type entries in yourself. The one thing fetched from the internet is the daily exchange-rate table, so conversions use a real market rate rather than a number from last year.",
+    q: "What separates net from gross portfolio value?",
+    a: "Gross is everything earned once losses, fees and tax are accounted for. Net subtracts the money you have converted out to cash and restores anything you have put back in. Both are plotted together, and the distance between the two lines is exactly what you have withdrawn.",
   },
   {
-    q: "What's the difference between net and gross portfolio value?",
-    a: "Gross is everything you earned less losses, fees and tax. Net takes off the money you've moved out to cash and adds back anything you've put in. On the chart they're two lines — the gap between them is exactly what you've cashed out.",
+    q: "Can I work in rupees rather than dollars?",
+    a: `Yes. Amounts are held in USD and presented in whichever of the ${demoLedger.currencies} supported currencies you choose — NPR, USD, INR, EUR, GBP or AED. Every table, chart, goal and total follows the setting instantly.`,
   },
   {
-    q: "Can I see the totals in rupees instead of dollars?",
-    a: `Yes. Amounts are stored in USD and displayed in whichever of the ${demoLedger.currencies} currencies you pick in Settings — NPR, USD, INR, EUR, GBP or AED. Every figure on every page follows the setting.`,
+    q: "Where do the exchange rates come from?",
+    a: "A public market feed, refreshed on demand and stored with the date it was taken, so you always know how current a conversion is. Individual peer-to-peer entries can carry the rate you actually negotiated instead of the market one.",
   },
   {
-    q: "Is the demo data real?",
-    a: `It's invented, but it behaves like the real thing: ${demoLedger.entries} entries spread over ${demoLedger.years} years, ${demoLedger.categories} categories, ${demoLedger.sources} sources, with rates that drift the way the rupee actually has. It's there so the charts have something honest to draw.`,
+    q: "Can I look around before creating an account?",
+    a: `Yes. The demo is the complete application, loaded with a representative ledger of ${demoLedger.entries} entries across ${demoLedger.years} years — every page, every chart, every control, open to explore.`,
   },
   {
-    q: "Will anything I add in the demo be saved?",
-    a: "Yes — to your browser only, and only for you. Add entries, edit goals, change the display currency; it'll all still be there next time. Clear your site data to put the demo back as it was.",
+    q: "Is the demo data taken from a real portfolio?",
+    a: `No. It is constructed, but it behaves like the genuine article: ${demoLedger.categories} categories, ${demoLedger.sources} sources, quiet months and heavy ones, and rupee rates that drift the way they have in practice — so the charts show you something meaningful.`,
   },
 ]
 
 export function Faq() {
   return (
     <section id="faq" className="mx-auto w-full max-w-3xl px-5 py-16">
-      <SectionHeading
-        eyebrow="Questions"
-        title="The things worth knowing first"
-      />
+      <SectionHeading eyebrow="Questions" title="Answered before you ask" />
 
       <Reveal delay={120}>
         <Accordion className="w-full">

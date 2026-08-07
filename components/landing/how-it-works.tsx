@@ -6,18 +6,18 @@ import { SectionHeading } from "@/components/landing/section-heading"
 const STEPS = [
   {
     n: "01",
-    title: "Log what happened",
-    body: "An airdrop landed, a trade went wrong, the exchange took a fee, you sold USD for rupees. Pick the type, put in the amount, add a category and a note while you still remember.",
+    title: "Record it while it is fresh",
+    body: "An allocation lands, a position closes short, a platform takes its cut, dollars become rupees. Choose the type, enter the amount, attach a category and a note — a minute at most.",
   },
   {
     n: "02",
-    title: "Let it add up",
-    body: "Every page reads from the same ledger. The portfolio line, the monthly bars, the category split, the heatmap and the year totals all move the moment you save an entry.",
+    title: "Let the totals resolve",
+    body: "Every surface reads from the same ledger. The portfolio series, the monthly bars, the category split, the heatmap and the annual totals all move the moment an entry is saved.",
   },
   {
     n: "03",
-    title: "Watch the year close",
-    body: "Set a target, pin it to the dashboard, and see how far along you are — including how far past it you went. Export the year when it's time to file.",
+    title: "Hold yourself to the number",
+    body: "Set a target, pin it to the year it belongs to, and track the distance to it — overshoot included. Export the period when it is time to file.",
   },
 ]
 
@@ -25,9 +25,9 @@ export function HowItWorks() {
   return (
     <section id="how" className="mx-auto w-full max-w-6xl px-5 py-16">
       <SectionHeading
-        eyebrow="How it works"
-        title="Three habits, and the rest takes care of itself"
-        description="There's no import, no bank connection and no syncing to wait for. The only work is the minute it takes to write an entry down."
+        eyebrow="The method"
+        title="Three habits. The rest resolves itself."
+        description="Precision costs about a minute a day. Everything downstream of that minute — the totals, the trends, the targets — is computed for you."
       />
 
       <div className="grid gap-4 md:grid-cols-3">

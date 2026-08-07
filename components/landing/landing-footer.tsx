@@ -54,8 +54,8 @@ export function LandingFooter() {
               </span>
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-              A personal finance dashboard for crypto, stocks and cash income —
-              kept by hand, and kept on your own machine.
+              A precision dashboard for crypto, equities and cash income —
+              recorded deliberately, reported exactly.
             </p>
           </div>
 
@@ -83,10 +83,8 @@ export function LandingFooter() {
         <Separator />
 
         <div className="flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
-          <span>Artha — built for one person&apos;s books.</span>
-          <span>
-            Everything on this site runs locally. No account, no server.
-          </span>
+          <span>© {new Date().getFullYear()} Artha</span>
+          <span>Crypto · Equities · Cash income — in NPR and USD</span>
         </div>
       </div>
     </footer>

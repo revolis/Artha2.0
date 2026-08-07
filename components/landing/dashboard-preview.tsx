@@ -39,9 +39,9 @@ function WindowFrame({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Not a screenshot — the real dashboard components, fed the real demo ledger.
- * Whatever the app renders, this renders, so the preview can never drift out
- * of date the way an exported image would.
+ * The preview mounts the application's own dashboard components against the
+ * demo ledger rather than showing an exported image, so it stays in step with
+ * the product and stays interactive for the visitor.
  */
 export function DashboardPreview() {
   const series = React.useMemo(
@@ -66,11 +66,11 @@ export function DashboardPreview() {
     .slice(0, 2)
 
   return (
-    <section id="preview" className="mx-auto w-full max-w-6xl px-5 py-16">
+    <section id="dashboard" className="mx-auto w-full max-w-6xl px-5 py-16">
       <SectionHeading
-        eyebrow="Live preview"
-        title="This is the real thing, not a picture of it"
-        description="Everything below is the app itself, running on the demo ledger. Hover the chart, point at a goal arc — it all works. Open the demo to use the whole dashboard."
+        eyebrow="The dashboard"
+        title="Your year, resolved to the rupee"
+        description="Portfolio value before and after the cash you've taken out, month-on-month movement, and the targets you're measuring yourself against — interactive, and running on a live ledger."
       />
 
       <Reveal delay={120} y={24}>
@@ -100,7 +100,7 @@ export function DashboardPreview() {
             render={<Link href="/dashboard" />}
             nativeButton={false}
           >
-            Open the full dashboard
+            Open the full workspace
             <ArrowRight data-icon="inline-end" />
           </Button>
         </div>

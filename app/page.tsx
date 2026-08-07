@@ -11,11 +11,13 @@ import { LandingFooter } from "@/components/landing/landing-footer"
 import { LandingNav } from "@/components/landing/landing-nav"
 import { PageTour } from "@/components/landing/page-tour"
 import { TracksMarquee } from "@/components/landing/tracks-marquee"
+import { WaveDivider } from "@/components/landing/wave-divider"
+import { WavyBand } from "@/components/landing/wavy-band"
 
 export const metadata: Metadata = {
   title: "ARTHA — Know exactly where your money stands",
   description:
-    "A personal finance dashboard for crypto, stocks and cash income. Track profit, loss, fees, tax and every rupee you cash out — in NPR and USD, at today's rate. Try the live demo, no sign-up.",
+    "A precision dashboard for crypto, equities and cash income. Record profit, loss, fees, tax and every conversion to cash — reported in NPR and USD at the day's rate. Explore the live demo.",
 }
 
 export default function Page() {
@@ -27,7 +29,9 @@ export default function Page() {
         <DashboardPreview />
         <TracksMarquee />
         <FeatureGrid />
+        <WavyBand />
         <ByTheNumbers />
+        <WaveDivider />
         <PageTour />
         <HowItWorks />
         <Faq />

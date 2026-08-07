@@ -121,9 +121,9 @@ export function PageTour() {
   return (
     <section id="pages" className="mx-auto w-full max-w-6xl px-5 py-16">
       <SectionHeading
-        eyebrow="Every page"
-        title="Nine pages, each with one job"
-        description="Click any of them to open it in the demo — they're all live, loaded with the same ledger, and nothing asks you to sign in."
+        eyebrow="The workspace"
+        title="Nine surfaces, each with a single purpose"
+        description="Open any of them to see it working against the demo ledger — the same data throughout, examined from a different angle each time."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

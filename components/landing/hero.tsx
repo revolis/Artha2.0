@@ -2,23 +2,23 @@
 
 import Link from "next/link"
 
-import { ArrowRight, Sparkles, Wallet } from "@/components/icons"
+import { ArrowRight, Sparkles } from "@/components/icons"
 import { Reveal } from "@/components/landing/reveal"
 import { Button } from "@/components/ui/button"
 import { DotPattern } from "@/components/ui/dot-pattern"
 import { demoLedger } from "@/lib/landing-stats"
 import { cn } from "@/lib/utils"
 
-const TRUST = [
-  "No sign-up",
-  "Nothing leaves your browser",
-  "NPR · USD · INR · EUR · GBP · AED",
+const CAPABILITIES = [
+  "Six entry types",
+  "Six display currencies",
+  "Exchange rates refreshed daily",
 ]
 
 export function Hero() {
   return (
     <section className="relative overflow-hidden">
-      {/* Dots fade out towards the edges so the grid never draws a hard box. */}
+      {/* Dots fade towards the edges so the grid never draws a hard box. */}
       <DotPattern
         cr={0.8}
         className={cn(
@@ -37,7 +37,7 @@ export function Hero() {
         <Reveal delay={40} y={10}>
           <span className="inline-flex items-center gap-2 rounded-full border bg-card/60 px-3.5 py-1.5 text-xs text-muted-foreground backdrop-blur">
             <Sparkles className="size-3.5 text-[var(--chart-2)]" />
-            Crypto, stocks and cash income — one ledger
+            Crypto, equities and cash income in a single ledger
           </span>
         </Reveal>
 
@@ -52,10 +52,10 @@ export function Hero() {
 
         <Reveal delay={340}>
           <p className="max-w-2xl text-base leading-relaxed text-balance text-muted-foreground sm:text-lg">
-            Artha is a personal finance dashboard you fill in yourself. Log what
-            you earned, lost, paid in fees and cashed out — it works out your
-            portfolio, your goals and your year, in rupees and dollars at
-            today&apos;s rate.
+            A precision dashboard for people who want their own numbers, not an
+            estimate. Record what you earned, lost, paid in fees and converted
+            to cash — and see your portfolio, your goals and your year resolve
+            in rupees and dollars at the day&apos;s rate.
           </p>
         </Reveal>
 
@@ -66,24 +66,23 @@ export function Hero() {
               render={<Link href="/dashboard" />}
               nativeButton={false}
             >
-              Open the live demo
+              Explore the live demo
               <ArrowRight data-icon="inline-end" />
             </Button>
             <Button
               size="lg"
               variant="outline"
-              render={<a href="#preview" />}
+              render={<a href="#dashboard" />}
               nativeButton={false}
             >
-              <Wallet data-icon="inline-start" />
-              See what&apos;s inside
+              Tour the workspace
             </Button>
           </div>
         </Reveal>
 
         <Reveal delay={540}>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-            {TRUST.map((item) => (
+            {CAPABILITIES.map((item) => (
               <span key={item} className="flex items-center gap-1.5">
                 <span
                   aria-hidden
@@ -97,9 +96,8 @@ export function Hero() {
 
         <Reveal delay={620}>
           <p className="text-xs text-muted-foreground/70">
-            The demo is loaded with {demoLedger.entries} entries across{" "}
-            {demoLedger.firstYear}–{demoLedger.lastYear}. Nothing to install,
-            nothing to sign.
+            The demo opens on a working ledger of {demoLedger.entries} entries
+            spanning {demoLedger.firstYear}–{demoLedger.lastYear}.
           </p>
         </Reveal>
       </div>
