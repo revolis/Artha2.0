@@ -2,22 +2,23 @@
 
 import { Reveal } from "@/components/landing/reveal"
 import { SectionHeading } from "@/components/landing/section-heading"
+import DataFeedingIn from "@/components/ui/data-feeding-in"
 
 const STEPS = [
   {
     n: "01",
-    title: "Record it while it is fresh",
-    body: "An allocation lands, a position closes short, a platform takes its cut, dollars become rupees. Choose the type, enter the amount, attach a category and a note — a minute at most.",
+    title: "Record",
+    body: "Log the entry while it is fresh.",
   },
   {
     n: "02",
-    title: "Let the totals resolve",
-    body: "Every surface reads from the same ledger. The portfolio series, the monthly bars, the category split, the heatmap and the annual totals all move the moment an entry is saved.",
+    title: "Resolve",
+    body: "Totals, charts and targets update on save.",
   },
   {
     n: "03",
-    title: "Hold yourself to the number",
-    body: "Set a target, pin it to the year it belongs to, and track the distance to it — overshoot included. Export the period when it is time to file.",
+    title: "Review",
+    body: "Measure the distance to your target.",
   },
 ]
 
@@ -27,30 +28,42 @@ export function HowItWorks() {
       <SectionHeading
         eyebrow="The method"
         title="Three habits. The rest resolves itself."
-        description="Precision costs about a minute a day. Everything downstream of that minute — the totals, the trends, the targets — is computed for you."
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {STEPS.map((step, index) => (
-          <Reveal key={step.n} delay={index * 110} className="h-full">
-            <div className="relative flex h-full flex-col gap-3 rounded-xl border bg-card p-6">
-              {/* The step number sits behind the text as a watermark. */}
-              <span
-                aria-hidden
-                className="absolute top-4 right-5 text-5xl font-semibold text-muted-foreground/10 tabular-nums select-none"
+      {/* Both columns take min-w-0: the illustration is a fixed 400px, and a
+          grid item defaults to min-width:auto, so it would otherwise set the
+          column width and push the steps past the viewport on a phone. */}
+      <div className="grid items-center gap-12 lg:grid-cols-2">
+        <Reveal className="min-w-0">
+          <ol className="flex flex-col">
+            {STEPS.map((step) => (
+              <li
+                key={step.n}
+                className="flex items-baseline gap-5 border-b py-6 last:border-b-0"
               >
-                {step.n}
-              </span>
-              <span className="text-[10px] font-medium tracking-[0.2em] text-[var(--chart-2)] uppercase">
-                Step {step.n}
-              </span>
-              <h3 className="text-lg font-semibold">{step.title}</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {step.body}
-              </p>
+                <span className="text-xs font-medium tracking-[0.18em] text-[var(--chart-2)] tabular-nums">
+                  {step.n}
+                </span>
+                <span className="flex min-w-0 flex-col gap-1">
+                  <span className="text-lg font-semibold">{step.title}</span>
+                  <span className="text-sm leading-relaxed text-muted-foreground">
+                    {step.body}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </Reveal>
+
+        <Reveal delay={140} className="min-w-0">
+          {/* Pulses travelling along converging paths into a ledger table.
+              Scaled down on a phone, and clipped by the wrapper beyond that. */}
+          <div className="flex w-full justify-center overflow-hidden lg:justify-end">
+            <div className="shrink-0 scale-[0.78] sm:scale-100">
+              <DataFeedingIn />
             </div>
-          </Reveal>
-        ))}
+          </div>
+        </Reveal>
       </div>
     </section>
   )
