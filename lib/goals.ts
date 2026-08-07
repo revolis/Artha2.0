@@ -6,6 +6,18 @@ import type { Goal } from "@/lib/types"
 
 const DAY_MS = 86_400_000
 
+/**
+ * Whether a goal's period touches a given year. A goal running July to March
+ * belongs to both years it crosses. One with no dates at all isn't tied to a
+ * year, so it shows against every one.
+ */
+export function goalCoversYear(goal: Goal, year: number): boolean {
+  if (!goal.startDate && !goal.endDate) return true
+  const startYear = goal.startDate ? Number(goal.startDate.slice(0, 4)) : year
+  const endYear = goal.endDate ? Number(goal.endDate.slice(0, 4)) : year
+  return year >= startYear && year <= endYear
+}
+
 export function getGoalPercent(goal: Goal): number {
   if (goal.targetAmount <= 0) return 0
   return Math.min(100, (goal.currentAmount / goal.targetAmount) * 100)

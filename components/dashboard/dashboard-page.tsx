@@ -25,6 +25,7 @@ import {
   getEntryYear,
   getNetAmount,
 } from "@/lib/mock-data"
+import { goalCoversYear } from "@/lib/goals"
 import { useSettings } from "@/lib/use-settings"
 import {
   buildDualDailySeries,
@@ -34,14 +35,13 @@ import {
 import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
+import { useDashboardYears } from "@/lib/use-years"
 import type { Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const CURRENT_YEAR = new Date().getFullYear()
 
 export function DashboardPage() {
-  // Always start on the current year; more years appear as the user adds them.
-  const [years, setYears] = React.useState<number[]>([CURRENT_YEAR])
   const [selectedYear, setSelectedYear] = React.useState(CURRENT_YEAR)
   // Subscribing re-renders every amount when the display currency changes.
   useSettings()
@@ -49,25 +49,6 @@ export function DashboardPage() {
   const [yearPendingDelete, setYearPendingDelete] = React.useState<
     number | null
   >(null)
-
-  function handleSelectYear(year: number) {
-    setYears((prev) => (prev.includes(year) ? prev : [...prev, year]))
-    setSelectedYear(year)
-  }
-
-  // Removes the year's entries as well as the tab — that data loss is what the
-  // export prompt and hold-to-confirm in the dialog are guarding.
-  function handleDeleteYear(year: number) {
-    setEntries((prev) => prev.filter((entry) => getEntryYear(entry) !== year))
-    setYears((prev) => {
-      const remaining = prev.filter((item) => item !== year)
-      const next = remaining.length > 0 ? remaining : [CURRENT_YEAR]
-      if (selectedYear === year) {
-        setSelectedYear(Math.max(...next))
-      }
-      return next
-    })
-  }
 
   const {
     entries,
@@ -77,6 +58,31 @@ export function DashboardPage() {
     tagOptions,
     saveEntry,
   } = useEntryData()
+
+  // Tabs for this year, every year holding entries, and anything opened by
+  // hand — the last of those is saved, so the tabs come back after a reload.
+  const { years, addYear, forgetYear } = useDashboardYears(
+    entries,
+    CURRENT_YEAR
+  )
+
+  function handleSelectYear(year: number) {
+    addYear(year)
+    setSelectedYear(year)
+  }
+
+  // Removes the year's entries as well as the tab — that data loss is what the
+  // export prompt and hold-to-confirm in the dialog are guarding.
+  function handleDeleteYear(year: number) {
+    setEntries((prev) => prev.filter((entry) => getEntryYear(entry) !== year))
+    forgetYear(year)
+    if (selectedYear === year) {
+      const remaining = years.filter((item) => item !== year)
+      setSelectedYear(
+        remaining.length > 0 ? Math.max(...remaining) : CURRENT_YEAR
+      )
+    }
+  }
   const [entryDialogOpen, setEntryDialogOpen] = React.useState(false)
   const [editingEntry, setEditingEntry] = React.useState<Entry | null>(null)
 
@@ -99,7 +105,11 @@ export function DashboardPage() {
   }
   const avgMonthlyIncomeUsd = getAvgMonthlyIncome(entries, selectedYear)
   const { goals } = useGoals()
-  const pinnedGoals = goals.filter((goal) => goal.showOnDashboard)
+  // Pinned goals belonging to the year on screen. Without the year check the
+  // same cards followed you from tab to tab, whichever year you were looking at.
+  const pinnedGoals = goals.filter(
+    (goal) => goal.showOnDashboard && goalCoversYear(goal, selectedYear)
+  )
 
   const series = React.useMemo(
     () => buildDualDailySeries(entries, selectedYear),

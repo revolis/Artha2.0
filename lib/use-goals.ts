@@ -9,7 +9,9 @@ import * as React from "react"
 import { mockGoals } from "@/lib/mock-data"
 import type { Goal } from "@/lib/types"
 
-const STORAGE_KEY = "artha.goals"
+// Versioned like the entry store: bumping it hands everyone the goals that
+// go with the current demo ledger, one set per year.
+const STORAGE_KEY = "artha.goals.v2"
 
 let cache: Goal[] | null = null
 const listeners = new Set<() => void>()
