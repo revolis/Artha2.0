@@ -147,7 +147,7 @@ export const mockEntries: Entry[] = [
     sourceId: "s_2",
     amount: 437.42,
     note: "Alpha points redemption — best drop this quarter.",
-    attachments: ["alpha-payout.png"],
+    attachments: [{ name: "alpha-payout.png" }],
   },
   {
     id: "e_26_8",
@@ -210,7 +210,7 @@ export const mockEntries: Entry[] = [
     tags: ["alpha"],
     sourceId: "s_2",
     amount: 315,
-    attachments: ["march-alpha.png", "march-alpha-2.png"],
+    attachments: [{ name: "march-alpha.png" }, { name: "march-alpha-2.png" }],
   },
   {
     id: "e_26_2",

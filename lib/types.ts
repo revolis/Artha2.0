@@ -79,6 +79,14 @@ export interface P2PDetails {
   cashAmount: number // amount × rate, auto-calculated
 }
 
+// An image attached to an entry. The picture is kept as a downscaled data URL
+// so it can actually be previewed — nothing is uploaded anywhere.
+export interface EntryAttachment {
+  name: string
+  /** Downscaled JPEG data URL. Absent on seed data, which has names only. */
+  dataUrl?: string
+}
+
 export interface Entry {
   id: string
   datetime: string // ISO date + time, e.g. "2026-08-04T14:30"
@@ -89,7 +97,7 @@ export interface Entry {
   amount: number // always positive, in USD; sign comes from `type`
   p2p?: P2PDetails // only on type "p2p"
   note?: string
-  attachments?: string[] // image file names (design phase — not uploaded anywhere)
+  attachments?: EntryAttachment[]
 }
 
 export interface AssetPrice {

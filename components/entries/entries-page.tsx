@@ -3,16 +3,20 @@
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
 import {
+  ChevronDown,
   Copy,
   FilterX,
   Inbox,
   MoreVertical,
-  Paperclip,
   Pencil,
   Search,
   Trash2,
 } from "@/components/icons"
 
+import {
+  AttachmentCount,
+  EntryDetailRow,
+} from "@/components/entries/entry-detail-row"
 import {
   EntryFormDialog,
   entryTypeLabels,
@@ -62,6 +66,7 @@ import { formatMoney, getNetAmount } from "@/lib/mock-data"
 import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
+import { tagStyle } from "@/lib/tag-colors"
 import { cn } from "@/lib/utils"
 
 type RangePreset = "all" | "7d" | "30d" | "month" | "year" | "custom"
@@ -135,6 +140,8 @@ export function EntriesPage() {
 
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<Entry | null>(null)
+  // One row open at a time, so the table doesn't sprawl.
+  const [expanded, setExpanded] = React.useState<string | null>(null)
 
   // The header search sends people here with ?q=… . Mirroring the param into
   // state during render (rather than in an effect) keeps the box editable
@@ -416,6 +423,7 @@ export function EntriesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10" />
                 <TableHead>Date</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Category</TableHead>
@@ -432,113 +440,146 @@ export function EntriesPage() {
                 const source = entry.sourceId
                   ? sourceById.get(entry.sourceId)
                   : undefined
+                const hasDetail =
+                  Boolean(entry.note) || (entry.attachments?.length ?? 0) > 0
+                const isOpen = expanded === entry.id
                 return (
-                  <TableRow key={entry.id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{date}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {time}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {entryTypeLabels[entry.type]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{entry.category ?? "—"}</TableCell>
-                    <TableCell>{source?.name ?? "—"}</TableCell>
-                    <TableCell>
-                      {entry.tags.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {entry.tags.slice(0, 2).map((tag) => (
-                            <Badge key={tag} variant="outline">
-                              {tag}
-                            </Badge>
-                          ))}
-                          {entry.tags.length > 2 ? (
-                            <Badge variant="outline">
-                              +{entry.tags.length - 2}
-                            </Badge>
+                  <React.Fragment key={entry.id}>
+                    <TableRow>
+                      <TableCell className="pr-0">
+                        {hasDetail ? (
+                          <button
+                            type="button"
+                            aria-expanded={isOpen}
+                            aria-label={
+                              isOpen
+                                ? "Hide note and images"
+                                : "Show note and images"
+                            }
+                            onClick={() =>
+                              setExpanded(isOpen ? null : entry.id)
+                            }
+                            className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          >
+                            <ChevronDown
+                              className={cn(
+                                "size-4 transition-transform duration-200",
+                                isOpen && "rotate-180"
+                              )}
+                            />
+                          </button>
+                        ) : null}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{date}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {time}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {entryTypeLabels[entry.type]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{entry.category ?? "—"}</TableCell>
+                      <TableCell>{source?.name ?? "—"}</TableCell>
+                      <TableCell>
+                        {entry.tags.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {/* Each tag keeps its own colour, derived from its
+                              text so it never changes between renders. */}
+                            {entry.tags.slice(0, 2).map((tag) => (
+                              <Badge
+                                key={tag}
+                                variant="outline"
+                                style={tagStyle(tag)}
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                            {entry.tags.length > 2 ? (
+                              <Badge variant="outline">
+                                +{entry.tags.length - 2}
+                              </Badge>
+                            ) : null}
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-48">
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate text-muted-foreground">
+                            {entry.note ?? "—"}
+                          </span>
+                          <AttachmentCount entry={entry} />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex flex-col items-end">
+                          <AmountCell entry={entry} />
+                          {entry.p2p ? (
+                            <span className="text-xs text-muted-foreground">
+                              {entry.p2p.direction === "usd-to-cash"
+                                ? "Sold USD"
+                                : "Bought USD"}
+                              {" · "}
+                              {entry.p2p.cashCurrency}{" "}
+                              {entry.p2p.cashAmount.toLocaleString("en-US", {
+                                maximumFractionDigits: 2,
+                              })}
+                              {" @ "}
+                              {entry.p2p.rate}
+                            </span>
                           ) : null}
                         </div>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
-                    <TableCell className="max-w-48">
-                      <div className="flex items-center gap-1.5">
-                        <span className="truncate text-muted-foreground">
-                          {entry.note ?? "—"}
-                        </span>
-                        {entry.attachments?.length ? (
-                          <span className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground">
-                            <Paperclip className="size-3" />
-                            {entry.attachments.length}
-                          </span>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex flex-col items-end">
-                        <AmountCell entry={entry} />
-                        {entry.p2p ? (
-                          <span className="text-xs text-muted-foreground">
-                            {entry.p2p.direction === "usd-to-cash"
-                              ? "Sold USD"
-                              : "Bought USD"}
-                            {" · "}
-                            {entry.p2p.cashCurrency}{" "}
-                            {entry.p2p.cashAmount.toLocaleString("en-US", {
-                              maximumFractionDigits: 2,
-                            })}
-                            {" @ "}
-                            {entry.p2p.rate}
-                          </span>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label="Entry options"
-                            />
-                          }
-                        >
-                          <MoreVertical />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuGroup>
-                            <DropdownMenuItem onClick={() => openEdit(entry)}>
-                              <Pencil />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDuplicate(entry)}
-                            >
-                              <Copy />
-                              Duplicate
-                            </DropdownMenuItem>
-                          </DropdownMenuGroup>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuGroup>
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onClick={() => handleDelete(entry)}
-                            >
-                              <Trash2 />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                aria-label="Entry options"
+                              />
+                            }
+                          >
+                            <MoreVertical />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem onClick={() => openEdit(entry)}>
+                                <Pencil />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDuplicate(entry)}
+                              >
+                                <Copy />
+                                Duplicate
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => handleDelete(entry)}
+                              >
+                                <Trash2 />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                    {isOpen ? (
+                      <EntryDetailRow entry={entry} colSpan={9} />
+                    ) : null}
+                  </React.Fragment>
                 )
               })}
             </TableBody>

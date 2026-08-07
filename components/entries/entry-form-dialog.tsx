@@ -7,7 +7,6 @@ import {
   CreatableCombobox,
   CreatableMultiCombobox,
 } from "@/components/entries/creatable-combobox"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import {
@@ -35,7 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import type { Entry, EntryType, Source } from "@/lib/types"
+import { normaliseAttachments, readAttachment } from "@/lib/attachments"
+import type { Entry, EntryAttachment, EntryType, Source } from "@/lib/types"
 
 export const entryTypeLabels: Record<EntryType, string> = {
   profit: "Profit",
@@ -114,9 +114,10 @@ export function EntryFormDialog({
     entry?.p2p ? String(entry.p2p.rate) : ""
   )
   const [note, setNote] = React.useState(entry?.note ?? "")
-  const [attachments, setAttachments] = React.useState<string[]>(
-    entry?.attachments ?? []
+  const [attachments, setAttachments] = React.useState<EntryAttachment[]>(() =>
+    normaliseAttachments(entry?.attachments)
   )
+  const [attachError, setAttachError] = React.useState<string | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const existingSource = sourceName
@@ -130,12 +131,30 @@ export function EntryFormDialog({
   const cashAmount = amount > 0 && rate > 0 ? amount * rate : 0
   const canSave = amount > 0 && !!datetime && (!isP2P || rate > 0)
 
-  function handleAttach(event: React.ChangeEvent<HTMLInputElement>) {
-    const names = Array.from(event.target.files ?? []).map((f) => f.name)
-    if (names.length > 0) {
-      setAttachments((prev) => Array.from(new Set([...prev, ...names])))
-    }
+  async function handleAttach(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? [])
     event.target.value = ""
+    if (files.length === 0) return
+
+    setAttachError(null)
+    const added: EntryAttachment[] = []
+    for (const file of files) {
+      try {
+        added.push(await readAttachment(file))
+      } catch (error) {
+        setAttachError(
+          error instanceof Error ? error.message : "Could not read that image."
+        )
+      }
+    }
+    if (added.length === 0) return
+
+    // Keyed by name, so re-picking the same file replaces rather than doubles.
+    setAttachments((prev) => {
+      const byName = new Map(prev.map((item) => [item.name, item]))
+      for (const item of added) byName.set(item.name, item)
+      return [...byName.values()]
+    })
   }
 
   function handleSave() {
@@ -421,22 +440,49 @@ export function EntryFormDialog({
                 className="hidden"
                 onChange={handleAttach}
               />
-              {attachments.map((name) => (
-                <Badge key={name} variant="secondary" className="gap-1">
-                  {name}
-                  <button
-                    type="button"
-                    aria-label={`Remove ${name}`}
-                    onClick={() =>
-                      setAttachments((prev) => prev.filter((n) => n !== name))
-                    }
-                    className="flex items-center"
-                  >
-                    <X className="size-3" />
-                  </button>
-                </Badge>
-              ))}
             </div>
+
+            {attachError ? (
+              <p className="text-xs text-destructive">{attachError}</p>
+            ) : null}
+
+            {/* Thumbnails rather than filenames — you can see what you attached. */}
+            {attachments.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {attachments.map((item) => (
+                  <div
+                    key={item.name}
+                    className="group relative size-16 overflow-hidden rounded-lg border bg-muted/40"
+                  >
+                    {item.dataUrl ? (
+                      // Data URL held in memory, so next/image adds nothing.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.dataUrl}
+                        alt={item.name}
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex size-full items-center justify-center px-1 text-center text-[10px] break-all text-muted-foreground">
+                        {item.name}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${item.name}`}
+                      onClick={() =>
+                        setAttachments((prev) =>
+                          prev.filter((n) => n.name !== item.name)
+                        )
+                      }
+                      className="absolute top-0.5 right-0.5 flex size-5 items-center justify-center rounded-md bg-background/85 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </Field>
         </FieldGroup>
         <DialogFooter>
