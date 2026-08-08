@@ -6,7 +6,6 @@ import { ArrowRight, Sparkles } from "@/components/icons"
 import { Reveal } from "@/components/landing/reveal"
 import { Button } from "@/components/ui/button"
 import { DotPattern } from "@/components/ui/dot-pattern"
-import { demoLedger } from "@/lib/landing-stats"
 import { cn } from "@/lib/utils"
 
 const CAPABILITIES = [
@@ -92,13 +91,6 @@ export function Hero() {
               </span>
             ))}
           </div>
-        </Reveal>
-
-        <Reveal delay={620}>
-          <p className="text-xs text-muted-foreground/70">
-            The demo opens on a working ledger of {demoLedger.entries} entries
-            spanning {demoLedger.firstYear}–{demoLedger.lastYear}.
-          </p>
         </Reveal>
       </div>
     </section>

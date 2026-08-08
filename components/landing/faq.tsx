@@ -33,11 +33,11 @@ const FAQS = [
   },
   {
     q: "Can I look around before creating an account?",
-    a: `Yes. The demo is the complete application, loaded with a representative ledger of ${demoLedger.entries} entries across ${demoLedger.years} years — every page, every chart, every control, open to explore.`,
+    a: "Yes. The demo is the complete application, loaded with a representative ledger spanning several years — every page, every chart, every control, open to explore.",
   },
   {
     q: "Is the demo data taken from a real portfolio?",
-    a: `No. It is constructed, but it behaves like the genuine article: ${demoLedger.categories} categories, ${demoLedger.sources} sources, quiet months and heavy ones, and rupee rates that drift the way they have in practice — so the charts show you something meaningful.`,
+    a: "No. It is constructed, but it behaves like the genuine article — quiet months and heavy ones, costs alongside the gains, and rupee rates that drift the way they have in practice, so the charts show you something meaningful.",
   },
 ]
 

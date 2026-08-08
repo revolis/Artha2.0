@@ -264,3 +264,68 @@
   animation: none;
   mix-blend-mode: normal;
 }
+
+/* Travelling lights on the workspace architecture diagram. Each pulse rides
+   the same path its wire is drawn along, starting at the dot on the outer end
+   and running in to the centre block. The coordinates are the SVG's own user
+   units, so they must stay in step with the paths in
+   components/landing/workspace-architecture.tsx. */
+@keyframes artha-wire-flow {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+.artha-wire {
+  animation: artha-wire-flow 5s cubic-bezier(0.35, 0.1, 0.5, 1) infinite;
+}
+
+.artha-wire-1 {
+  offset-path: path("M 10 20 h 79.5 q 5 0 5 5 v 15");
+  animation-delay: 0s;
+}
+.artha-wire-2 {
+  offset-path: path("M 10 50 h 75");
+  animation-duration: 4.4s;
+  animation-delay: 0.9s;
+}
+.artha-wire-3 {
+  offset-path: path("M 10 80 h 79.5 q 5 0 5 -5 v -15");
+  animation-duration: 5.6s;
+  animation-delay: 1.7s;
+}
+.artha-wire-4 {
+  offset-path: path("M 190 20 h -79.7 q -5 0 -5 5 v 15");
+  animation-duration: 4.8s;
+  animation-delay: 0.4s;
+}
+.artha-wire-5 {
+  offset-path: path("M 190 50 h -75");
+  animation-duration: 5.2s;
+  animation-delay: 2.3s;
+}
+.artha-wire-6 {
+  offset-path: path("M 190 80 h -79.7 q -5 0 -5 -5 v -15");
+  animation-duration: 4.6s;
+  animation-delay: 1.2s;
+}
+.artha-wire-7 {
+  offset-path: path("M 100 6 v 34");
+  animation-duration: 3.8s;
+  animation-delay: 2.8s;
+}
+.artha-wire-8 {
+  offset-path: path("M 100 94 v -34");
+  animation-duration: 4.2s;
+  animation-delay: 0.6s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artha-wire {
+    animation: none;
+    opacity: 0;
+  }
+}
