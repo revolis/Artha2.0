@@ -4,19 +4,41 @@ import * as React from "react"
 
 import Marquee from "@/components/ui/marquee/marquee"
 import { getCategoryIcon } from "@/lib/category-icons"
-import { mockEntries, mockSources } from "@/lib/mock-data"
 
-// Pulled from the ledger rather than written out, so the strip always shows
-// what the demo actually contains.
-const categories = [
-  ...new Set(
-    mockEntries
-      .map((entry) => entry.category)
-      .filter((name): name is string => Boolean(name))
-  ),
-].sort()
+// What the ledger is for, rather than who or what it happens to be full of.
+// Naming the exchanges and the people traded with told a visitor nothing and
+// dated the page the moment either changed.
+const EARNINGS = [
+  "Income Sources",
+  "Spot Trading",
+  "Perpetual Trading",
+  "Futures Trading",
+  "Stocks",
+  "US Stocks",
+  "Commodities",
+  "Dividends",
+  "Staking Rewards",
+  "Airdrops",
+  "Freelance Income",
+  "Referral Income",
+  "Interest & Yield",
+  "Prediction Markets",
+]
 
-const sources = mockSources.map((source) => source.name)
+const OUTGOINGS = [
+  "Expenses",
+  "Monthly Expenses",
+  "Travel Expenses",
+  "Tax",
+  "Capital Gains Tax",
+  "Platform Fees",
+  "Network Fees",
+  "Withdrawal Fees",
+  "Subscriptions",
+  "Cash Conversions",
+  "Realised Losses",
+  "Transfers",
+]
 
 function Pill({ label }: { label: string }) {
   return (
@@ -40,15 +62,17 @@ function Row({ items }: { items: string[] }) {
 }
 
 /**
- * The categories and sources the demo tracks, drifting past in both
- * directions. `repeat` is a fixed number rather than "auto" — auto measures
- * with a ResizeObserver, and a strip that renders nothing when the observer
- * is unavailable is not worth the tighter loop.
+ * What Artha keeps track of, drifting past in both directions: what comes in
+ * on the top row, what goes out on the bottom.
+ *
+ * `repeat` is a fixed number rather than "auto" — auto measures with a
+ * ResizeObserver, and a strip that renders nothing when the observer is
+ * unavailable is not worth the tighter loop.
  */
 export function TracksMarquee() {
   return (
     <section
-      aria-label="What Artha tracks"
+      aria-label="What Artha keeps track of"
       className="relative flex flex-col gap-3 overflow-hidden border-y bg-muted/20 py-10"
     >
       {/* Fades the strip into the page at both ends. */}
@@ -62,7 +86,7 @@ export function TracksMarquee() {
       />
 
       <Marquee speed={26} gap="0.75rem" repeat={3} pauseOnHover>
-        <Row items={categories} />
+        <Row items={EARNINGS} />
       </Marquee>
       <Marquee
         speed={20}
@@ -71,7 +95,7 @@ export function TracksMarquee() {
         direction="right"
         pauseOnHover
       >
-        <Row items={sources} />
+        <Row items={OUTGOINGS} />
       </Marquee>
     </section>
   )

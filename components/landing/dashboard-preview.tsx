@@ -71,8 +71,8 @@ export function DashboardPreview() {
     <section id="dashboard" className="mx-auto w-full max-w-6xl px-5 py-16">
       <SectionHeading
         eyebrow="The dashboard"
-        title="Your year, resolved to the rupee"
-        description="Portfolio value before and after the cash you've taken out, month-on-month movement, and the targets you're measuring yourself against — interactive, and running on a live ledger."
+        title="The whole year on a single screen"
+        description="Net and gross portfolio value, month-on-month movement, and progress against every target you have set — each figure drawn live from the ledger, and every control below is the real one."
       />
 
       <Reveal delay={120} y={24}>
