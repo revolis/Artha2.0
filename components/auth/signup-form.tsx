@@ -75,7 +75,10 @@ export function SignupForm() {
       {step === "password" ? (
         <SetPasswordStep
           submitLabel="Create account"
-          onDone={() => router.push("/dashboard")}
+          onDone={() => {
+            router.push("/dashboard")
+            router.refresh()
+          }}
         />
       ) : null}
     </AuthShell>

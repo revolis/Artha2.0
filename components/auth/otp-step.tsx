@@ -4,7 +4,7 @@ import * as React from "react"
 
 import OtpInput from "@/components/lab/otp-segmented-input"
 import { Button } from "@/components/ui/button"
-import { DEMO_OTP, RESEND_SECONDS, sendOtp, verifyOtp } from "@/lib/auth-flow"
+import { RESEND_SECONDS, sendOtp, verifyOtp } from "@/lib/auth-flow"
 
 /**
  * The code step, shared by sign-up and password reset.
@@ -17,13 +17,17 @@ export function OtpStep({
   email,
   onVerified,
   onBack,
+  createUser = true,
 }: {
   email: string
   onVerified: () => void
   onBack: () => void
+  /** False on a password reset, so resending cannot create an account. */
+  createUser?: boolean
 }) {
   const [secondsLeft, setSecondsLeft] = React.useState(RESEND_SECONDS)
   const [resending, setResending] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     if (secondsLeft <= 0) return
@@ -32,19 +36,27 @@ export function OtpStep({
   }, [secondsLeft])
 
   async function verify(value: string) {
-    const ok = await verifyOtp(value)
-    if (ok) {
-      // Let the cells finish their cascade before the step changes.
-      window.setTimeout(onVerified, 700)
+    try {
+      const ok = await verifyOtp(value, email)
+      if (ok) {
+        // Let the cells finish their cascade before the step changes.
+        window.setTimeout(onVerified, 700)
+      }
+      return ok
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Something went wrong.")
+      return false
     }
-    return ok
   }
 
   async function resend() {
     setResending(true)
+    setError(null)
     try {
-      await sendOtp(email)
+      await sendOtp(email, { createUser })
       setSecondsLeft(RESEND_SECONDS)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Something went wrong.")
     } finally {
       setResending(false)
     }
@@ -56,13 +68,13 @@ export function OtpStep({
         <OtpInput length={6} group verify={verify} />
       </div>
 
-      {/* Stated plainly, because there is no inbox behind this yet. */}
-      <p className="rounded-lg border border-dashed px-3 py-2 text-center text-xs text-muted-foreground">
-        No mail is sent while the backend is being built — use{" "}
-        <span className="font-medium text-foreground tabular-nums">
-          {DEMO_OTP}
-        </span>
-      </p>
+      {error ? (
+        <p className="text-center text-xs text-destructive">{error}</p>
+      ) : (
+        <p className="text-center text-xs text-muted-foreground">
+          The code expires after an hour. Check spam if it hasn&apos;t arrived.
+        </p>
+      )}
 
       <div className="flex flex-col items-center gap-2">
         <Button

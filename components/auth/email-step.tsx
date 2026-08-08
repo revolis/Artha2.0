@@ -19,11 +19,14 @@ export function EmailStep({
   onEmailChange,
   onSent,
   submitLabel,
+  createUser = true,
 }: {
   email: string
   onEmailChange: (value: string) => void
   onSent: () => void
   submitLabel: string
+  /** False on a password reset, so a typo cannot open a new account. */
+  createUser?: boolean
 }) {
   const [error, setError] = React.useState<string | null>(null)
   const [sending, setSending] = React.useState(false)
@@ -37,7 +40,7 @@ export function EmailStep({
     setError(null)
     setSending(true)
     try {
-      await sendOtp(email)
+      await sendOtp(email, { createUser })
       onSent()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Something went wrong.")

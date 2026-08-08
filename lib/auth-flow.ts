@@ -1,43 +1,116 @@
-// The seam between the auth screens and a real backend.
-//
-// Nothing here talks to a server. The project is still in its design phase —
-// no database, no auth provider, no mail service — so these stand in for the
-// calls that will replace them, and every screen is built against this file
-// rather than against fetch(). When Supabase lands, the bodies change and the
-// screens do not.
-//
-//   sendOtp        → supabase.auth.signInWithOtp({ email })
-//   verifyOtp      → supabase.auth.verifyOtp({ email, token, type })
-//   setPassword    → supabase.auth.updateUser({ password })
-//   signInWithPassword / signInWithGoogle → the matching supabase.auth calls
-//
-// Until then the code below is the code any six digits are checked against, so
-// the flow can be walked end to end without an inbox.
+"use client"
 
-export const DEMO_OTP = "246810"
+// The auth calls the screens are built against.
+//
+// These used to be stubs standing in for a backend. They now talk to Supabase,
+// and the screens above them did not have to change: the seam was designed for
+// exactly this swap.
+
+import { createClient } from "@/lib/supabase/client"
 
 /** How long before "Resend code" becomes available again. */
 export const RESEND_SECONDS = 30
-
-function pause(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
 
 export function isEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
 }
 
-/** Stands in for mailing a one-time code. */
-export async function sendOtp(email: string): Promise<void> {
-  await pause(600)
-  if (!isEmail(email))
-    throw new Error("That doesn't look like an email address.")
+function friendly(message: string): string {
+  // Supabase speaks in API terms; these are the ones a person actually meets.
+  if (/rate limit|too many/i.test(message)) {
+    return "Too many attempts. Wait a minute and try again."
+  }
+  if (/invalid login credentials/i.test(message)) {
+    return "That email and password do not match an account."
+  }
+  if (/expired|invalid/i.test(message)) {
+    return "That code has expired. Send a new one."
+  }
+  return message
 }
 
-/** Stands in for checking the code against the one that was mailed. */
-export async function verifyOtp(code: string): Promise<boolean> {
-  await pause(500)
-  return code === DEMO_OTP
+/**
+ * Mails a six-digit code. `shouldCreateUser` decides whether this is a sign-up
+ * or a password reset — sending a reset code to an address with no account
+ * would otherwise quietly create one.
+ */
+export async function sendOtp(
+  email: string,
+  { createUser = true }: { createUser?: boolean } = {}
+): Promise<void> {
+  if (!isEmail(email)) {
+    throw new Error("That doesn't look like an email address.")
+  }
+  const supabase = createClient()
+  const { error } = await supabase.auth.signInWithOtp({
+    email: email.trim(),
+    options: { shouldCreateUser: createUser },
+  })
+  if (error) throw new Error(friendly(error.message))
+}
+
+/**
+ * Checks the code and, on success, signs the user in — a verified code is
+ * proof of ownership, which is what a session represents.
+ */
+export async function verifyOtp(code: string, email: string): Promise<boolean> {
+  const supabase = createClient()
+  const { error } = await supabase.auth.verifyOtp({
+    email: email.trim(),
+    token: code,
+    type: "email",
+  })
+  if (error) {
+    // A wrong code is an expected outcome, not a failure worth throwing over —
+    // the input animates its own rejection.
+    if (/invalid|expired|token/i.test(error.message)) return false
+    throw new Error(friendly(error.message))
+  }
+  return true
+}
+
+/** Sets the password on the session that verifying the code just created. */
+export async function setPassword(password: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) throw new Error(friendly(error.message))
+  // The account now has a password, whatever it was created with.
+  const { data } = await supabase.auth.getUser()
+  if (data.user) {
+    await supabase
+      .from("settings")
+      .update({ has_password: true })
+      .eq("user_id", data.user.id)
+  }
+}
+
+export async function signInWithPassword(
+  email: string,
+  password: string
+): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password,
+  })
+  if (error) throw new Error(friendly(error.message))
+}
+
+export async function signInWithGoogle(next?: string): Promise<void> {
+  const supabase = createClient()
+  const callback = new URL("/auth/callback", window.location.origin)
+  if (next) callback.searchParams.set("next", next)
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: callback.toString() },
+  })
+  if (error) throw new Error(friendly(error.message))
+}
+
+export async function signOut(): Promise<void> {
+  const supabase = createClient()
+  await supabase.auth.signOut()
 }
 
 export interface PasswordRule {

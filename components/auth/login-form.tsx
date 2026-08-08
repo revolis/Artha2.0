@@ -8,6 +8,7 @@ import { AuthShell } from "@/components/auth/auth-shell"
 import { GoogleButton } from "@/components/auth/google-button"
 import { PasswordField } from "@/components/auth/password-field"
 import { Loader2 } from "@/components/icons"
+import { QueryParamSync } from "@/components/layout/query-param-sync"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -17,16 +18,18 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { isEmail } from "@/lib/auth-flow"
+import { isEmail, signInWithPassword } from "@/lib/auth-flow"
 
 export function LoginForm() {
   const router = useRouter()
+  // Where the middleware wanted them before it sent them here.
+  const [next, setNext] = React.useState("/dashboard")
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
   const [signingIn, setSigningIn] = React.useState(false)
 
-  function submit(event: React.FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault()
     if (!isEmail(email)) {
       setError("Enter a valid email address.")
@@ -38,7 +41,16 @@ export function LoginForm() {
     }
     setError(null)
     setSigningIn(true)
-    router.push("/dashboard")
+    try {
+      await signInWithPassword(email, password)
+      // refresh() so the middleware and every server component pick up the new
+      // session; push() alone would navigate with the old one still cached.
+      router.push(next)
+      router.refresh()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Something went wrong.")
+      setSigningIn(false)
+    }
   }
 
   return (
@@ -57,7 +69,16 @@ export function LoginForm() {
         </>
       }
     >
-      <GoogleButton label="Continue with Google" />
+      {/* Renders nothing; keeps ?next= out of a Suspense boundary that would
+          otherwise wrap the whole screen. */}
+      <React.Suspense fallback={null}>
+        <QueryParamSync
+          name="next"
+          onChange={(value) => setNext(value.startsWith("/") ? value : "/dashboard")}
+        />
+      </React.Suspense>
+
+      <GoogleButton label="Continue with Google" next={next} />
       <FieldSeparator>or</FieldSeparator>
 
       <form onSubmit={submit}>

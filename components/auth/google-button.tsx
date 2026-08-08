@@ -1,6 +1,10 @@
 "use client"
 
+import * as React from "react"
+
+import { Loader2 } from "@/components/icons"
 import { Button } from "@/components/ui/button"
+import { signInWithGoogle } from "@/lib/auth-flow"
 
 /** Google's four-colour mark, at its official proportions. */
 function GoogleMark() {
@@ -26,15 +30,49 @@ function GoogleMark() {
   )
 }
 
-/**
- * The only third-party sign-in offered. Presentational for now — it will hand
- * off to supabase.auth.signInWithOAuth once the backend exists.
- */
-export function GoogleButton({ label }: { label: string }) {
+/** The only third-party sign-in offered. */
+export function GoogleButton({
+  label,
+  next,
+}: {
+  label: string
+  /** Where to land once Google sends them back. */
+  next?: string
+}) {
+  const [busy, setBusy] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  async function start() {
+    setBusy(true)
+    setError(null)
+    try {
+      // Redirects away on success, so `busy` stays true until the page leaves.
+      await signInWithGoogle(next)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Something went wrong.")
+      setBusy(false)
+    }
+  }
+
   return (
-    <Button variant="outline" size="lg" className="w-full">
-      <GoogleMark data-icon="inline-start" />
-      {label}
-    </Button>
+    <div className="flex flex-col gap-2">
+      <Button
+        variant="outline"
+        size="lg"
+        className="w-full"
+        disabled={busy}
+        onClick={start}
+      >
+        {busy ? (
+          <Loader2 data-icon="inline-start" className="animate-spin" />
+        ) : (
+          <GoogleMark data-icon="inline-start" />
+        )}
+        {label}
+      </Button>
+      {error ? (
+        <p className="text-center text-xs text-destructive">{error}</p>
+      ) : null}
+    </div>
   )
 }

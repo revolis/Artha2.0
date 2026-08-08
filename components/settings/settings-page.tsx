@@ -72,6 +72,7 @@ import { HELP_ARTICLES } from "@/lib/help-content"
 import { useMoney } from "@/lib/use-money"
 import { SITE } from "@/lib/site"
 import { useProfile } from "@/lib/use-profile"
+import { signOut } from "@/lib/auth-flow"
 import {
   CURRENCY_OPTIONS,
   LANGUAGE_OPTIONS,
@@ -949,9 +950,13 @@ export function SettingsPage() {
               Stay signed in
             </Button>
             <Button
-              onClick={() => {
+              onClick={async () => {
                 setSignOutOpen(false)
+                await signOut()
                 router.push("/")
+                // Clears the cached server render, which still holds the
+                // signed-in shell.
+                router.refresh()
               }}
             >
               <LogOut data-icon="inline-start" />

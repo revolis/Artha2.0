@@ -2,11 +2,11 @@
 
 import * as React from "react"
 
-import { Loader2 } from "@/components/icons"
 import { PasswordField } from "@/components/auth/password-field"
+import { Loader2 } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { FieldError, FieldGroup } from "@/components/ui/field"
-import { isStrongPassword } from "@/lib/auth-flow"
+import { isStrongPassword, setPassword } from "@/lib/auth-flow"
 
 /** The final step of both sign-up and reset: choose a password that holds up. */
 export function SetPasswordStep({
@@ -16,7 +16,7 @@ export function SetPasswordStep({
   submitLabel: string
   onDone: () => void
 }) {
-  const [password, setPassword] = React.useState("")
+  const [password, setPasswordValue] = React.useState("")
   const [confirm, setConfirm] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
   const [saving, setSaving] = React.useState(false)
@@ -36,7 +36,13 @@ export function SetPasswordStep({
     }
     setError(null)
     setSaving(true)
-    onDone()
+    try {
+      await setPassword(password)
+      onDone()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Something went wrong.")
+      setSaving(false)
+    }
   }
 
   return (
@@ -47,7 +53,7 @@ export function SetPasswordStep({
           label="New password"
           value={password}
           onChange={(value) => {
-            setPassword(value)
+            setPasswordValue(value)
             setError(null)
           }}
           showRules

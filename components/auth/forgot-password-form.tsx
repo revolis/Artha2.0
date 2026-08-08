@@ -55,6 +55,7 @@ export function ForgotPasswordForm() {
           onEmailChange={setEmail}
           onSent={() => setStep("otp")}
           submitLabel="Send reset code"
+          createUser={false}
         />
       ) : null}
 
@@ -63,13 +64,18 @@ export function ForgotPasswordForm() {
           email={email}
           onVerified={() => setStep("password")}
           onBack={() => setStep("email")}
+          createUser={false}
         />
       ) : null}
 
       {step === "password" ? (
+        // Verifying the code signed them in, so they go straight through.
         <SetPasswordStep
-          submitLabel="Save and log in"
-          onDone={() => router.push("/login")}
+          submitLabel="Save and continue"
+          onDone={() => {
+            router.push("/dashboard")
+            router.refresh()
+          }}
         />
       ) : null}
     </AuthShell>
