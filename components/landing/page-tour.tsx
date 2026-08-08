@@ -9,7 +9,7 @@ export function PageTour() {
     <section id="pages" className="mx-auto w-full max-w-6xl px-5 py-16">
       <SectionHeading
         eyebrow="The workspace"
-        title="Eight surfaces, one ledger"
+        title="Every view, drawn from one ledger"
       />
 
       <Reveal delay={120} y={20}>

@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/accordion"
 import { Reveal } from "@/components/landing/reveal"
 import { SectionHeading } from "@/components/landing/section-heading"
-import { demoLedger } from "@/lib/landing-stats"
 
 const FAQS = [
   {
@@ -25,7 +24,7 @@ const FAQS = [
   },
   {
     q: "Can I work in rupees rather than dollars?",
-    a: `Yes. Amounts are held in USD and presented in whichever of the ${demoLedger.currencies} supported currencies you choose — NPR, USD, INR, EUR, GBP or AED. Every table, chart, goal and total follows the setting instantly.`,
+    a: "Yes. Amounts are held in USD and presented in whichever currency you choose — NPR, USD, INR, EUR, GBP or AED. Every table, chart, target and total follows the setting instantly.",
   },
   {
     q: "Where do the exchange rates come from?",

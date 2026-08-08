@@ -9,13 +9,15 @@ import { GoalCard } from "@/components/goals/goal-card"
 import { Reveal } from "@/components/landing/reveal"
 import { SectionHeading } from "@/components/landing/section-heading"
 import { Button } from "@/components/ui/button"
-import { DEMO_YEAR } from "@/lib/landing-stats"
 import { mockEntries, mockGoals } from "@/lib/mock-data"
 import {
   buildDualDailySeries,
   getMonthOverMonth,
   getPortfolioStats,
 } from "@/lib/portfolio"
+
+/** The year the preview opens on — the ledger's most recent full year of trading. */
+const DEMO_YEAR = 2026
 
 /** The frame around the preview, so it reads as the app and not as page furniture. */
 function WindowFrame({ children }: { children: React.ReactNode }) {

@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button"
 import { DotPattern } from "@/components/ui/dot-pattern"
 import { cn } from "@/lib/utils"
 
+// Framed as what you can do, not how many of it there is. A count tells a
+// visitor nothing until they already know the product.
 const CAPABILITIES = [
-  "Six entry types",
-  "Six display currencies",
+  "Record entries however you work",
+  "Read your totals in any currency",
   "Exchange rates refreshed daily",
 ]
 
@@ -74,7 +76,7 @@ export function Hero() {
               render={<a href="#dashboard" />}
               nativeButton={false}
             >
-              Tour the workspace
+              See it in action
             </Button>
           </div>
         </Reveal>

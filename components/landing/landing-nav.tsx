@@ -71,21 +71,14 @@ export function LandingNav() {
           >
             Live demo
           </Button>
-          <Button
-            variant="ghost"
+          {/* Log in only. Signing up is the page's closing ask, not something
+              to press before reading anything. */}
+          <MagnetizeButton
             size="sm"
-            className="hidden sm:inline-flex"
             render={<Link href="/login" />}
             nativeButton={false}
           >
             Log in
-          </Button>
-          <MagnetizeButton
-            size="sm"
-            render={<Link href="/signup" />}
-            nativeButton={false}
-          >
-            Sign up
           </MagnetizeButton>
         </div>
       </nav>
