@@ -5,9 +5,8 @@ import NumberFlow from "@number-flow/react"
 
 import { createNotchPath } from "@/components/charts/notch-gauge-shared"
 import { getGoalRawPercent, getGoalSlices, type GoalSlice } from "@/lib/goals"
-import { convertCurrency } from "@/lib/mock-data"
 import type { Currency, Goal } from "@/lib/types"
-import { useSettings } from "@/lib/use-settings"
+import { useMoney } from "@/lib/use-money"
 import { cn } from "@/lib/utils"
 
 // Arc geometry follows @bklit/gauge-chart's notch gauge: same sweep, taper and
@@ -127,7 +126,8 @@ function GaugeCenter({
   masked: boolean
 }) {
   const ready = useNumberFlowReady()
-  const shown = convertCurrency(amount, currency, target)
+  const { convert } = useMoney()
+  const shown = convert(amount, currency, target)
 
   const moneyFormat = {
     style: "currency" as const,
@@ -188,10 +188,10 @@ export function GoalGauge({
   onHoverChange: (slice: SliceKey | null) => void
   className?: string
 }) {
-  // Read through the hook rather than the module getters: it hands back the
-  // seed values during hydration, so server and client agree on the first
-  // render and the stored settings arrive on the next one.
-  const { settings } = useSettings()
+  // Read through the hook rather than module state: it hands back the seed
+  // values during hydration, so server and client agree on the first render
+  // and the stored settings arrive on the next one.
+  const { displayCurrency, privacyMode } = useMoney()
   const mounted = useHasMounted()
 
   const rawPercent = getGoalRawPercent(goal)
@@ -324,8 +324,8 @@ export function GoalGauge({
         percent={mounted ? centerPercent : 0}
         label={centerLabel}
         currency={goal.currency}
-        target={settings.displayCurrency}
-        masked={settings.privacyMode}
+        target={displayCurrency}
+        masked={privacyMode}
       />
 
       {/* Floating label for the hovered part. */}

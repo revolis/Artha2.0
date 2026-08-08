@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { formatMoney } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import {
   PORTFOLIO_RANGES,
   sliceSeries,
@@ -41,6 +41,7 @@ interface PortfolioCardProps {
 
 /** The month-on-month move, stated plainly rather than badged. */
 function Momentum({ momentum }: { momentum: MonthOverMonth }) {
+  const { formatMoney } = useMoney()
   const up = momentum.change >= 0
 
   if (momentum.change === 0) {
@@ -97,6 +98,7 @@ function ValueStat({
   explanation: string
   children?: React.ReactNode
 }) {
+  const { formatMoney } = useMoney()
   return (
     <div className="flex flex-col gap-1">
       <span className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
@@ -138,6 +140,7 @@ export function PortfolioCard({
   cashOut,
   cashIn,
 }: PortfolioCardProps) {
+  const { formatMoney } = useMoney()
   // Opens on the year so the dashboard shows the whole story by default. The
   // shorter windows are there when you want the two lines further apart — a
   // wider window means a wider axis, which squeezes the gap between them.

@@ -74,6 +74,9 @@ export interface ChartStatFlowProps {
   valueClassName?: string
   labelClassName?: string
   icon?: ReactNode
+  /** Local addition: render the mask instead of the figure, for privacy mode. */
+  masked?: boolean
+  maskText?: string
 }
 
 /**
@@ -89,6 +92,8 @@ export function ChartStatFlow({
   valueClassName = "text-2xl font-bold",
   labelClassName = "text-xs",
   icon,
+  masked = false,
+  maskText = "••••••",
 }: ChartStatFlowProps) {
   const numberFlowReady = useNumberFlowElementReady()
   const staticValue = useMemo(
@@ -104,7 +109,9 @@ export function ChartStatFlow({
         </div>
       ) : null}
       <span className={cn("text-foreground tabular-nums", valueClassName)}>
-        {numberFlowReady ? (
+        {masked ? (
+          maskText
+        ) : numberFlowReady ? (
           <NumberFlow
             format={formatOptions}
             isolate

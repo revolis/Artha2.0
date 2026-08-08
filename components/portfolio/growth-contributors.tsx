@@ -25,7 +25,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { formatMoney } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import type { Contributor } from "@/lib/portfolio"
 import { cn } from "@/lib/utils"
 
@@ -62,6 +62,7 @@ function formatMonth(datetime: string): string {
 }
 
 export function GrowthContributors({ items }: { items: Contributor[] }) {
+  const { formatMoney } = useMoney()
   const [search, setSearch] = React.useState("")
   const [filter, setFilter] = React.useState<Filter>("all")
   const [visible, setVisible] = React.useState(PAGE_SIZE)

@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useSearchParams } from "next/navigation"
 import {
   ChevronDown,
   Copy,
@@ -22,6 +21,7 @@ import {
   entryTypeLabels,
 } from "@/components/entries/entry-form-dialog"
 import { AppShell } from "@/components/layout/app-shell"
+import { QueryParamSync } from "@/components/layout/query-param-sync"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
@@ -62,8 +62,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatMoney, getNetAmount } from "@/lib/mock-data"
-import { useSettings } from "@/lib/use-settings"
+import { getNetAmount } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { tagStyle } from "@/lib/tag-colors"
@@ -115,6 +115,7 @@ function formatEntryDate(datetime: string): { date: string; time: string } {
 }
 
 function AmountCell({ entry }: { entry: Entry }) {
+  const { formatMoney } = useMoney()
   const net = getNetAmount(entry)
   const formatted = formatMoney(entry.amount, "USD")
   if (net > 0) {
@@ -127,8 +128,7 @@ function AmountCell({ entry }: { entry: Entry }) {
 }
 
 export function EntriesPage() {
-  // Subscribing re-renders every amount when the display currency changes.
-  useSettings()
+  const { formatMoney, formatCash, formatPlain } = useMoney()
   const {
     entries,
     setEntries,
@@ -143,16 +143,10 @@ export function EntriesPage() {
   // One row open at a time, so the table doesn't sprawl.
   const [expanded, setExpanded] = React.useState<string | null>(null)
 
-  // The header search sends people here with ?q=… . Mirroring the param into
-  // state during render (rather than in an effect) keeps the box editable
-  // afterwards while still following later navigations.
-  const urlQuery = useSearchParams().get("q") ?? ""
-  const [search, setSearch] = React.useState(urlQuery)
-  const [lastUrlQuery, setLastUrlQuery] = React.useState(urlQuery)
-  if (urlQuery !== lastUrlQuery) {
-    setLastUrlQuery(urlQuery)
-    setSearch(urlQuery)
-  }
+  // The header search sends people here with ?q=… . The param is read by the
+  // QueryParamSync leaf near the bottom of the tree, which hands it here —
+  // the box stays editable afterwards and still follows later navigations.
+  const [search, setSearch] = React.useState("")
   const [typeFilter, setTypeFilter] = React.useState<string>("all")
   const [sourceFilter, setSourceFilter] = React.useState<string>("all")
   const [tagFilter, setTagFilter] = React.useState<string>("all")
@@ -262,6 +256,12 @@ export function EntriesPage() {
 
   return (
     <AppShell>
+      {/* Renders nothing. Confined to its own boundary so reading the query
+          string cannot stop the rest of the page hydrating. */}
+      <React.Suspense fallback={null}>
+        <QueryParamSync name="q" onChange={setSearch} />
+      </React.Suspense>
+
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
@@ -526,12 +526,12 @@ export function EntriesPage() {
                                 ? "Sold USD"
                                 : "Bought USD"}
                               {" · "}
-                              {entry.p2p.cashCurrency}{" "}
-                              {entry.p2p.cashAmount.toLocaleString("en-US", {
-                                maximumFractionDigits: 2,
-                              })}
+                              {formatCash(
+                                entry.p2p.cashAmount,
+                                entry.p2p.cashCurrency
+                              )}
                               {" @ "}
-                              {entry.p2p.rate}
+                              {formatPlain(entry.p2p.rate)}
                             </span>
                           ) : null}
                         </div>

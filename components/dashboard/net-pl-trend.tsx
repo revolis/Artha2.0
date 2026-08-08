@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getTrendSeries, type TrendTimeframe } from "@/lib/analytics"
-import { formatMoney } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import type { Entry } from "@/lib/types"
 
 const timeframes: { value: TrendTimeframe; label: string }[] = [
@@ -42,6 +42,7 @@ function TrendChart({
   year: number
   timeframe: TrendTimeframe
 }) {
+  const { formatMoney } = useMoney()
   const data = React.useMemo(
     () => getTrendSeries(entries, year, timeframe),
     [entries, year, timeframe]

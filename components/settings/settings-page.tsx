@@ -69,7 +69,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { HELP_ARTICLES } from "@/lib/help-content"
-import { formatMoney } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import { SITE } from "@/lib/site"
 import { useProfile } from "@/lib/use-profile"
 import {
@@ -144,6 +144,7 @@ export function SettingsPage() {
   const router = useRouter()
   const mounted = useMounted()
   const { settings, updateSettings, setNotification } = useSettings()
+  const { formatMoney } = useMoney()
   const { profile, saveProfile } = useProfile()
   const { theme, setTheme } = useTheme()
 

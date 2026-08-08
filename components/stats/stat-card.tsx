@@ -26,8 +26,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { PRIVACY_MASK } from "@/lib/money"
 import type { StatPoint } from "@/lib/stat-series"
+import { useMoney } from "@/lib/use-money"
 
+// Money cards inherit the currency; the code here is only a placeholder that
+// the reader's choice replaces at render time.
 const usdFormat = {
   currency: "USD",
   maximumFractionDigits: 0,
@@ -89,6 +93,20 @@ export function StatCard({
   const displayLabel = hover.label ?? restLabel
   const displayTrend = hover.trend ?? trend
 
+  // These figures used to be handed straight to Intl, which meant they ignored
+  // both the display currency and privacy mode — a card reading "$14,292"
+  // beside a table reading rupees, and a masked page with its headline numbers
+  // still legible. A "decimal" format means the value is a rate or a count, so
+  // it is shown as-is; anything else is money held in USD and gets converted.
+  const { convert, displayCurrency, privacyMode } = useMoney()
+  const isMoney = formatOptions.style !== "decimal"
+  const shownValue = isMoney
+    ? convert(displayValue, "USD", displayCurrency)
+    : displayValue
+  const resolvedFormat = isMoney
+    ? { ...formatOptions, style: "currency", currency: displayCurrency }
+    : formatOptions
+
   return (
     <Card className="w-full gap-0 py-0">
       <CardHeader className="px-4 py-3">
@@ -100,11 +118,13 @@ export function StatCard({
 
       <CardContent className="flex flex-col gap-3 px-4 pt-2 pb-3">
         <ChartStatFlow
-          formatOptions={formatOptions}
+          formatOptions={resolvedFormat}
           label={displayLabel}
           labelClassName={statCardLabelClassName}
-          value={displayValue}
+          value={shownValue}
           valueClassName={statCardValueClassName}
+          masked={privacyMode}
+          maskText={PRIVACY_MASK}
         />
 
         <StatCardChart size="sm">

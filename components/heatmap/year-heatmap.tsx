@@ -14,7 +14,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
-import { formatMoney, getEntryYear } from "@/lib/mock-data"
+import { getEntryYear } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import type { Entry, Source } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -86,6 +87,7 @@ interface YearHeatmapProps {
 // Daily net P/L for a whole year, GitHub-contributions style. Shared by the
 // Year Heatmap page and the dashboard.
 export function YearHeatmap({ entries, sources, year }: YearHeatmapProps) {
+  const { formatMoney } = useMoney()
   const sourceById = React.useMemo(
     () => new Map(sources.map((source) => [source.id, source.name])),
     [sources]

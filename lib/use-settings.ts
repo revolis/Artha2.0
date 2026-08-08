@@ -5,11 +5,7 @@
 
 import * as React from "react"
 
-import {
-  mockSettings,
-  setDisplayCurrency,
-  setPrivacyMode,
-} from "@/lib/mock-data"
+import { mockSettings } from "@/lib/mock-data"
 import type { AppSettings, Currency, NotificationKey } from "@/lib/types"
 
 const STORAGE_KEY = "artha.settings"
@@ -39,12 +35,7 @@ function load(): AppSettings {
 }
 
 function getSnapshot(): AppSettings {
-  if (cache === null) {
-    cache = load()
-    // Keep the formatter in step the moment settings are first read.
-    setDisplayCurrency(cache.displayCurrency)
-    setPrivacyMode(cache.privacyMode)
-  }
+  if (cache === null) cache = load()
   return cache
 }
 
@@ -53,23 +44,12 @@ function getServerSnapshot(): AppSettings {
 }
 
 function subscribe(onChange: () => void) {
-  // Priming on subscribe as well as on read, so the formatter is not left
-  // waiting for whichever component happens to call getSnapshot first.
-  //
-  // NOTE: this hardens the ordering but does not on its own fix the known
-  // display-currency fault — a hard load of /entries and /reports still
-  // formats every amount in the default currency. See the audit notes: the
-  // real problem is that formatMoney reads mutable module state instead of
-  // taking the currency as an argument, and that wants fixing properly.
-  getSnapshot()
   listeners.add(onChange)
   return () => listeners.delete(onChange)
 }
 
 function write(next: AppSettings) {
   cache = next
-  setDisplayCurrency(next.displayCurrency)
-  setPrivacyMode(next.privacyMode)
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
   } catch {

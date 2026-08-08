@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { formatMoney } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import { CURRENCY_OPTIONS, useSettings } from "@/lib/use-settings"
 import type { Currency } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,7 @@ export function AvgMonthlyIncome({ amountUsd }: { amountUsd: number }) {
   // Picking a currency here changes the site-wide display currency, so this
   // stays in step with the same setting on the Settings page.
   const { settings, updateSettings } = useSettings()
+  const { formatMoney } = useMoney()
 
   return (
     <div className="flex items-center gap-1.5">

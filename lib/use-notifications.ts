@@ -7,8 +7,15 @@
 
 import * as React from "react"
 
-import { formatMoney, getNetAmount } from "@/lib/mock-data"
-import type { AppSettings, Entry, Goal, NotificationKey } from "@/lib/types"
+import { getNetAmount } from "@/lib/mock-data"
+import type {
+  AppSettings,
+  Currency,
+  Entry,
+  Goal,
+  NotificationKey,
+} from "@/lib/types"
+import { useMoney } from "@/lib/use-money"
 
 export type NotificationKind =
   "goal" | "entry" | "report" | "rate" | "summary" | "news"
@@ -107,7 +114,10 @@ function buildNotifications(
   entries: Entry[],
   settings: AppSettings,
   rate: { updatedAt: string; isLive: boolean },
-  now: Date
+  now: Date,
+  // Passed in rather than imported: amounts are formatted for the reader, and
+  // that depends on settings this module has no business reaching for.
+  formatMoney: (amount: number, from?: Currency) => string
 ): AppNotification[] {
   const items: AppNotification[] = []
   const today = isoDay(now)
@@ -268,6 +278,7 @@ export function useNotifications(
     getReadSnapshot,
     getServerReadSnapshot
   )
+  const { formatMoney } = useMoney()
 
   const notifications = React.useMemo(
     () =>
@@ -276,9 +287,10 @@ export function useNotifications(
         entries,
         settings,
         { updatedAt: rateUpdatedAt, isLive: rateIsLive },
-        new Date()
+        new Date(),
+        formatMoney
       ),
-    [goals, entries, settings, rateUpdatedAt, rateIsLive]
+    [goals, entries, settings, rateUpdatedAt, rateIsLive, formatMoney]
   )
 
   const readSet = React.useMemo(() => new Set(read), [read])

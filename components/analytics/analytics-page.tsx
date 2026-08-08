@@ -55,9 +55,9 @@ import {
   type PerformanceRow,
   type TrendPoint,
 } from "@/lib/analytics"
-import { formatMoney, getEntryYear, getNetAmount } from "@/lib/mock-data"
+import { getEntryYear, getNetAmount } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
-import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
 import { useProfile } from "@/lib/use-profile"
@@ -68,9 +68,22 @@ const INCOME_COLOR = "var(--success)"
 const EXPENSE_COLOR = "var(--destructive)"
 const NET_COLOR = "var(--chart-line-primary)"
 
-function signed(value: number): string {
+/** The sign is written out, so the formatter only ever sees a magnitude. */
+function signed(
+  value: number,
+  formatMoney: (amount: number) => string
+): string {
   const sign = value > 0 ? "+" : value < 0 ? "−" : ""
-  return `${sign}${formatMoney(Math.abs(value), "USD")}`
+  return `${sign}${formatMoney(Math.abs(value))}`
+}
+
+/** Hook form, for the components that render a signed figure. */
+function useSigned() {
+  const { formatMoney } = useMoney()
+  return React.useCallback(
+    (value: number) => signed(value, (amount) => formatMoney(amount, "USD")),
+    [formatMoney]
+  )
 }
 
 function toneFor(value: number): string | undefined {
@@ -113,6 +126,8 @@ function MonthCard({
   year: number
   emptyText: string
 }) {
+  const { formatMoney } = useMoney()
+  const signed = useSigned()
   return (
     <Card size="sm">
       <CardHeader>
@@ -171,6 +186,7 @@ function TransactionTable({
   showType?: boolean
   emptyText: string
 }) {
+  const { formatMoney } = useMoney()
   if (entries.length === 0) {
     return <p className="text-sm text-muted-foreground">{emptyText}</p>
   }
@@ -229,6 +245,8 @@ function BreakdownTable({
   label: string
   emptyText: string
 }) {
+  const { formatMoney } = useMoney()
+  const signed = useSigned()
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">{emptyText}</p>
   }
@@ -287,8 +305,8 @@ function BreakdownTable({
 }
 
 export function AnalyticsPage() {
-  // Subscribing re-renders every amount when the display currency changes.
-  useSettings()
+  const { formatMoney } = useMoney()
+  const signed = useSigned()
   const { entries, sources } = useEntryData()
   const { goals } = useGoals()
   const { profile } = useProfile()

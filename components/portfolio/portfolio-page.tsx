@@ -25,7 +25,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { formatMoney, getNetAmount } from "@/lib/mock-data"
+import { getNetAmount } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import { StatCard } from "@/components/stats/stat-card"
 import {
   buildDualDailySeries,
@@ -35,7 +36,6 @@ import {
 } from "@/lib/portfolio"
 import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import type { Entry } from "@/lib/types"
-import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 
 type Preset = "7d" | "30d" | "90d" | "ytd" | "custom"
@@ -62,8 +62,7 @@ function formatDay(value: Date | string): string {
 }
 
 export function PortfolioPage() {
-  // Subscribing re-renders every amount when the display currency changes.
-  useSettings()
+  const { formatMoney } = useMoney()
   const { entries, sources } = useEntryData()
   const year = new Date().getFullYear()
 

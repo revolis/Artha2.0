@@ -2,7 +2,7 @@
 // in CSV, JSON, or print-ready HTML (which the browser saves as PDF).
 
 import { entryTypeLabels } from "@/components/entries/entry-form-dialog"
-import { formatMoney, getNetAmount } from "@/lib/mock-data"
+import { getNetAmount } from "@/lib/mock-data"
 import { SITE } from "@/lib/site"
 import type { Entry, Source } from "@/lib/types"
 
@@ -190,17 +190,23 @@ function escapeHtml(value: string | number): string {
     .replace(/"/g, "&quot;")
 }
 
+/**
+ * The printable report. The formatter is passed in rather than imported: this
+ * runs outside React, and the reader's display currency belongs to React state
+ * now. Whatever the screen is showing, the print-out matches.
+ */
 export function buildPrintHTML(
   meta: ReportMeta,
   rows: ReportRow[],
-  logoDataUrl: string | null
+  logoDataUrl: string | null,
+  formatAmount: (amount: number) => string
 ): string {
   const summary = [
-    ["Total Income", formatMoney(meta.totals.income, "USD")],
-    ["Total Expense", formatMoney(meta.totals.expense, "USD")],
-    ["Net Result", formatMoney(meta.totals.net, "USD")],
-    ["USD Cashed Out", formatMoney(meta.totals.cashOut, "USD")],
-    ["USD Cashed In", formatMoney(meta.totals.cashIn, "USD")],
+    ["Total Income", formatAmount(meta.totals.income)],
+    ["Total Expense", formatAmount(meta.totals.expense)],
+    ["Net Result", formatAmount(meta.totals.net)],
+    ["Cashed Out", formatAmount(meta.totals.cashOut)],
+    ["Cashed In", formatAmount(meta.totals.cashIn)],
   ]
     .map(
       ([label, value]) =>
@@ -217,9 +223,7 @@ export function buildPrintHTML(
     .map((row) => {
       const cells = COLUMNS.map((column) => {
         const raw = row[column.key]
-        const text = column.numeric
-          ? formatMoney(Number(raw), "USD")
-          : String(raw)
+        const text = column.numeric ? formatAmount(Number(raw)) : String(raw)
         const tone =
           column.key === "netEffect"
             ? Number(raw) > 0

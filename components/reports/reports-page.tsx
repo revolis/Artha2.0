@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { useSearchParams } from "next/navigation"
 
 import { AppShell } from "@/components/layout/app-shell"
+import { QueryParamSync } from "@/components/layout/query-param-sync"
 import { Badge } from "@/components/ui/badge"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import {
@@ -32,7 +32,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatMoney, getEntryYear } from "@/lib/mock-data"
+import { getEntryYear } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import {
   buildPrintHTML,
   buildReportRows,
@@ -45,7 +46,6 @@ import {
   toJSON,
   type ReportMeta,
 } from "@/lib/reports"
-import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry, EntryType } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -115,25 +115,27 @@ const presets: { label: string; description: string; scope: ScopeKind }[] = [
 ]
 
 export function ReportsPage() {
-  // Subscribing re-renders every amount when the display currency changes.
-  useSettings()
+  const { formatMoney } = useMoney()
   const { entries, sources } = useEntryData()
   const currentYear = new Date().getFullYear()
 
   // Deep link support, e.g. /reports?year=2026&scope=all — used by the
-  // "export before deleting" prompt on the dashboard.
-  const searchParams = useSearchParams()
-  const linkedYear = Number(searchParams.get("year"))
-  const linkedScope = searchParams.get("scope")
+  // "export before deleting" prompt on the dashboard. The params arrive from
+  // the QueryParamSync leaves below rather than being read here, so that
+  // reading them cannot hold up the rest of the page.
+  const [year, setYear] = React.useState(currentYear)
+  const [scope, setScope] = React.useState<ScopeKind>("all")
 
-  const [year, setYear] = React.useState(
-    Number.isFinite(linkedYear) && linkedYear > 0 ? linkedYear : currentYear
-  )
-  const [scope, setScope] = React.useState<ScopeKind>(
-    scopeItems.some((item) => item.value === linkedScope)
-      ? (linkedScope as ScopeKind)
-      : "all"
-  )
+  const applyLinkedYear = React.useCallback((value: string) => {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed) && parsed > 0) setYear(parsed)
+  }, [])
+
+  const applyLinkedScope = React.useCallback((value: string) => {
+    if (scopeItems.some((item) => item.value === value)) {
+      setScope(value as ScopeKind)
+    }
+  }, [])
   const [scopeValue, setScopeValue] = React.useState<string>("")
   const [range, setRange] = React.useState<RangeKind>("year")
   const [customFrom, setCustomFrom] = React.useState("")
@@ -251,7 +253,13 @@ export function ReportsPage() {
 
   async function exportPDF() {
     const logo = await loadLogoDataUrl()
-    const opened = openPrintWindow(buildPrintHTML(buildMeta(), rows, logo))
+    // The print-out is formatted for whoever is looking at the screen, so the
+    // PDF and the page agree. The CSV stays in USD, labelled as such.
+    const opened = openPrintWindow(
+      buildPrintHTML(buildMeta(), rows, logo, (amount) =>
+        formatMoney(amount, "USD")
+      )
+    )
     setNotice(
       opened
         ? "Report opened in a new tab — choose “Save as PDF” in the print dialog."
@@ -269,6 +277,13 @@ export function ReportsPage() {
 
   return (
     <AppShell>
+      {/* Both render nothing, and sit in their own boundary so reading the
+          deep-link params cannot stop the page hydrating. */}
+      <React.Suspense fallback={null}>
+        <QueryParamSync name="year" onChange={applyLinkedYear} />
+        <QueryParamSync name="scope" onChange={applyLinkedScope} />
+      </React.Suspense>
+
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] font-medium tracking-[0.2em] text-muted-foreground uppercase">

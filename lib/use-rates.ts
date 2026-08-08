@@ -6,7 +6,6 @@
 
 import * as React from "react"
 
-import { setActiveRates } from "@/lib/mock-data"
 import { SEED_RATES, SEED_RATES_DATE, type RateTable } from "@/lib/rate-data"
 import type { Currency } from "@/lib/types"
 
@@ -57,11 +56,7 @@ function load(): RateState {
 }
 
 function getSnapshot(): RateState {
-  if (cache === null) {
-    cache = load()
-    // Every formatMoney call across the app converts with these.
-    setActiveRates(cache.rates)
-  }
+  if (cache === null) cache = load()
   return cache
 }
 
@@ -76,7 +71,6 @@ function subscribe(onChange: () => void) {
 
 function write(next: RateState) {
   cache = next
-  setActiveRates(next.rates)
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
   } catch {

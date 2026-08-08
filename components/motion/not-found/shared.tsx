@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import { motion, useReducedMotion } from "motion/react";
-import { SPRING_PRESS } from "@/lib/ease";
-import { useHoverCapable } from "@/lib/hooks/use-hover-capable";
-import { cn } from "@/lib/utils";
+import { motion, useReducedMotion } from "motion/react"
+import { SPRING_PRESS } from "@/lib/ease"
+import { useHoverCapable } from "@/lib/hooks/use-hover-capable"
+import { cn } from "@/lib/utils"
 
 export interface NotFoundProps {
-  className?: string;
+  className?: string
   /** The big status code. */
-  code?: string;
-  title?: string;
-  description?: string;
-  homeHref?: string;
-  homeLabel?: string;
-  browseHref?: string;
-  browseLabel?: string;
+  code?: string
+  title?: string
+  description?: string
+  homeHref?: string
+  homeLabel?: string
+  browseHref?: string
+  browseLabel?: string
 }
 
 export const NOT_FOUND_DEFAULTS = {
@@ -26,12 +26,12 @@ export const NOT_FOUND_DEFAULTS = {
   homeLabel: "Back home",
   browseHref: "/components/motion",
   browseLabel: "Browse components",
-} as const;
+} as const
 
 type ActionsProps = Pick<
   NotFoundProps,
   "homeHref" | "homeLabel" | "browseHref" | "browseLabel" | "className"
->;
+>
 
 /** The shared dual CTA: a primary "Back home" and a secondary "Browse". */
 export function NotFoundActions({
@@ -41,16 +41,16 @@ export function NotFoundActions({
   browseLabel = NOT_FOUND_DEFAULTS.browseLabel,
   className,
 }: ActionsProps) {
-  const reduce = useReducedMotion();
-  const canHover = useHoverCapable();
-  const whileTap = reduce ? undefined : { scale: 0.96 };
-  const whileHover = reduce || !canHover ? undefined : { scale: 1.02 };
+  const reduce = useReducedMotion()
+  const canHover = useHoverCapable()
+  const whileTap = reduce ? undefined : { scale: 0.96 }
+  const whileHover = reduce || !canHover ? undefined : { scale: 1.02 }
 
   return (
     <div
       className={cn(
         "flex flex-wrap items-center justify-center gap-3",
-        className,
+        className
       )}
     >
       <motion.a
@@ -58,7 +58,7 @@ export function NotFoundActions({
         whileTap={whileTap}
         whileHover={whileHover}
         transition={SPRING_PRESS}
-        className="inline-flex h-11 select-none items-center justify-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors select-none hover:bg-primary/90"
       >
         {homeLabel}
       </motion.a>
@@ -67,12 +67,12 @@ export function NotFoundActions({
         whileTap={whileTap}
         whileHover={whileHover}
         transition={SPRING_PRESS}
-        className="inline-flex h-11 select-none items-center justify-center rounded-full border border-border bg-card px-6 text-sm font-medium text-foreground transition-colors hover:bg-primary/5"
+        className="inline-flex h-11 items-center justify-center rounded-full border border-border bg-card px-6 text-sm font-medium text-foreground transition-colors select-none hover:bg-primary/5"
       >
         {browseLabel}
       </motion.a>
     </div>
-  );
+  )
 }
 
 /** Centers a variant and gives it a consistent minimum stage height. */
@@ -80,17 +80,17 @@ export function NotFoundStage({
   className,
   children,
 }: {
-  className?: string;
-  children: React.ReactNode;
+  className?: string
+  children: React.ReactNode
 }) {
   return (
     <div
       className={cn(
         "flex min-h-[420px] w-full flex-col items-center justify-center gap-8 px-4 text-center",
-        className,
+        className
       )}
     >
       {children}
     </div>
-  );
+  )
 }

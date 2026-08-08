@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { GoalGauge, SLICE_FILL } from "@/components/goals/goal-gauge"
 import { getGoalSlices, isGoalCompleted, type GoalSlice } from "@/lib/goals"
-import { formatMoney } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import type { Goal } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -52,6 +52,7 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, actions }: GoalCardProps) {
+  const { formatMoney } = useMoney()
   const slices = getGoalSlices(goal)
   // Shared so pointing at the arc lights the matching legend row and back,
   // the same link the pie chart has with its legend.

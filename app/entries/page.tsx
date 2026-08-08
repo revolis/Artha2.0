@@ -1,4 +1,3 @@
-import { Suspense } from "react"
 import type { Metadata } from "next"
 
 import { EntriesPage } from "@/components/entries/entries-page"
@@ -8,11 +7,7 @@ export const metadata: Metadata = {
 }
 
 export default function Page() {
-  // EntriesPage reads ?q= from the header search, which needs a Suspense
-  // boundary so the rest of the route can still be prerendered.
-  return (
-    <Suspense>
-      <EntriesPage />
-    </Suspense>
-  )
+  // No Suspense boundary here on purpose. The ?q= read is confined to a leaf
+  // inside EntriesPage that renders nothing, so the page hydrates normally.
+  return <EntriesPage />
 }

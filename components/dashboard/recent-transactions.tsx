@@ -31,7 +31,8 @@ import {
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
 import { normaliseAttachments } from "@/lib/attachments"
 import { getCategoryIcon } from "@/lib/category-icons"
-import { formatMoney, getNetAmount } from "@/lib/mock-data"
+import { getNetAmount } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import { tagStyle } from "@/lib/tag-colors"
 import type { Entry, Source } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -88,6 +89,7 @@ export function RecentTransactions({
   onDelete,
 }: RecentTransactionsProps) {
   const router = useRouter()
+  const { formatMoney, formatCash, formatPlain } = useMoney()
   const sourceById = new Map(sources.map((source) => [source.id, source.name]))
   const recent = [...entries]
     .sort((a, b) => b.datetime.localeCompare(a.datetime))
@@ -174,20 +176,22 @@ export function RecentTransactions({
                       ) : null}
                     </div>
 
-                    {/* The rate and cash side of a P2P trade — the whole point
-                        of the entry, and previously invisible here. */}
+                    {/* The rate and cash side of a P2P trade. Both go through
+                        the formatter: printed raw they stayed legible under
+                        privacy mode, and either one divided by the other gives
+                        back the amount that was meant to be hidden. */}
                     {entry.p2p ? (
                       <span className="text-xs text-muted-foreground tabular-nums">
                         {entry.p2p.direction === "usd-to-cash"
                           ? "Sold USD"
                           : "Bought USD"}
                         {" · "}
-                        {entry.p2p.cashCurrency}{" "}
-                        {entry.p2p.cashAmount.toLocaleString("en-US", {
-                          maximumFractionDigits: 2,
-                        })}
+                        {formatCash(
+                          entry.p2p.cashAmount,
+                          entry.p2p.cashCurrency
+                        )}
                         {" @ "}
-                        {entry.p2p.rate}
+                        {formatPlain(entry.p2p.rate)}
                       </span>
                     ) : null}
 

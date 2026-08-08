@@ -53,9 +53,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { StatCard } from "@/components/stats/stat-card"
-import { formatMoney } from "@/lib/mock-data"
+import { useMoney } from "@/lib/use-money"
 import { autoBuckets, toStatPoints, trendOf } from "@/lib/stat-series"
-import { useSettings } from "@/lib/use-settings"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { tagStyle } from "@/lib/tag-colors"
@@ -88,10 +87,6 @@ function timeframeBounds(
   return {}
 }
 
-function formatCash(amount: number, currency: string): string {
-  return `${currency} ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`
-}
-
 function formatEntryDate(datetime: string): { date: string; time: string } {
   const d = new Date(datetime)
   return {
@@ -108,8 +103,7 @@ function formatEntryDate(datetime: string): { date: string; time: string } {
 }
 
 export function P2PPage() {
-  // Subscribing re-renders every amount when the display currency changes.
-  useSettings()
+  const { formatMoney, formatCash, formatPlain } = useMoney()
   const {
     entries,
     setEntries,
@@ -441,7 +435,7 @@ export function P2PPage() {
                           {formatMoney(entry.amount, "USD")}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {p2p.rate}
+                          {formatPlain(p2p.rate)}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatCash(p2p.cashAmount, p2p.cashCurrency)}

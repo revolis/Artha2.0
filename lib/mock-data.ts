@@ -2,15 +2,7 @@
 // comes from here (seeded into localStorage-backed stores by lib/local-store.ts).
 
 import { demoEntries } from "@/lib/demo-entries"
-import { SEED_RATES, type RateTable } from "@/lib/rate-data"
-import type {
-  AppSettings,
-  Currency,
-  Entry,
-  Goal,
-  Source,
-  UserProfile,
-} from "@/lib/types"
+import type { AppSettings, Entry, Goal, Source, UserProfile } from "@/lib/types"
 
 export const mockUser: UserProfile = {
   id: "u_1",
@@ -49,40 +41,10 @@ export const mockSettings: AppSettings = {
   twoFactor: false,
 }
 
-// The currency every amount is rendered in. Held at module level so the
-// existing formatMoney(amount, "USD") call sites across the app pick up the
-// user's choice without each one having to thread settings through.
-let displayCurrency: Currency = mockSettings.displayCurrency
-let privacyMode = mockSettings.privacyMode
-
-// The rates every conversion uses. Starts at the seeded real rates and is
-// replaced whenever the user records a newer set (see lib/use-rates.ts).
-let activeRates: RateTable = { ...SEED_RATES }
-
-export function setActiveRates(next: RateTable) {
-  activeRates = next
-}
-
-export function getActiveRates(): RateTable {
-  return activeRates
-}
-
-export function setDisplayCurrency(currency: Currency) {
-  displayCurrency = currency
-}
-
-export function getDisplayCurrency(): Currency {
-  return displayCurrency
-}
-
-/** Masks every formatted amount without touching the underlying data. */
-export function setPrivacyMode(enabled: boolean) {
-  privacyMode = enabled
-}
-
-export function isPrivacyMode(): boolean {
-  return privacyMode
-}
+// Display currency, privacy and the active rate table used to live here as
+// mutable module variables. They are React state now — see lib/use-money.ts —
+// because whether a figure came out right depended on which component had
+// written them first, and that is not something React lets you rely on.
 
 export const mockSources: Source[] = [
   {
@@ -380,43 +342,8 @@ export function getAvgMonthlyIncome(
   return total / months
 }
 
-export function convertFromUsd(amountUsd: number, to: Currency): number {
-  return amountUsd * activeRates[to]
-}
-
-export function convertCurrency(
-  amount: number,
-  from: Currency,
-  to: Currency
-): number {
-  if (from === to) return amount
-  return (amount / activeRates[from]) * activeRates[to]
-}
-
-const CURRENCY_LOCALES: Record<Currency, string> = {
-  USD: "en-US",
-  NPR: "en-IN",
-  INR: "en-IN",
-  EUR: "de-DE",
-  GBP: "en-GB",
-  AED: "en-AE",
-}
-
-/**
- * Formats an amount for display. `currency` is the currency the amount is
- * stored in — the result is converted into whatever the user has picked as
- * their display currency, so one setting changes every figure on the site.
- */
-export function formatMoney(amount: number, currency: Currency): string {
-  if (privacyMode) return "••••••"
-  const target = displayCurrency
-  const converted = convertCurrency(amount, currency, target)
-  return new Intl.NumberFormat(CURRENCY_LOCALES[target], {
-    style: "currency",
-    currency: target,
-    maximumFractionDigits: target === "NPR" || target === "INR" ? 0 : 2,
-  }).format(converted)
-}
+// Conversion and formatting now live in lib/money.ts as pure functions, bound
+// to the reader's settings by lib/use-money.ts.
 
 // Seed goals cover every status the card can show: on track, behind pace,
 // completed early, and timeframe ended without completing.

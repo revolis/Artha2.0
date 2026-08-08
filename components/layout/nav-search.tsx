@@ -14,9 +14,8 @@ import type { IconSvgElement } from "@hugeicons/react"
 import { NavIcon } from "@/components/layout/nav-icon"
 import { NavIconButton } from "@/components/layout/nav-icon-button"
 import { NAV_ITEMS } from "@/lib/nav-config"
-import { formatMoney } from "@/lib/mock-data"
 import { useEntryData } from "@/lib/use-entry-data"
-import { useSettings } from "@/lib/use-settings"
+import { useMoney } from "@/lib/use-money"
 import { cn } from "@/lib/utils"
 
 interface SearchResult {
@@ -33,8 +32,7 @@ const GROUP_ORDER = ["Pages", "Entries", "Categories", "Sources", "Tags"]
 /** Search that lives in the header and opens out over the breadcrumb. */
 export function NavSearch() {
   const router = useRouter()
-  // Subscribing keeps result amounts in the chosen display currency.
-  useSettings()
+  const { formatMoney } = useMoney()
   const { entries, sources, categoryOptions, tagOptions } = useEntryData()
 
   const [open, setOpen] = React.useState(false)
@@ -140,7 +138,15 @@ export function NavSearch() {
     return GROUP_ORDER.flatMap((group) =>
       found.filter((item) => item.group === group).slice(0, 5)
     )
-  }, [query, entries, sources, sourceById, categoryOptions, tagOptions])
+  }, [
+    query,
+    entries,
+    sources,
+    sourceById,
+    categoryOptions,
+    tagOptions,
+    formatMoney,
+  ])
 
   const close = React.useCallback(() => {
     setOpen(false)

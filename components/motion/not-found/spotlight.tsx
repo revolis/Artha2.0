@@ -1,21 +1,21 @@
-"use client";
+"use client"
 // beui.dev/components/blocks/not-found
 
-import { useRef } from "react";
+import { useRef } from "react"
 import {
   motion,
   useMotionTemplate,
   useMotionValue,
   useReducedMotion,
-} from "motion/react";
-import { useHoverCapable } from "@/lib/hooks/use-hover-capable";
-import { cn } from "@/lib/utils";
+} from "motion/react"
+import { useHoverCapable } from "@/lib/hooks/use-hover-capable"
+import { cn } from "@/lib/utils"
 import {
   NOT_FOUND_DEFAULTS,
   NotFoundActions,
   NotFoundStage,
   type NotFoundProps,
-} from "./shared";
+} from "./shared"
 
 export function NotFoundSpotlight({
   className,
@@ -27,22 +27,22 @@ export function NotFoundSpotlight({
   browseHref,
   browseLabel,
 }: NotFoundProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const canHover = useHoverCapable();
-  const enabled = !reduce && canHover;
+  const ref = useRef<HTMLDivElement>(null)
+  const reduce = useReducedMotion()
+  const canHover = useHoverCapable()
+  const enabled = !reduce && canHover
 
-  const mx = useMotionValue(50);
-  const my = useMotionValue(50);
-  const mask = useMotionTemplate`radial-gradient(220px circle at ${mx}% ${my}%, #000 25%, transparent 72%)`;
+  const mx = useMotionValue(50)
+  const my = useMotionValue(50)
+  const mask = useMotionTemplate`radial-gradient(220px circle at ${mx}% ${my}%, #000 25%, transparent 72%)`
 
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = ref.current;
-    if (!el || !enabled) return;
-    const rect = el.getBoundingClientRect();
-    mx.set(((e.clientX - rect.left) / rect.width) * 100);
-    my.set(((e.clientY - rect.top) / rect.height) * 100);
-  };
+    const el = ref.current
+    if (!el || !enabled) return
+    const rect = el.getBoundingClientRect()
+    mx.set(((e.clientX - rect.left) / rect.width) * 100)
+    my.set(((e.clientY - rect.top) / rect.height) * 100)
+  }
 
   return (
     <NotFoundStage className={className}>
@@ -54,17 +54,19 @@ export function NotFoundSpotlight({
         {/* Dim base layer. */}
         <span
           aria-hidden
-          className="select-none font-bold leading-none tracking-tighter text-white/10 [font-size:clamp(5rem,16vw,10rem)]"
+          className="[font-size:clamp(5rem,16vw,10rem)] leading-none font-bold tracking-tighter text-white/10 select-none"
         >
           {code}
         </span>
         {/* Bright layer, revealed only under the spotlight. */}
         <motion.h1
           aria-label={code}
-          style={enabled ? { WebkitMaskImage: mask, maskImage: mask } : undefined}
+          style={
+            enabled ? { WebkitMaskImage: mask, maskImage: mask } : undefined
+          }
           className={cn(
-            "absolute select-none font-bold leading-none tracking-tighter text-white [font-size:clamp(5rem,16vw,10rem)]",
-            !enabled && "text-white/90",
+            "absolute [font-size:clamp(5rem,16vw,10rem)] leading-none font-bold tracking-tighter text-white select-none",
+            !enabled && "text-white/90"
           )}
         >
           <span aria-hidden>{code}</span>
@@ -83,5 +85,5 @@ export function NotFoundSpotlight({
         browseLabel={browseLabel}
       />
     </NotFoundStage>
-  );
+  )
 }

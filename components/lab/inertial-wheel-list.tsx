@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   useCallback,
@@ -9,8 +9,14 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
-} from "react";
-import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
+} from "react"
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "motion/react"
 
 // Inertial wheel list - the iOS picker drum, rebuilt on one principle: the
 // SCROLL POSITION IS THE STATE. Nothing is scroll-jacked and no library fakes
@@ -41,19 +47,19 @@ const WHEEL_VARS = {
   "--wheel-w": "14rem",
   "--wheel-h": "12.5rem",
   "--wheel-item": "2.5rem",
-} as CSSProperties;
+} as CSSProperties
 
 export interface WheelState {
-  value: string;
-  index: number;
-  count: number;
-  settled: boolean;
+  value: string
+  index: number
+  count: number
+  settled: boolean
 }
 
 interface Metrics {
-  itemH: number;
-  centers: number[];
-  half: number;
+  itemH: number
+  centers: number[]
+  half: number
 }
 
 // Fallback geometry (16px root): item 40px, viewport 200px - used until the
@@ -62,7 +68,7 @@ const fallbackMetrics = (count: number): Metrics => ({
   itemH: 40,
   centers: Array.from({ length: count }, (_, i) => 80 + 40 * i + 20),
   half: 100,
-});
+})
 
 export default function WheelList({
   items,
@@ -72,119 +78,138 @@ export default function WheelList({
   inspect = false,
   onStateChange,
 }: {
-  items: string[];
-  label?: string;
-  initialIndex?: number;
-  drum?: boolean;
-  inspect?: boolean;
-  onStateChange?: (state: WheelState) => void;
+  items: string[]
+  label?: string
+  initialIndex?: number
+  drum?: boolean
+  inspect?: boolean
+  onStateChange?: (state: WheelState) => void
 }) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const settleTimer = useRef(0);
-  const idBase = useId();
-  const reduced = useReducedMotion();
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const settleTimer = useRef(0)
+  const idBase = useId()
+  const reduced = useReducedMotion()
 
-  const [metrics, setMetrics] = useState<Metrics>(() => fallbackMetrics(items.length));
-  const [index, setIndex] = useState(initialIndex);
-  const [settled, setSettled] = useState(true);
-  const indexRef = useRef(initialIndex);
-  const metricsRef = useRef(metrics);
-  metricsRef.current = metrics;
+  const [metrics, setMetrics] = useState<Metrics>(() =>
+    fallbackMetrics(items.length)
+  )
+  const [index, setIndex] = useState(initialIndex)
+  const [settled, setSettled] = useState(true)
+  const indexRef = useRef(initialIndex)
+  const metricsRef = useRef(metrics)
+  metricsRef.current = metrics
 
-  const { scrollY } = useScroll({ container: scrollerRef });
+  const { scrollY } = useScroll({ container: scrollerRef })
 
   const clampIndex = useCallback(
     (i: number) => Math.min(Math.max(i, 0), items.length - 1),
-    [items.length],
-  );
+    [items.length]
+  )
 
   function handleScroll() {
     // Selection derives from the scroll on every frame; it commits when the
     // snap lands (scrollend where the engine has it, the quiet-timer elsewhere).
-    const scroller = scrollerRef.current;
+    const scroller = scrollerRef.current
     if (scroller) {
-      const next = clampIndex(Math.round(scroller.scrollTop / metricsRef.current.itemH));
+      const next = clampIndex(
+        Math.round(scroller.scrollTop / metricsRef.current.itemH)
+      )
       if (next !== indexRef.current) {
-        indexRef.current = next;
-        setIndex(next);
+        indexRef.current = next
+        setIndex(next)
       }
     }
-    setSettled(false);
-    window.clearTimeout(settleTimer.current);
-    settleTimer.current = window.setTimeout(() => setSettled(true), 140);
+    setSettled(false)
+    window.clearTimeout(settleTimer.current)
+    settleTimer.current = window.setTimeout(() => setSettled(true), 140)
   }
 
   function handleScrollEnd() {
-    window.clearTimeout(settleTimer.current);
-    setSettled(true);
+    window.clearTimeout(settleTimer.current)
+    setSettled(true)
   }
 
   function scrollToIndex(i: number, smooth = true) {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
+    const scroller = scrollerRef.current
+    if (!scroller) return
     scroller.scrollTo({
       top: clampIndex(i) * metricsRef.current.itemH,
       behavior: smooth && !reduced ? "smooth" : "auto",
-    });
+    })
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const steps: Record<string, number> = { ArrowUp: -1, ArrowDown: 1, PageUp: -5, PageDown: 5 };
-    let target: number;
-    if (event.key in steps) target = indexRef.current + steps[event.key];
-    else if (event.key === "Home") target = 0;
-    else if (event.key === "End") target = items.length - 1;
-    else return;
-    event.preventDefault();
-    scrollToIndex(target);
+    const steps: Record<string, number> = {
+      ArrowUp: -1,
+      ArrowDown: 1,
+      PageUp: -5,
+      PageDown: 5,
+    }
+    let target: number
+    if (event.key in steps) target = indexRef.current + steps[event.key]
+    else if (event.key === "Home") target = 0
+    else if (event.key === "End") target = items.length - 1
+    else return
+    event.preventDefault()
+    scrollToIndex(target)
   }
 
   // Measure once (and on resize / new items): item height, each centre, and the
   // half-viewport - cached so the motion transforms never read layout.
   useLayoutEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return undefined;
+    const scroller = scrollerRef.current
+    if (!scroller) return undefined
     const measure = () => {
-      const options = scroller.querySelectorAll<HTMLElement>('[role="option"]');
-      if (!options.length) return;
+      const options = scroller.querySelectorAll<HTMLElement>('[role="option"]')
+      if (!options.length) return
       setMetrics({
         itemH: options[0].offsetHeight,
-        centers: Array.from(options, (el) => el.offsetTop + el.offsetHeight / 2),
+        centers: Array.from(
+          options,
+          (el) => el.offsetTop + el.offsetHeight / 2
+        ),
         half: scroller.clientHeight / 2,
-      });
-    };
-    measure();
-    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
-    observer?.observe(scroller);
-    return () => observer?.disconnect();
-  }, [items]);
+      })
+    }
+    measure()
+    const observer =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null
+    observer?.observe(scroller)
+    return () => observer?.disconnect()
+  }, [items])
 
   // Land on the initial value before first paint - no snap animation on load.
   useLayoutEffect(() => {
-    const scroller = scrollerRef.current;
-    if (scroller) scroller.scrollTop = clampIndex(initialIndex) * metricsRef.current.itemH;
+    const scroller = scrollerRef.current
+    if (scroller)
+      scroller.scrollTop = clampIndex(initialIndex) * metricsRef.current.itemH
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
-  useEffect(() => () => window.clearTimeout(settleTimer.current), []);
+  useEffect(() => () => window.clearTimeout(settleTimer.current), [])
 
   useEffect(() => {
-    onStateChange?.({ value: items[index], index, count: items.length, settled });
-  }, [items, index, settled, onStateChange]);
+    onStateChange?.({
+      value: items[index],
+      index,
+      count: items.length,
+      settled,
+    })
+  }, [items, index, settled, onStateChange])
 
-  const optionId = (i: number) => `${idBase}-opt-${i}`;
-  const value = items[index];
+  const optionId = (i: number) => `${idBase}-opt-${i}`
+  const value = items[index]
 
   return (
     <div className="relative w-full max-w-[var(--wheel-w)]" style={WHEEL_VARS}>
-      <div className="relative p-2 rounded-[1.25rem] bg-card shadow-border">
+      <div className="relative rounded-[1.25rem] bg-card p-2 shadow-border">
         {/* The selection lens: a static bar the centred item scrolls through. */}
         <span
-          className="absolute left-2 right-2 top-1/2 h-[var(--wheel-item)] -translate-y-1/2 rounded-xl bg-muted pointer-events-none"
+          className="pointer-events-none absolute top-1/2 right-2 left-2 h-[var(--wheel-item)] -translate-y-1/2 rounded-xl bg-muted"
           aria-hidden="true"
         />
         <div
-          className="relative h-[var(--wheel-h)] overflow-y-auto overscroll-contain rounded-xl [scroll-snap-type:y_mandatory] [perspective:44rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_bottom,transparent_0,#000_30%,#000_70%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0,#000_30%,#000_70%,transparent_100%)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+          className="relative h-[var(--wheel-h)] [scroll-snap-type:y_mandatory] [scrollbar-width:none] overflow-y-auto overscroll-contain rounded-xl [mask-image:linear-gradient(to_bottom,transparent_0,#000_30%,#000_70%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0,#000_30%,#000_70%,transparent_100%)] [perspective:44rem] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&::-webkit-scrollbar]:hidden"
           ref={scrollerRef}
           role="listbox"
           aria-label={label}
@@ -203,7 +228,9 @@ export default function WheelList({
                 label={item}
                 selected={i === index}
                 scrollY={scrollY}
-                center={metrics.centers[i] ?? fallbackMetrics(items.length).centers[i]}
+                center={
+                  metrics.centers[i] ?? fallbackMetrics(items.length).centers[i]
+                }
                 half={metrics.half}
                 drum={drum}
                 flat={Boolean(reduced)}
@@ -215,13 +242,13 @@ export default function WheelList({
         {inspect && (
           <>
             <span
-              className="absolute left-1 right-1 top-1/2 z-[5] border-t-[1.5px] border-dashed border-[#ef4444] pointer-events-none"
+              className="pointer-events-none absolute top-1/2 right-1 left-1 z-[5] border-t-[1.5px] border-dashed border-[#ef4444]"
               aria-hidden="true"
             />
-            <span className="absolute z-[6] top-1 left-1/2 -translate-x-1/2 px-[0.3125rem] py-[0.0625rem] text-[0.625rem] leading-normal font-medium tracking-[0.01em] whitespace-nowrap bg-white rounded-[0.25rem] shadow-[0_1px_2px_rgba(0,0,0,0.08)] pointer-events-none tabular-nums text-[#dc2626] border border-[#fecaca]">
+            <span className="pointer-events-none absolute top-1 left-1/2 z-[6] -translate-x-1/2 rounded-[0.25rem] border border-[#fecaca] bg-white px-[0.3125rem] py-[0.0625rem] text-[0.625rem] leading-normal font-medium tracking-[0.01em] whitespace-nowrap text-[#dc2626] tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
               {drum ? "rotateX(38° · t) · " : ""}scale(1.14 − 0.34|t|)
             </span>
-            <span className="absolute z-[6] bottom-1 left-1/2 -translate-x-1/2 px-[0.3125rem] py-[0.0625rem] text-[0.625rem] leading-normal font-medium tracking-[0.01em] whitespace-nowrap bg-white rounded-[0.25rem] shadow-[0_1px_2px_rgba(0,0,0,0.08)] pointer-events-none tabular-nums text-[#2563eb] border border-[#bfdbfe]">
+            <span className="pointer-events-none absolute bottom-1 left-1/2 z-[6] -translate-x-1/2 rounded-[0.25rem] border border-[#bfdbfe] bg-white px-[0.3125rem] py-[0.0625rem] text-[0.625rem] leading-normal font-medium tracking-[0.01em] whitespace-nowrap text-[#2563eb] tabular-nums shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
               index = round(scrollTop / {metrics.itemH}px) · snap mandatory
             </span>
           </>
@@ -232,7 +259,7 @@ export default function WheelList({
         {settled ? `Selected ${value}` : "Scrolling"}
       </p>
     </div>
-  );
+  )
 }
 
 // One drum row. `t` is the item's signed distance from the viewport centre in
@@ -251,31 +278,33 @@ function Option({
   flat,
   onClick,
 }: {
-  id: string;
-  label: string;
-  selected: boolean;
-  scrollY: MotionValue<number>;
-  center: number;
-  half: number;
-  drum: boolean;
-  flat: boolean;
-  onClick: () => void;
+  id: string
+  label: string
+  selected: boolean
+  scrollY: MotionValue<number>
+  center: number
+  half: number
+  drum: boolean
+  flat: boolean
+  onClick: () => void
 }) {
-  const t = useTransform(scrollY, (v) => Math.max(-1, Math.min(1, (center - (v + half)) / half)));
-  const rotateX = useTransform(t, (tv) => (flat || !drum ? 0 : -38 * tv));
-  const scale = useTransform(t, (tv) => (flat ? 1 : 1.14 - 0.34 * Math.abs(tv)));
-  const opacity = useTransform(t, (tv) => (flat ? 1 : 1 - 0.55 * Math.abs(tv)));
+  const t = useTransform(scrollY, (v) =>
+    Math.max(-1, Math.min(1, (center - (v + half)) / half))
+  )
+  const rotateX = useTransform(t, (tv) => (flat || !drum ? 0 : -38 * tv))
+  const scale = useTransform(t, (tv) => (flat ? 1 : 1.14 - 0.34 * Math.abs(tv)))
+  const opacity = useTransform(t, (tv) => (flat ? 1 : 1 - 0.55 * Math.abs(tv)))
 
   return (
     <motion.li
       id={id}
       role="option"
       aria-selected={selected}
-      className="h-[var(--wheel-item)] flex items-center justify-center [scroll-snap-align:center] text-[0.9375rem] font-medium tabular-nums text-foreground cursor-pointer select-none"
+      className="flex h-[var(--wheel-item)] cursor-pointer [scroll-snap-align:center] items-center justify-center text-[0.9375rem] font-medium text-foreground tabular-nums select-none"
       style={{ rotateX, scale, opacity }}
       onClick={onClick}
     >
       {label}
     </motion.li>
-  );
+  )
 }
