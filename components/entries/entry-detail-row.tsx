@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { AttachmentImage } from "@/components/entries/attachment-image"
 import { normaliseAttachments } from "@/lib/attachments"
 import type { Entry, EntryAttachment } from "@/lib/types"
 
@@ -61,7 +62,7 @@ export function EntryDetailRow({
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {attachments.map((item) =>
-                    item.dataUrl ? (
+                    item.path ? (
                       <button
                         key={item.name}
                         type="button"
@@ -69,11 +70,9 @@ export function EntryDetailRow({
                         aria-label={`Preview ${item.name}`}
                         className="size-20 overflow-hidden rounded-lg border transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md"
                       >
-                        {/* Data URL from the local file picker. */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={item.dataUrl}
-                          alt={item.name}
+                        <AttachmentImage
+                          path={item.path}
+                          name={item.name}
                           className="size-full object-cover"
                         />
                       </button>
@@ -81,13 +80,12 @@ export function EntryDetailRow({
                       // Seed rows and anything saved before images were kept
                       // carry a filename only, so say that rather than
                       // pretending there is a picture behind it.
-                      <span
+                      <AttachmentImage
                         key={item.name}
-                        title="No image stored for this attachment"
-                        className="flex size-20 items-center justify-center rounded-lg border border-dashed px-1.5 text-center text-[10px] break-all text-muted-foreground"
-                      >
-                        {item.name}
-                      </span>
+                        path={undefined}
+                        name={item.name}
+                        className="size-20 rounded-lg"
+                      />
                     )
                   )}
                 </div>
@@ -109,14 +107,13 @@ export function EntryDetailRow({
               <span className="truncate">{preview?.name}</span>
             </DialogTitle>
             <DialogDescription>
-              Attached to this entry. Stored in your browser only.
+              Attached to this entry. Only you can open it.
             </DialogDescription>
           </DialogHeader>
-          {preview?.dataUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={preview.dataUrl}
-              alt={preview.name}
+          {preview ? (
+            <AttachmentImage
+              path={preview.path}
+              name={preview.name}
               className="max-h-[70vh] w-full rounded-xl object-contain"
             />
           ) : null}

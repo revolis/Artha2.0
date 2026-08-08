@@ -21,11 +21,21 @@ import {
   sourceFromRow,
   sourceToRow,
 } from "@/lib/data/mappers"
+import { removeAttachmentObjects } from "@/lib/attachments"
 import { createClient } from "@/lib/supabase/client"
 import type { Entry, Goal, Source } from "@/lib/types"
 
 function fail(context: string, error: { message: string } | null) {
   if (error) throw new Error(`${context}: ${error.message}`)
+}
+
+/** Every stored image an entry points at. */
+function pathsOf(entries: Entry[]): string[] {
+  return entries.flatMap((entry) =>
+    (entry.attachments ?? [])
+      .map((item) => item.path)
+      .filter((path): path is string => Boolean(path))
+  )
 }
 
 // ------------------------------------------------------------------ entries --
@@ -35,7 +45,7 @@ export const entriesStore: RemoteStore<Entry> = createRemoteStore<Entry>({
     const supabase = createClient()
     const { data, error } = await supabase
       .from("entries")
-      .select("*, entry_attachments(name, data_url)")
+      .select("*, entry_attachments(name, storage_path)")
       .order("occurred_at", { ascending: false })
     fail("Could not load entries", error)
     return (data ?? []).map(entryFromRow)
@@ -76,13 +86,21 @@ export const entriesStore: RemoteStore<Entry> = createRemoteStore<Entry>({
               entry.attachments.map((item) => ({
                 entry_id: entry.id,
                 name: item.name,
-                data_url: item.dataUrl ?? null,
+                storage_path: item.path ?? null,
               }))
             )
           fail("Could not save attachments", addError)
         }
       }
     }
+
+    // Rows in the child table went with the entry, but the images themselves
+    // are in Storage and nothing cascades to them. Anything the new version of
+    // the collection no longer mentions is deleted here — covering both an
+    // image removed from an entry and an entry deleted outright.
+    const stillUsed = new Set(pathsOf(next))
+    const orphaned = pathsOf(prev).filter((path) => !stillUsed.has(path))
+    await removeAttachmentObjects(orphaned)
   },
 })
 

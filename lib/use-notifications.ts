@@ -1,13 +1,20 @@
 "use client"
 
-// Notifications for the design phase. Nothing is pushed from a server — the
-// list is derived from the data already on the device (goals, entries, rates)
-// and filtered by the user's in-app notification preferences. Which ones have
-// been read is remembered in localStorage.
+// Nothing is pushed from a server — the list is worked out from the data the
+// app already has (goals, entries, rates) and filtered by the user's in-app
+// notification preferences. Which ones have been read is stored per account in
+// the notification_reads table, so marking one read on a phone leaves it read
+// on a laptop.
+//
+// Only the read state is stored. The notifications themselves are derived, so
+// they are always current — an entry deleted today takes its notification with
+// it, and a row in notification_reads for an id nothing generates any more is
+// simply never looked at.
 
 import * as React from "react"
 
 import { getNetAmount } from "@/lib/mock-data"
+import { createClient } from "@/lib/supabase/client"
 import type {
   AppSettings,
   Currency,
@@ -30,24 +37,20 @@ export interface AppNotification {
   href: string
 }
 
-const STORAGE_KEY = "artha.notifications.read"
-
-let readCache: string[] | null = null
-const listeners = new Set<() => void>()
+// A stable empty array: a fresh [] from the snapshot would look like new state
+// on every render and spin useSyncExternalStore forever.
 const EMPTY: string[] = []
 
-function loadRead(): string[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as string[]
-  } catch {
-    // corrupted or unavailable storage — treat everything as unread
-  }
-  return EMPTY
+let readCache: string[] = EMPTY
+let loaded = false
+let inFlight: Promise<void> | null = null
+const listeners = new Set<() => void>()
+
+function publish() {
+  for (const listener of listeners) listener()
 }
 
 function getReadSnapshot(): string[] {
-  if (readCache === null) readCache = loadRead()
   return readCache
 }
 
@@ -55,19 +58,50 @@ function getServerReadSnapshot(): string[] {
   return EMPTY
 }
 
+async function load() {
+  if (inFlight) return inFlight
+  inFlight = (async () => {
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from("notification_reads")
+        .select("notification_id")
+      if (data) {
+        readCache = data.map((row) => row.notification_id)
+        publish()
+      }
+    } finally {
+      loaded = true
+      inFlight = null
+    }
+  })()
+  return inFlight
+}
+
 function subscribe(onChange: () => void) {
   listeners.add(onChange)
+  if (!loaded) void load()
   return () => listeners.delete(onChange)
 }
 
-function writeRead(next: string[]) {
+/**
+ * Applies a change straight away and writes it behind the scenes.
+ *
+ * Marking something read is not worth a spinner or an error message — if the
+ * write fails the badge is briefly wrong and corrects itself on the next load,
+ * which is a fair trade for the panel staying instant.
+ */
+function writeRead(next: string[], persist: () => PromiseLike<unknown>) {
   readCache = next
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  } catch {
-    // storage full or blocked — the change still applies for this session
-  }
-  for (const listener of listeners) listener()
+  publish()
+  void Promise.resolve(persist()).then(undefined, () => {})
+}
+
+/** Forgets the read state so the next account does not inherit it. */
+export function resetNotificationReads() {
+  readCache = EMPTY
+  loaded = false
+  publish()
 }
 
 /**
@@ -299,17 +333,47 @@ export function useNotifications(
   ).length
 
   const markAllRead = React.useCallback(() => {
-    writeRead(notifications.map((item) => item.id))
+    const current = new Set(getReadSnapshot())
+    const missing = notifications
+      .map((item) => item.id)
+      .filter((id) => !current.has(id))
+    if (missing.length === 0) return
+
+    writeRead([...current, ...missing], () =>
+      createClient()
+        .from("notification_reads")
+        // Ignoring duplicates rather than failing: another tab may have marked
+        // some of these read already.
+        .upsert(
+          missing.map((id) => ({ notification_id: id })),
+          { onConflict: "user_id,notification_id", ignoreDuplicates: true }
+        )
+    )
   }, [notifications])
 
   const markRead = React.useCallback((id: string) => {
     const current = getReadSnapshot()
     if (current.includes(id)) return
-    writeRead([...current, id])
+
+    writeRead([...current, id], () =>
+      createClient()
+        .from("notification_reads")
+        .upsert(
+          { notification_id: id },
+          { onConflict: "user_id,notification_id", ignoreDuplicates: true }
+        )
+    )
   }, [])
 
   const markUnread = React.useCallback((id: string) => {
-    writeRead(getReadSnapshot().filter((item) => item !== id))
+    writeRead(
+      getReadSnapshot().filter((item) => item !== id),
+      () =>
+        createClient()
+          .from("notification_reads")
+          .delete()
+          .eq("notification_id", id)
+    )
   }, [])
 
   return {

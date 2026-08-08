@@ -21,7 +21,7 @@ import type {
 } from "@/lib/types"
 
 type EntryRow = Tables<"entries"> & {
-  entry_attachments?: { name: string; data_url: string | null }[] | null
+  entry_attachments?: { name: string; storage_path: string | null }[] | null
 }
 
 /**
@@ -37,7 +37,7 @@ export function entryFromRow(row: EntryRow): Entry {
   const attachments: EntryAttachment[] = (row.entry_attachments ?? []).map(
     (item) => ({
       name: item.name,
-      dataUrl: item.data_url ?? undefined,
+      path: item.storage_path ?? undefined,
     })
   )
 

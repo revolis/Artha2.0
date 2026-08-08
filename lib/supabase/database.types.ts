@@ -87,26 +87,26 @@ export type Database = {
       entry_attachments: {
         Row: {
           created_at: string
-          data_url: string | null
           entry_id: string
           id: string
           name: string
+          storage_path: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
-          data_url?: string | null
           entry_id: string
           id?: string
           name: string
+          storage_path?: string | null
           user_id?: string
         }
         Update: {
           created_at?: string
-          data_url?: string | null
           entry_id?: string
           id?: string
           name?: string
+          storage_path?: string | null
           user_id?: string
         }
         Relationships: [

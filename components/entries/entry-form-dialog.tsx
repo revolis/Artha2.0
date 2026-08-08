@@ -34,7 +34,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { normaliseAttachments, readAttachment } from "@/lib/attachments"
+import { AttachmentImage } from "@/components/entries/attachment-image"
+import {
+  normaliseAttachments,
+  removeAttachmentObjects,
+  uploadAttachment,
+} from "@/lib/attachments"
 import { newId } from "@/lib/id"
 import type { Entry, EntryAttachment, EntryType, Source } from "@/lib/types"
 
@@ -119,7 +124,15 @@ export function EntryFormDialog({
     normaliseAttachments(entry?.attachments)
   )
   const [attachError, setAttachError] = React.useState<string | null>(null)
+  const [uploading, setUploading] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  // Images upload as they are picked, before there is an entry to hang them
+  // on. These two refs are how the dialog cleans up after itself: anything
+  // uploaded here that the user does not go on to save has to be deleted, or
+  // the bucket fills with pictures no entry points at.
+  const uploadedHere = React.useRef<string[]>([])
+  const wasSaved = React.useRef(false)
 
   const existingSource = sourceName
     ? sources.find((s) => s.name.toLowerCase() === sourceName.toLowerCase())
@@ -138,16 +151,20 @@ export function EntryFormDialog({
     if (files.length === 0) return
 
     setAttachError(null)
+    setUploading(true)
     const added: EntryAttachment[] = []
     for (const file of files) {
       try {
-        added.push(await readAttachment(file))
+        const attachment = await uploadAttachment(file)
+        added.push(attachment)
+        if (attachment.path) uploadedHere.current.push(attachment.path)
       } catch (error) {
         setAttachError(
-          error instanceof Error ? error.message : "Could not read that image."
+          error instanceof Error ? error.message : "Could not attach that image."
         )
       }
     }
+    setUploading(false)
     if (added.length === 0) return
 
     // Keyed by name, so re-picking the same file replaces rather than doubles.
@@ -158,8 +175,33 @@ export function EntryFormDialog({
     })
   }
 
+  function handleRemoveAttachment(target: EntryAttachment) {
+    setAttachments((prev) => prev.filter((item) => item.name !== target.name))
+
+    // Only delete the picture now if it was uploaded in this sitting and so
+    // has never belonged to a saved entry. One that came with the entry stays
+    // put until the save goes through — otherwise cancelling after removing an
+    // image would destroy it anyway.
+    if (target.path && uploadedHere.current.includes(target.path)) {
+      uploadedHere.current = uploadedHere.current.filter(
+        (path) => path !== target.path
+      )
+      void removeAttachmentObjects([target.path])
+    }
+  }
+
+  /** Throws away images uploaded here if the dialog closes without saving. */
+  function handleOpenChange(next: boolean) {
+    if (!next && !wasSaved.current && uploadedHere.current.length > 0) {
+      void removeAttachmentObjects(uploadedHere.current)
+      uploadedHere.current = []
+    }
+    onOpenChange(next)
+  }
+
   function handleSave() {
     if (!canSave) return
+    wasSaved.current = true
     onSave(
       {
         id: entry?.id ?? newId(),
@@ -186,7 +228,7 @@ export function EntryFormDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{entry ? "Edit entry" : "Add entry"}</DialogTitle>
@@ -428,10 +470,11 @@ export function EntryFormDialog({
                 type="button"
                 variant="outline"
                 size="xs"
+                disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
               >
                 <ImagePlus data-icon="inline-start" />
-                Attach images
+                {uploading ? "Uploading…" : "Attach images"}
               </Button>
               <input
                 ref={fileInputRef}
@@ -455,27 +498,15 @@ export function EntryFormDialog({
                     key={item.name}
                     className="group relative size-16 overflow-hidden rounded-lg border bg-muted/40"
                   >
-                    {item.dataUrl ? (
-                      // Data URL held in memory, so next/image adds nothing.
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.dataUrl}
-                        alt={item.name}
-                        className="size-full object-cover"
-                      />
-                    ) : (
-                      <span className="flex size-full items-center justify-center px-1 text-center text-[10px] break-all text-muted-foreground">
-                        {item.name}
-                      </span>
-                    )}
+                    <AttachmentImage
+                      path={item.path}
+                      name={item.name}
+                      className="size-full object-cover"
+                    />
                     <button
                       type="button"
                       aria-label={`Remove ${item.name}`}
-                      onClick={() =>
-                        setAttachments((prev) =>
-                          prev.filter((n) => n.name !== item.name)
-                        )
-                      }
+                      onClick={() => handleRemoveAttachment(item)}
                       className="absolute top-0.5 right-0.5 flex size-5 items-center justify-center rounded-md bg-background/85 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100"
                     >
                       <X className="size-3" />
@@ -487,7 +518,9 @@ export function EntryFormDialog({
           </Field>
         </FieldGroup>
         <DialogFooter>
-          <InteractiveHoverButton onClick={() => onOpenChange(false)}>
+          {/* handleOpenChange, not onOpenChange: closing this way still has to
+              throw away images uploaded during this sitting. */}
+          <InteractiveHoverButton onClick={() => handleOpenChange(false)}>
             Cancel
           </InteractiveHoverButton>
           <InteractiveHoverButton disabled={!canSave} onClick={handleSave}>

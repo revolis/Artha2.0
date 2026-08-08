@@ -79,12 +79,16 @@ export interface P2PDetails {
   cashAmount: number // amount × rate, auto-calculated
 }
 
-// An image attached to an entry. The picture is kept as a downscaled data URL
-// so it can actually be previewed — nothing is uploaded anywhere.
+// An image attached to an entry. The picture itself is in Storage; this is the
+// name to show and where to find it.
 export interface EntryAttachment {
   name: string
-  /** Downscaled JPEG data URL. Absent on seed data, which has names only. */
-  dataUrl?: string
+  /**
+   * Object path in the private entry-attachments bucket. Absent on seed rows
+   * and on anything saved back when attachments were filenames only, which is
+   * why everything that renders one has to handle its absence.
+   */
+  path?: string
 }
 
 export interface Entry {
