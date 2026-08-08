@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { FooterSpotlight } from "@/components/landing/footer-spotlight"
 import { ArthaMark } from "@/components/layout/artha-mark"
+import { MadeBy } from "@/components/layout/made-by"
 import { Separator } from "@/components/ui/separator"
 
 const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
@@ -85,6 +86,7 @@ export function LandingFooter() {
 
         <div className="flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
           <span>© {new Date().getFullYear()} Artha</span>
+          <MadeBy className="font-medium" />
           <span>Crypto · Equities · Cash income — in NPR and USD</span>
         </div>
 

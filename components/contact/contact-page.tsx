@@ -6,7 +6,6 @@ import {
   BadgeCheck,
   Bug,
   Clock,
-  CircleDot,
   Lightbulb,
   LifeBuoy,
   Mail,
@@ -15,6 +14,7 @@ import {
 } from "@/components/icons"
 
 import { AppShell } from "@/components/layout/app-shell"
+import { ContactChannels } from "@/components/layout/contact-channels"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -70,9 +70,9 @@ export function ContactPage() {
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Send us a message</CardTitle>
+            <CardTitle>Write a message</CardTitle>
             <CardDescription>
-              The more detail you give, the faster this gets sorted.
+              The more detail you give, the sooner it is resolved.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -80,10 +80,10 @@ export function ContactPage() {
               <div className="flex animate-in items-start gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
                 <BadgeCheck className="mt-0.5 size-4 shrink-0 text-success" />
                 <div className="flex flex-col gap-1">
-                  <span className="font-medium">Message sent</span>
+                  <span className="font-medium">Not delivered yet</span>
                   <span className="text-muted-foreground">
-                    We&apos;ll reply to {replyTo}. Nothing leaves your browser
-                    yet — this hooks up with the backend.
+                    This form is waiting on the backend, so nothing has actually
+                    been sent. Use email or Telegram and it will reach me today.
                   </span>
                 </div>
               </div>
@@ -205,53 +205,21 @@ export function ContactPage() {
         <div className="flex flex-col gap-4">
           <Card>
             <CardHeader>
-              <CardTitle>Other ways to reach us</CardTitle>
-              <CardDescription>Whatever suits you.</CardDescription>
+              <CardTitle>Reach me directly</CardTitle>
+              <CardDescription>
+                All three arrive with the same person.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col divide-y">
-              {[
-                {
-                  icon: Mail,
-                  label: "Email",
-                  value: "hello@artha.app",
-                },
-                {
-                  icon: CircleDot,
-                  label: "Issues",
-                  value: "github.com/artha",
-                },
-                {
-                  icon: LifeBuoy,
-                  label: "Help Centre",
-                  value: "Answers to common questions",
-                  action: () => router.push("/help"),
-                },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-                >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border bg-muted/50">
-                    <item.icon className="size-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex min-w-0 flex-col">
-                    <span className="text-sm font-medium">{item.label}</span>
-                    <span className="truncate text-sm text-muted-foreground">
-                      {item.value}
-                    </span>
-                  </div>
-                  {item.action ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="ml-auto"
-                      onClick={item.action}
-                    >
-                      Open
-                    </Button>
-                  ) : null}
-                </div>
-              ))}
+            <CardContent className="flex flex-col gap-3">
+              <ContactChannels className="sm:grid-cols-1" />
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => router.push("/help")}
+              >
+                <LifeBuoy data-icon="inline-start" />
+                Check the Help Centre first
+              </Button>
             </CardContent>
           </Card>
 
@@ -263,14 +231,15 @@ export function ContactPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
-              <p className="text-sm text-muted-foreground">
-                Artha is built by one person, so replies come when they come —
-                usually within a couple of days. Security concerns jump the
-                queue.
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Artha is built and maintained by one person, so replies are
+                written rather than automated — usually within a couple of days.
+                Telegram is the fastest of the three. Anything touching security
+                is answered first.
               </p>
-              <p className="text-sm text-muted-foreground">
-                If something is broken, mentioning which page you were on and
-                what you clicked saves a round trip.
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                If something is behaving badly, naming the page you were on and
+                what you had just done saves an exchange of messages.
               </p>
             </CardContent>
           </Card>

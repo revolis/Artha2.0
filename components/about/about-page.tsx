@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import {
   Check,
   Circle,
-  KeyRound,
+  Layers,
   Loader,
   PencilLine,
   Wallet,
@@ -12,6 +12,8 @@ import {
 
 import { ArthaMark } from "@/components/layout/artha-mark"
 import { AppShell } from "@/components/layout/app-shell"
+import { ContactChannels } from "@/components/layout/contact-channels"
+import { MadeBy } from "@/components/layout/made-by"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,18 +29,18 @@ import { cn } from "@/lib/utils"
 const PRINCIPLES = [
   {
     icon: PencilLine,
-    title: "Entered by hand, on purpose",
-    body: "Nothing syncs with an exchange. You type what happened, which means Artha only ever knows what you choose to tell it.",
+    title: "Recorded deliberately",
+    body: "Nothing is imported from an exchange. You enter what happened, which is why the ledger reflects the deal you actually made rather than what an API decided to report.",
   },
   {
-    icon: KeyRound,
-    title: "No keys, no logins, no access",
-    body: "There are no API keys to paste and no accounts to connect, so there is nothing that could read your balances or move your funds.",
+    icon: Layers,
+    title: "Built for the awkward cases",
+    body: "Peer-to-peer trades at a negotiated rate, income settled in cash, fees and tax on both sides of a position. The things automated tools quietly leave out.",
   },
   {
     icon: Wallet,
-    title: "One place for everything",
-    body: "Crypto, stocks and cash income sit side by side, in the currency you pick, rather than scattered across five apps and a spreadsheet.",
+    title: "One ledger, one currency",
+    body: "Crypto, equities and cash income sit together and report in whichever currency you work in — rather than scattered across five dashboards and a spreadsheet.",
   },
 ]
 
@@ -47,19 +49,10 @@ const ROADMAP = [
   { status: "done", label: "Portfolio, analytics and heatmap" },
   { status: "done", label: "Goals, reports and exports" },
   { status: "done", label: "Profile and settings" },
-  { status: "doing", label: "Landing page and sign-in" },
-  { status: "next", label: "A real backend, so data leaves the browser" },
-  { status: "next", label: "Daily USD to NPR rate sync" },
+  { status: "done", label: "Landing page and account screens" },
+  { status: "doing", label: "Accounts and synced storage" },
+  { status: "next", label: "Scheduled exchange-rate updates" },
 ] as const
-
-const FACTS = [
-  { label: "Entry method", value: "Manual only" },
-  { label: "Currencies", value: "USD, NPR, INR, EUR, GBP, AED" },
-  { label: "Exports", value: "PDF, CSV, JSON" },
-  { label: "Price", value: "Free, with no paid tier" },
-  { label: "Data location", value: "This browser, for now" },
-  { label: "Built with", value: "Next.js, TypeScript, Tailwind, shadcn/ui" },
-]
 
 export function AboutPage() {
   const router = useRouter()
@@ -83,13 +76,16 @@ export function AboutPage() {
             <span className="text-muted-foreground">{SITE.tagline}</span>
           </div>
           <Badge variant="secondary">Version 0.1 · Design preview</Badge>
-          <p className="max-w-xl text-sm text-muted-foreground">
-            Artha started from a simple problem: money coming in from airdrops,
-            trades, launchpads and P2P cash-outs, with no single place showing
-            what any of it added up to. Spreadsheets drifted. Exchange
-            dashboards only knew their own corner. So this became the one place
-            where the whole picture lives.
+          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+            Artha began with a problem worth solving properly: income arriving
+            from airdrops, trades, launchpads and peer-to-peer cash-outs, and no
+            single place that could say what it amounted to. Spreadsheets
+            drifted out of date. Each exchange knew only its own corner, and
+            none of them knew about the cash. This is the ledger that holds all
+            of it — entered deliberately, reported exactly, in the currency you
+            actually think in.
           </p>
+          <MadeBy className="text-sm" />
         </CardContent>
       </Card>
 
@@ -110,9 +106,9 @@ export function AboutPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Where it is up to</CardTitle>
+            <CardTitle>Where it stands</CardTitle>
             <CardDescription>
-              Built in the open, one page at a time.
+              Built in the open, one surface at a time.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -142,27 +138,13 @@ export function AboutPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>The short version</CardTitle>
+            <CardTitle>Get in touch</CardTitle>
             <CardDescription>
-              Everything worth knowing, in a list.
+              Questions, corrections and requests all reach the same person.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col divide-y">
-              {FACTS.map((fact) => (
-                <div
-                  key={fact.label}
-                  className="flex items-baseline justify-between gap-4 py-2.5 first:pt-0 last:pb-0"
-                >
-                  <span className="text-sm text-muted-foreground">
-                    {fact.label}
-                  </span>
-                  <span className="text-right text-sm font-medium">
-                    {fact.value}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <ContactChannels className="sm:grid-cols-1" />
           </CardContent>
         </Card>
       </div>
@@ -171,10 +153,11 @@ export function AboutPage() {
         <CardContent className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-col">
             <span className="text-sm font-medium">
-              Got a thought on where this should go?
+              A view on where this should go next?
             </span>
             <span className="text-sm text-muted-foreground">
-              Artha is shaped by whoever uses it. That includes you.
+              Artha is shaped by the people keeping books in it. That includes
+              you.
             </span>
           </div>
           <div className="flex flex-wrap gap-2">

@@ -25,7 +25,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
       },
       {
         q: "Why is everything entered by hand?",
-        a: "Artha never asks for exchange logins or API keys. Nothing connects to your accounts, so nothing can read or move your funds. The trade-off is that you type entries in yourself.",
+        a: "Because automated imports miss exactly the entries that matter most: a peer-to-peer trade at a rate you negotiated, freelance income, cash settled in person. Entering them yourself takes a minute and produces a ledger that matches what actually happened.",
       },
       {
         q: "What do the entry types mean?",
@@ -66,8 +66,8 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     description: "Targets, timeframes and staying on pace.",
     articles: [
       {
-        q: "How does a goal know if I'm on track?",
-        a: "It compares how far through the timeframe you are against how far through the amount you are. Ahead of that line reads as on track, behind it reads as behind pace.",
+        q: "What does the gauge on a goal show?",
+        a: "Three parts: how much is completed, how much remains, and — once you pass the target — how far past it you went. The centre reads the amount reached and the percentage of the target it represents.",
       },
       {
         q: "Can a goal cover any period?",
@@ -98,7 +98,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
       },
       {
         q: "Where is my data stored?",
-        a: "Right now it lives in this browser only, which is why exports matter. A proper backend comes later in the build.",
+        a: "During this preview it stays in the browser you entered it in, which is why the exports are worth using. Accounts and synced storage are the next thing being built.",
       },
     ],
   },

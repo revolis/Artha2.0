@@ -80,7 +80,7 @@ export function HelpPage() {
 
       <Card>
         <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
-          <h2 className="text-lg font-medium">What can we help with?</h2>
+          <h2 className="text-lg font-medium">What do you need?</h2>
           <InputGroup className="max-w-md">
             <InputGroupAddon>
               <Search />
@@ -107,7 +107,7 @@ export function HelpPage() {
             </EmptyMedia>
             <EmptyTitle>Nothing matched that</EmptyTitle>
             <EmptyDescription>
-              Try a different word, or ask us directly.
+              Try a different word, or ask directly.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
@@ -153,15 +153,14 @@ export function HelpPage() {
               <MessageSquare className="size-4 text-muted-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">
-                Didn&apos;t find your answer?
-              </span>
+              <span className="text-sm font-medium">Not answered here?</span>
               <span className="text-sm text-muted-foreground">
-                Send us the details and we&apos;ll get back to you.
+                Send the details and you will get a written reply — by email,
+                Telegram or X.
               </span>
             </div>
           </div>
-          <Button onClick={() => router.push("/contact")}>Contact us</Button>
+          <Button onClick={() => router.push("/contact")}>Get in touch</Button>
         </CardContent>
       </Card>
     </AppShell>
