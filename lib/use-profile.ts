@@ -1,62 +1,169 @@
 "use client"
 
-// Profile state for the design phase: seeded from mock data and persisted in
-// localStorage, so edits survive reloads. Swaps for a real backend later.
+// The profile, from the database. Created alongside the account by the
+// on_auth_user_created trigger, so a signed-in user always has one.
+//
+// Social links live in their own table but belong to the profile as far as the
+// UI is concerned, so they are loaded and saved together. The set is small and
+// reordering matters, so a save replaces them wholesale rather than diffing.
 
 import * as React from "react"
 
-import { mockUser } from "@/lib/mock-data"
+import { profileFromRow, profileToRow } from "@/lib/data/mappers"
+import { createClient } from "@/lib/supabase/client"
 import type { UserProfile } from "@/lib/types"
 
-const STORAGE_KEY = "artha.profile"
-
-let cache: UserProfile | null = null
-const listeners = new Set<() => void>()
-
-function load(): UserProfile {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      // Merge over the seed so profiles saved before a field existed still work.
-      return { ...mockUser, ...(JSON.parse(raw) as Partial<UserProfile>) }
-    }
-  } catch {
-    // corrupted or unavailable storage — fall back to the seed
-  }
-  return mockUser
+/**
+ * What the app shows before a profile has loaded, and what a signed-out
+ * visitor gets on the public pages.
+ *
+ * Blank on purpose. This used to be `mockUser` from the design phase, which
+ * meant an anonymous visitor to /contact found the owner's real email address
+ * already filled into the reply-to box.
+ */
+const BLANK: UserProfile = {
+  id: "",
+  username: "",
+  name: "",
+  email: "",
+  socials: [],
+  createdAt: "",
 }
 
-function getSnapshot(): UserProfile {
-  if (cache === null) cache = load()
+/**
+ * The profile and whether it has actually arrived yet.
+ *
+ * The `loaded` flag matters because forms seed their draft from the profile
+ * once, when they mount. Under localStorage the profile was there on the first
+ * client render, so that was safe. Coming from the network it is not: a form
+ * that mounts too early keeps the placeholder for good. Screens with a draft
+ * wait for this flag before rendering.
+ */
+interface ProfileState {
+  profile: UserProfile
+  loaded: boolean
+}
+
+// One frozen object per state, so useSyncExternalStore sees a stable
+// reference between changes instead of a fresh object every render.
+const EMPTY: ProfileState = { profile: BLANK, loaded: false }
+
+let cache: ProfileState = EMPTY
+let inFlight: Promise<void> | null = null
+const listeners = new Set<() => void>()
+
+function publish() {
+  for (const listener of listeners) listener()
+}
+
+function getSnapshot(): ProfileState {
   return cache
 }
 
-function getServerSnapshot(): UserProfile {
-  return mockUser
+function getServerSnapshot(): ProfileState {
+  return EMPTY
+}
+
+async function load() {
+  if (inFlight) return inFlight
+  inFlight = (async () => {
+    try {
+      const supabase = createClient()
+      const [{ data: profile }, { data: socials }] = await Promise.all([
+        supabase.from("profiles").select("*").maybeSingle(),
+        supabase.from("social_links").select("*"),
+      ])
+      cache = {
+        profile: profile
+          ? profileFromRow(profile, socials ?? [])
+          : cache.profile,
+        loaded: true,
+      }
+      publish()
+    } finally {
+      inFlight = null
+    }
+  })()
+  return inFlight
 }
 
 function subscribe(onChange: () => void) {
   listeners.add(onChange)
+  if (!cache.loaded) void load()
   return () => listeners.delete(onChange)
 }
 
-function saveProfile(profile: UserProfile) {
-  cache = profile
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(profile))
-  } catch {
-    // storage full or blocked — the change still applies for this session
-  }
-  for (const listener of listeners) listener()
+export function saveProfile(profile: UserProfile) {
+  const previous = cache
+  cache = { profile, loaded: true }
+  publish()
+
+  void (async () => {
+    const supabase = createClient()
+    const { data: user } = await supabase.auth.getUser()
+    const id = user.user?.id
+    if (!id) return
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(profileToRow(profile))
+      .eq("id", id)
+
+    if (error) {
+      cache = previous
+      publish()
+      return
+    }
+
+    // Replace the links rather than work out which moved: there are only ever
+    // a handful, and position is part of what is being saved.
+    await supabase.from("social_links").delete().eq("user_id", id)
+    if (profile.socials.length > 0) {
+      await supabase.from("social_links").insert(
+        profile.socials
+          .filter((link) => link.platform.trim() !== "" || link.url.trim() !== "")
+          .map((link, index) => ({
+            id: link.id,
+            platform: link.platform,
+            url: link.url,
+            position: index,
+          }))
+      )
+    }
+  })()
+}
+
+/** Forgets the loaded profile so the next account does not inherit it. */
+export function resetProfile() {
+  cache = EMPTY
+  publish()
 }
 
 export function useProfile() {
-  const profile = React.useSyncExternalStore(
+  const state = React.useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot
   )
-  return { profile, saveProfile }
+  return { profile: state.profile, loaded: state.loaded, saveProfile }
+}
+
+/**
+ * "January 2024" for the Member since stat.
+ *
+ * Guarded because the join date is genuinely unknown until the profile loads,
+ * and on a signed-out visit it never arrives at all. Formatting a blank date
+ * throws rather than producing something odd-looking, which is enough to take
+ * a whole page down.
+ */
+export function formatMemberSince(createdAt: string): string {
+  if (!createdAt) return "—"
+  const date = new Date(`${createdAt}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return "—"
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    year: "numeric",
+  }).format(date)
 }
 
 const USERNAME_PATTERN = /^[a-z0-9_]{3,20}$/

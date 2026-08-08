@@ -1,41 +1,31 @@
 "use client"
 
-// App settings for the design phase: seeded from mock data, persisted in
-// localStorage, and shared across every page that reads them.
+// App settings, from the database. One row per user, created alongside the
+// account by the on_auth_user_created trigger, so it always exists by the time
+// anything reads it.
+//
+// The hook keeps the shape the localStorage version had. What changed is that
+// the first snapshot is the defaults and the stored row arrives a moment later
+// — which is also what fixes the tearing the audit found, because the update
+// now comes through React rather than a module variable nobody re-read.
 
 import * as React from "react"
 
+import { settingsFromRow, settingsToRow } from "@/lib/data/mappers"
 import { mockSettings } from "@/lib/mock-data"
+import { createClient } from "@/lib/supabase/client"
 import type { AppSettings, Currency, NotificationKey } from "@/lib/types"
 
-const STORAGE_KEY = "artha.settings"
-
-let cache: AppSettings | null = null
+let cache: AppSettings = mockSettings
+let loaded = false
+let inFlight: Promise<void> | null = null
 const listeners = new Set<() => void>()
 
-function load(): AppSettings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<AppSettings>
-      // Merge over the seed so settings saved before a field existed still work.
-      return {
-        ...mockSettings,
-        ...parsed,
-        notifications: {
-          ...mockSettings.notifications,
-          ...(parsed.notifications ?? {}),
-        },
-      }
-    }
-  } catch {
-    // corrupted or unavailable storage — fall back to the seed
-  }
-  return mockSettings
+function publish() {
+  for (const listener of listeners) listener()
 }
 
 function getSnapshot(): AppSettings {
-  if (cache === null) cache = load()
   return cache
 }
 
@@ -43,23 +33,49 @@ function getServerSnapshot(): AppSettings {
   return mockSettings
 }
 
+async function load() {
+  if (inFlight) return inFlight
+  inFlight = (async () => {
+    try {
+      const supabase = createClient()
+      const { data } = await supabase.from("settings").select("*").maybeSingle()
+      if (data) {
+        cache = settingsFromRow(data, mockSettings)
+        publish()
+      }
+    } finally {
+      loaded = true
+      inFlight = null
+    }
+  })()
+  return inFlight
+}
+
 function subscribe(onChange: () => void) {
   listeners.add(onChange)
+  if (!loaded) void load()
   return () => listeners.delete(onChange)
 }
 
-function write(next: AppSettings) {
+async function write(next: AppSettings) {
+  const previous = cache
   cache = next
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  } catch {
-    // storage full or blocked — the change still applies for this session
+  publish()
+
+  const supabase = createClient()
+  const { error } = await supabase.from("settings").update(settingsToRow(next)).
+    // The row belongs to the signed-in user; RLS makes this the only one
+    // reachable, and the filter keeps PostgREST from refusing a blanket update.
+    not("user_id", "is", null)
+
+  if (error) {
+    cache = previous
+    publish()
   }
-  for (const listener of listeners) listener()
 }
 
 export function updateSettings(patch: Partial<AppSettings>) {
-  write({ ...getSnapshot(), ...patch })
+  void write({ ...cache, ...patch })
 }
 
 export function setNotification(
@@ -67,14 +83,20 @@ export function setNotification(
   channel: "inApp" | "email",
   value: boolean
 ) {
-  const current = getSnapshot()
-  write({
-    ...current,
+  void write({
+    ...cache,
     notifications: {
-      ...current.notifications,
-      [key]: { ...current.notifications[key], [channel]: value },
+      ...cache.notifications,
+      [key]: { ...cache.notifications[key], [channel]: value },
     },
   })
+}
+
+/** Forgets the loaded row so the next account does not inherit it. */
+export function resetSettings() {
+  cache = mockSettings
+  loaded = false
+  publish()
 }
 
 export function useSettings() {

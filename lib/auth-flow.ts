@@ -6,6 +6,7 @@
 // and the screens above them did not have to change: the seam was designed for
 // exactly this swap.
 
+import { clearAllData } from "@/lib/data/clear"
 import { createClient } from "@/lib/supabase/client"
 
 /** How long before "Resend code" becomes available again. */
@@ -131,6 +132,10 @@ export async function signInWithGoogle(next?: string): Promise<void> {
 export async function signOut(): Promise<void> {
   const supabase = createClient()
   await supabase.auth.signOut()
+  // The stores are module-level and survive a client-side navigation, so
+  // without this the next person to sign in on this machine would see the
+  // previous account's ledger until their own finished loading.
+  clearAllData()
 }
 
 export interface PasswordRule {

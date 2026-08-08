@@ -55,6 +55,7 @@ import {
 import { StatCard } from "@/components/stats/stat-card"
 import { useMoney } from "@/lib/use-money"
 import { autoBuckets, toStatPoints, trendOf } from "@/lib/stat-series"
+import { newId } from "@/lib/id"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { tagStyle } from "@/lib/tag-colors"
@@ -177,7 +178,7 @@ export function P2PPage() {
   }
 
   function handleDuplicate(entry: Entry) {
-    setEntries((prev) => [{ ...entry, id: `e_${Date.now()}` }, ...prev])
+    setEntries((prev) => [{ ...entry, id: newId() }, ...prev])
   }
 
   // Buckets follow the selected timeframe: months when it spans a while,

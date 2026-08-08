@@ -33,6 +33,7 @@ import {
   getPortfolioStats,
 } from "@/lib/portfolio"
 import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
+import { newId } from "@/lib/id"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
 import { useDashboardYears } from "@/lib/use-years"
@@ -97,7 +98,7 @@ export function DashboardPage() {
   }
 
   function duplicateEntry(entry: Entry) {
-    setEntries((prev) => [{ ...entry, id: `e_${Date.now()}` }, ...prev])
+    setEntries((prev) => [{ ...entry, id: newId() }, ...prev])
   }
 
   function deleteEntry(entry: Entry) {

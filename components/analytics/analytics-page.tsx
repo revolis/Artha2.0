@@ -60,7 +60,7 @@ import { useMoney } from "@/lib/use-money"
 import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
-import { useProfile } from "@/lib/use-profile"
+import { formatMemberSince, useProfile } from "@/lib/use-profile"
 import type { Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -328,14 +328,10 @@ export function AnalyticsPage() {
 
   // Account activity — spans every year, not just the one selected.
   const activityStats = React.useMemo<ActivityStat[]>(() => {
-    const memberSince = new Date(`${profile.createdAt}T00:00:00`)
     return [
       {
         label: "Member since",
-        value: new Intl.DateTimeFormat("en-US", {
-          month: "long",
-          year: "numeric",
-        }).format(memberSince),
+        value: formatMemberSince(profile.createdAt),
         sub: "Account opened",
         icon: ACTIVITY_ICONS.memberSince,
       },

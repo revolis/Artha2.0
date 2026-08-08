@@ -5,6 +5,7 @@ import { GoalCard } from "@/components/goals/goal-card"
 import { GoalFormDialog } from "@/components/goals/goal-form-dialog"
 import { AppShell } from "@/components/layout/app-shell"
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button"
+import { newId } from "@/lib/id"
 import { useGoals } from "@/lib/use-goals"
 import { useSettings } from "@/lib/use-settings"
 import type { Goal } from "@/lib/types"
@@ -65,7 +66,7 @@ export function GoalsPage() {
     setGoals((prev) => [
       {
         ...goal,
-        id: `g_${Date.now()}`,
+        id: newId(),
         title: `${goal.title} (copy)`,
         currentAmount: 0,
         completedAt: undefined,

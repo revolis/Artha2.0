@@ -50,10 +50,18 @@ export function ContactPage() {
   const { profile } = useProfile()
 
   const [topic, setTopic] = React.useState("help")
-  const [replyTo, setReplyTo] = React.useState(profile.email)
+  const [replyTo, setReplyTo] = React.useState("")
   const [subject, setSubject] = React.useState("")
   const [message, setMessage] = React.useState("")
   const [sent, setSent] = React.useState(false)
+
+  // The signed-in address arrives from the database a moment after this form
+  // mounts, so it is filled in when it lands. Once the visitor has typed an
+  // address of their own, it is theirs and nothing overwrites it.
+  const typedOwnAddress = React.useRef(false)
+  React.useEffect(() => {
+    if (!typedOwnAddress.current && profile.email) setReplyTo(profile.email)
+  }, [profile.email])
 
   const canSend = message.trim().length >= 10 && replyTo.includes("@")
   const selected = TOPICS.find((item) => item.value === topic)
@@ -122,7 +130,10 @@ export function ContactPage() {
                     id="reply-to"
                     type="email"
                     value={replyTo}
-                    onChange={(event) => setReplyTo(event.target.value)}
+                    onChange={(event) => {
+                      typedOwnAddress.current = true
+                      setReplyTo(event.target.value)
+                    }}
                   />
                 </Field>
                 <Field>

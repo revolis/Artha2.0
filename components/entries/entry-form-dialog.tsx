@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { normaliseAttachments, readAttachment } from "@/lib/attachments"
+import { newId } from "@/lib/id"
 import type { Entry, EntryAttachment, EntryType, Source } from "@/lib/types"
 
 export const entryTypeLabels: Record<EntryType, string> = {
@@ -161,7 +162,7 @@ export function EntryFormDialog({
     if (!canSave) return
     onSave(
       {
-        id: entry?.id ?? `e_${Date.now()}`,
+        id: entry?.id ?? newId(),
         datetime,
         type,
         category: category ?? undefined,

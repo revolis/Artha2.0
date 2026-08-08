@@ -18,7 +18,7 @@ export type Database = {
     Tables: {
       dashboard_years: {
         Row: { created_at: string; user_id: string; year: number }
-        Insert: { created_at?: string; user_id: string; year: number }
+        Insert: { created_at?: string; user_id?: string; year: number }
         Update: { created_at?: string; user_id?: string; year?: number }
         Relationships: []
       }
@@ -55,7 +55,7 @@ export type Database = {
           tags?: string[]
           type: string
           updated_at?: string
-          user_id: string
+          user_id?: string
         }
         Update: {
           amount?: number
@@ -99,7 +99,7 @@ export type Database = {
           entry_id: string
           id?: string
           name: string
-          user_id: string
+          user_id?: string
         }
         Update: {
           created_at?: string
@@ -148,7 +148,7 @@ export type Database = {
           target_amount: number
           title: string
           updated_at?: string
-          user_id: string
+          user_id?: string
         }
         Update: {
           color?: string | null
@@ -169,7 +169,7 @@ export type Database = {
       }
       notification_reads: {
         Row: { notification_id: string; read_at: string; user_id: string }
-        Insert: { notification_id: string; read_at?: string; user_id: string }
+        Insert: { notification_id: string; read_at?: string; user_id?: string }
         Update: { notification_id?: string; read_at?: string; user_id?: string }
         Relationships: []
       }
@@ -243,7 +243,7 @@ export type Database = {
           timezone?: string
           two_factor?: boolean
           updated_at?: string
-          user_id: string
+          user_id?: string
         }
         Update: {
           display_currency?: string
@@ -275,7 +275,7 @@ export type Database = {
           platform: string
           position?: number
           url: string
-          user_id: string
+          user_id?: string
         }
         Update: {
           created_at?: string
@@ -304,7 +304,7 @@ export type Database = {
           name: string
           platform_url?: string | null
           social_handle?: string | null
-          user_id: string
+          user_id?: string
         }
         Update: {
           campaign_url?: string | null

@@ -14,6 +14,7 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { newId } from "@/lib/id"
 import type { Goal } from "@/lib/types"
 
 type PeriodPreset = "month" | "quarter" | "year" | "custom"
@@ -100,7 +101,7 @@ export function GoalFormDialog({
   function handleSave() {
     if (!canSave) return
     onSave({
-      id: goal?.id ?? `g_${Date.now()}`,
+      id: goal?.id ?? newId(),
       title: name.trim(),
       targetAmount,
       currentAmount: goal ? achievedAmount : 0,

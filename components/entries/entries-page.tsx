@@ -64,6 +64,7 @@ import {
 } from "@/components/ui/table"
 import { getNetAmount } from "@/lib/mock-data"
 import { useMoney } from "@/lib/use-money"
+import { newId } from "@/lib/id"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { tagStyle } from "@/lib/tag-colors"
@@ -235,7 +236,7 @@ export function EntriesPage() {
   }
 
   function handleDuplicate(entry: Entry) {
-    setEntries((prev) => [{ ...entry, id: `e_${Date.now()}` }, ...prev])
+    setEntries((prev) => [{ ...entry, id: newId() }, ...prev])
   }
 
   const typeFilterItems = [

@@ -49,12 +49,14 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useEntryData } from "@/lib/use-entry-data"
 import { useGoals } from "@/lib/use-goals"
 import {
+  formatMemberSince,
   getProfileCompletion,
   useProfile,
   validateUsername,
 } from "@/lib/use-profile"
 import { getEntryYear } from "@/lib/mock-data"
 import type { SocialLink, UserProfile } from "@/lib/types"
+import { newId } from "@/lib/id"
 import { cn } from "@/lib/utils"
 
 const TIMEZONES = [
@@ -197,10 +199,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
   }
 
   const activeYears = new Set(entries.map(getEntryYear)).size
-  const memberSince = new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    year: "numeric",
-  }).format(new Date(`${draft.createdAt}T00:00:00`))
+  const memberSince = formatMemberSince(draft.createdAt)
 
   const stats = [
     { label: "Member since", value: memberSince },
@@ -550,7 +549,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
                 onClick={() =>
                   update("socials", [
                     ...draft.socials,
-                    { id: `s_${Date.now()}`, platform: "", url: "" },
+                    { id: newId(), platform: "", url: "" },
                   ])
                 }
               >
@@ -618,15 +617,16 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
 }
 
 export function ProfilePage() {
-  const { profile } = useProfile()
+  const { profile, loaded } = useProfile()
   const mounted = useMounted()
 
   return (
     <AppShell>
-      {mounted ? (
-        // Mounting after hydration means the form's initial state is the
-        // stored profile rather than the server's placeholder.
-        <ProfileForm profile={profile} />
+      {mounted && loaded ? (
+        // The form seeds its draft from this profile once, on mount, so it
+        // must not mount until the real profile has arrived — otherwise the
+        // fields keep the placeholder even after the account loads.
+        <ProfileForm key={profile.id} profile={profile} />
       ) : (
         <div className="flex flex-col gap-4">
           <Skeleton className="h-10 w-48" />

@@ -1,43 +1,31 @@
 "use client"
 
-// The years the user has opened on the dashboard, kept in localStorage so the
-// tabs survive a reload.
+// Years opened by hand on the dashboard, from the database.
 //
-// Only years added by hand live here. Any year that already has entries shows
-// up on its own (see `useDashboardYears` below), so this list exists for the
-// other case: opening next year to plan ahead, before a single entry exists.
+// Only the empty ones need storing: a year that holds entries appears on its
+// own, so this table exists for the case of opening next year to plan ahead
+// before a single entry is in it.
 
 import * as React from "react"
 
 import { getEntryYear } from "@/lib/mock-data"
+import { createClient } from "@/lib/supabase/client"
 import type { Entry } from "@/lib/types"
-
-const STORAGE_KEY = "artha.years.v1"
 
 // A stable empty array. Returning a fresh `[]` from the snapshot would look
 // like new state on every render and spin useSyncExternalStore forever.
 const NO_YEARS: number[] = []
 
-let cache: number[] | null = null
+let cache: number[] = NO_YEARS
+let loaded = false
+let inFlight: Promise<void> | null = null
 const listeners = new Set<() => void>()
 
-function load(): number[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as unknown
-      if (Array.isArray(parsed)) {
-        return parsed.filter((item): item is number => typeof item === "number")
-      }
-    }
-  } catch {
-    // corrupted or unavailable storage — behave as though nothing was added
-  }
-  return NO_YEARS
+function publish() {
+  for (const listener of listeners) listener()
 }
 
 function getSnapshot(): number[] {
-  if (cache === null) cache = load()
   return cache
 }
 
@@ -45,19 +33,35 @@ function getServerSnapshot(): number[] {
   return NO_YEARS
 }
 
+async function load() {
+  if (inFlight) return inFlight
+  inFlight = (async () => {
+    try {
+      const supabase = createClient()
+      const { data } = await supabase.from("dashboard_years").select("year")
+      if (data) {
+        cache = data.map((row) => row.year).sort((a, b) => a - b)
+        publish()
+      }
+    } finally {
+      loaded = true
+      inFlight = null
+    }
+  })()
+  return inFlight
+}
+
 function subscribe(onChange: () => void) {
   listeners.add(onChange)
+  if (!loaded) void load()
   return () => listeners.delete(onChange)
 }
 
-function setAddedYears(updater: (prev: number[]) => number[]) {
-  cache = updater(getSnapshot())
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cache))
-  } catch {
-    // storage full or blocked — state still updates for this session
-  }
-  for (const listener of listeners) listener()
+/** Forgets the loaded years so the next account does not inherit them. */
+export function resetYears() {
+  cache = NO_YEARS
+  loaded = false
+  publish()
 }
 
 /**
@@ -78,13 +82,18 @@ export function useDashboardYears(entries: Entry[], currentYear: number) {
   }, [entries, added, currentYear])
 
   const addYear = React.useCallback((year: number) => {
-    setAddedYears((prev) => (prev.includes(year) ? prev : [...prev, year]))
+    if (cache.includes(year)) return
+    cache = [...cache, year].sort((a, b) => a - b)
+    publish()
+    void createClient().from("dashboard_years").insert({ year })
   }, [])
 
   // Called when a year is deleted. The entries go too, so dropping it from
   // this list is enough to make the tab disappear.
   const forgetYear = React.useCallback((year: number) => {
-    setAddedYears((prev) => prev.filter((item) => item !== year))
+    cache = cache.filter((item) => item !== year)
+    publish()
+    void createClient().from("dashboard_years").delete().eq("year", year)
   }, [])
 
   return { years, addYear, forgetYear }
