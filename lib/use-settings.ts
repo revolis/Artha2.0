@@ -53,6 +53,15 @@ function getServerSnapshot(): AppSettings {
 }
 
 function subscribe(onChange: () => void) {
+  // Priming on subscribe as well as on read, so the formatter is not left
+  // waiting for whichever component happens to call getSnapshot first.
+  //
+  // NOTE: this hardens the ordering but does not on its own fix the known
+  // display-currency fault — a hard load of /entries and /reports still
+  // formats every amount in the default currency. See the audit notes: the
+  // real problem is that formatMoney reads mutable module state instead of
+  // taking the currency as an argument, and that wants fixing properly.
+  getSnapshot()
   listeners.add(onChange)
   return () => listeners.delete(onChange)
 }
