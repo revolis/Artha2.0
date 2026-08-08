@@ -92,8 +92,11 @@ export function getMonthlyPerformance(
 
   for (const bucket of months) {
     bucket.activeDays = days[bucket.month].size
+    // Only a category that actually made money can lead. Starting from
+    // -Infinity meant a month where everything lost reported its least bad
+    // category as the leader, which reads as praise for a bad month.
     let best: string | null = null
-    let bestValue = -Infinity
+    let bestValue = 0
     for (const [name, value] of categoryTotals[bucket.month]) {
       if (value > bestValue) {
         best = name

@@ -15,11 +15,6 @@ export function goalCoversYear(goal: Goal, year: number): boolean {
   return year >= startYear && year <= endYear
 }
 
-export function getGoalPercent(goal: Goal): number {
-  if (goal.targetAmount <= 0) return 0
-  return Math.min(100, (goal.currentAmount / goal.targetAmount) * 100)
-}
-
 /** Unclamped — goes past 100 when the goal was overshot. */
 export function getGoalRawPercent(goal: Goal): number {
   if (goal.targetAmount <= 0) return 0
