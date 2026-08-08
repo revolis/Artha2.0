@@ -53,10 +53,10 @@ export function Hero() {
 
         <Reveal delay={340}>
           <p className="max-w-2xl text-base leading-relaxed text-balance text-muted-foreground sm:text-lg">
-            A precision dashboard for people who want their own numbers, not an
-            estimate. Record what you earned, lost, paid in fees and converted
-            to cash — and see your portfolio, your goals and your year resolve
-            in rupees and dollars at the day&apos;s rate.
+            Artha brings crypto, equities and cash income into a single ledger.
+            Record each gain, loss, fee and conversion as it happens, and see
+            your true position — in the currency you work in, at the day&apos;s
+            rate.
           </p>
         </Reveal>
 

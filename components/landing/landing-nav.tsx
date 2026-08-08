@@ -6,7 +6,7 @@ import Link from "next/link"
 import { ArthaMark } from "@/components/layout/artha-mark"
 import { ThemeToggler } from "@/components/layout/theme-toggler"
 import { Button } from "@/components/ui/button"
-import { MagnetizeButton } from "@/components/ui/magnetize-button"
+import { GlowBorderButton } from "@/components/ui/glow-border-button"
 import TextRoll from "@/components/ui/text-roll"
 import { cn } from "@/lib/utils"
 
@@ -73,13 +73,9 @@ export function LandingNav() {
           </Button>
           {/* Log in only. Signing up is the page's closing ask, not something
               to press before reading anything. */}
-          <MagnetizeButton
-            size="sm"
-            render={<Link href="/login" />}
-            nativeButton={false}
-          >
+          <GlowBorderButton render={<Link href="/login" />}>
             Log in
-          </MagnetizeButton>
+          </GlowBorderButton>
         </div>
       </nav>
     </header>
