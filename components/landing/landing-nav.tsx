@@ -71,12 +71,22 @@ export function LandingNav() {
           >
             Live demo
           </Button>
-          {/* Log in and Sign up are presentational for now — the pages behind
-              them come later, so neither navigates yet. */}
-          <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hidden sm:inline-flex"
+            render={<Link href="/login" />}
+            nativeButton={false}
+          >
             Log in
           </Button>
-          <MagnetizeButton size="sm">Sign up</MagnetizeButton>
+          <MagnetizeButton
+            size="sm"
+            render={<Link href="/signup" />}
+            nativeButton={false}
+          >
+            Sign up
+          </MagnetizeButton>
         </div>
       </nav>
     </header>

@@ -33,7 +33,13 @@ export function FinalCta() {
                 Explore the live demo
                 <ArrowRight data-icon="inline-end" />
               </Button>
-              <MagnetizeButton size="lg">Create an account</MagnetizeButton>
+              <MagnetizeButton
+                size="lg"
+                render={<Link href="/signup" />}
+                nativeButton={false}
+              >
+                Create an account
+              </MagnetizeButton>
             </div>
           </div>
         </div>

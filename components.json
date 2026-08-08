@@ -25,6 +25,7 @@
     "@magicui": "https://magicui.design/r/{name}",
     "@bklit": "https://ui.bklit.com/r/{name}.json",
     "@animate-ui": "https://animate-ui.com/r/{name}.json",
+    "@beui": "https://beui.dev/r/{name}.json",
     "@sona-ui": "https://sona-ui.vercel.app/r/{name}.json",
     "@gammaui": "https://www.gammaui.com/r/{name}.json"
   }
