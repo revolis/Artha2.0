@@ -30,35 +30,55 @@ function friendly(message: string): string {
 }
 
 /**
- * Mails a six-digit code. `shouldCreateUser` decides whether this is a sign-up
- * or a password reset — sending a reset code to an address with no account
- * would otherwise quietly create one.
+ * Why a code is being sent. This decides which of Supabase's email templates
+ * is used, and the templates are the only place the wording lives — so the
+ * two purposes must take different routes through the API or the reader gets
+ * the same email whether they are opening an account or recovering one.
+ *
+ *   signup   → signInWithOtp        → "Confirm signup" template
+ *   recovery → resetPasswordForEmail → "Reset password" template
  */
+export type OtpPurpose = "signup" | "recovery"
+
+/** Mails a six-digit code for the given purpose. */
 export async function sendOtp(
   email: string,
-  { createUser = true }: { createUser?: boolean } = {}
+  { purpose = "signup" }: { purpose?: OtpPurpose } = {}
 ): Promise<void> {
   if (!isEmail(email)) {
     throw new Error("That doesn't look like an email address.")
   }
   const supabase = createClient()
-  const { error } = await supabase.auth.signInWithOtp({
-    email: email.trim(),
-    options: { shouldCreateUser: createUser },
-  })
+  const address = email.trim()
+
+  const { error } =
+    purpose === "recovery"
+      ? await supabase.auth.resetPasswordForEmail(address)
+      : await supabase.auth.signInWithOtp({
+          email: address,
+          // A reset never reaches here, so this can stay true: someone
+          // entering a new address at the sign-up step means to sign up.
+          options: { shouldCreateUser: true },
+        })
+
   if (error) throw new Error(friendly(error.message))
 }
 
 /**
  * Checks the code and, on success, signs the user in — a verified code is
- * proof of ownership, which is what a session represents.
+ * proof of ownership, which is what a session represents. The type has to
+ * match the way the code was sent.
  */
-export async function verifyOtp(code: string, email: string): Promise<boolean> {
+export async function verifyOtp(
+  code: string,
+  email: string,
+  { purpose = "signup" }: { purpose?: OtpPurpose } = {}
+): Promise<boolean> {
   const supabase = createClient()
   const { error } = await supabase.auth.verifyOtp({
     email: email.trim(),
     token: code,
-    type: "email",
+    type: purpose === "recovery" ? "recovery" : "email",
   })
   if (error) {
     // A wrong code is an expected outcome, not a failure worth throwing over —

@@ -55,7 +55,7 @@ export function ForgotPasswordForm() {
           onEmailChange={setEmail}
           onSent={() => setStep("otp")}
           submitLabel="Send reset code"
-          createUser={false}
+          purpose="recovery"
         />
       ) : null}
 
@@ -64,7 +64,7 @@ export function ForgotPasswordForm() {
           email={email}
           onVerified={() => setStep("password")}
           onBack={() => setStep("email")}
-          createUser={false}
+          purpose="recovery"
         />
       ) : null}
 

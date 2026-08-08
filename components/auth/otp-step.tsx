@@ -4,7 +4,12 @@ import * as React from "react"
 
 import OtpInput from "@/components/lab/otp-segmented-input"
 import { Button } from "@/components/ui/button"
-import { RESEND_SECONDS, sendOtp, verifyOtp } from "@/lib/auth-flow"
+import {
+  RESEND_SECONDS,
+  sendOtp,
+  verifyOtp,
+  type OtpPurpose,
+} from "@/lib/auth-flow"
 
 /**
  * The code step, shared by sign-up and password reset.
@@ -17,13 +22,13 @@ export function OtpStep({
   email,
   onVerified,
   onBack,
-  createUser = true,
+  purpose = "signup",
 }: {
   email: string
   onVerified: () => void
   onBack: () => void
-  /** False on a password reset, so resending cannot create an account. */
-  createUser?: boolean
+  /** Must match how the code was sent, or the check fails. */
+  purpose?: OtpPurpose
 }) {
   const [secondsLeft, setSecondsLeft] = React.useState(RESEND_SECONDS)
   const [resending, setResending] = React.useState(false)
@@ -37,7 +42,7 @@ export function OtpStep({
 
   async function verify(value: string) {
     try {
-      const ok = await verifyOtp(value, email)
+      const ok = await verifyOtp(value, email, { purpose })
       if (ok) {
         // Let the cells finish their cascade before the step changes.
         window.setTimeout(onVerified, 700)
@@ -53,7 +58,7 @@ export function OtpStep({
     setResending(true)
     setError(null)
     try {
-      await sendOtp(email, { createUser })
+      await sendOtp(email, { purpose })
       setSecondsLeft(RESEND_SECONDS)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Something went wrong.")

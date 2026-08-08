@@ -11,7 +11,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { isEmail, sendOtp } from "@/lib/auth-flow"
+import { isEmail, sendOtp, type OtpPurpose } from "@/lib/auth-flow"
 
 /** Collects the address and asks for a code to be sent to it. */
 export function EmailStep({
@@ -19,14 +19,14 @@ export function EmailStep({
   onEmailChange,
   onSent,
   submitLabel,
-  createUser = true,
+  purpose = "signup",
 }: {
   email: string
   onEmailChange: (value: string) => void
   onSent: () => void
   submitLabel: string
-  /** False on a password reset, so a typo cannot open a new account. */
-  createUser?: boolean
+  /** Decides which email template the reader receives. */
+  purpose?: OtpPurpose
 }) {
   const [error, setError] = React.useState<string | null>(null)
   const [sending, setSending] = React.useState(false)
@@ -40,7 +40,7 @@ export function EmailStep({
     setError(null)
     setSending(true)
     try {
-      await sendOtp(email, { createUser })
+      await sendOtp(email, { purpose })
       onSent()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Something went wrong.")
