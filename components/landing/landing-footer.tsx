@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { FooterSpotlight } from "@/components/landing/footer-spotlight"
 import { ArthaMark } from "@/components/layout/artha-mark"
 import { Separator } from "@/components/ui/separator"
 
@@ -85,6 +86,12 @@ export function LandingFooter() {
         <div className="flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
           <span>© {new Date().getFullYear()} Artha</span>
           <span>Crypto · Equities · Cash income — in NPR and USD</span>
+        </div>
+
+        {/* Clipped at the baseline so the wordmark sits into the bottom edge
+            of the page rather than floating above it. */}
+        <div className="-mb-14 max-h-[9rem] overflow-hidden sm:-mb-20 sm:max-h-[13rem]">
+          <FooterSpotlight />
         </div>
       </div>
     </footer>
