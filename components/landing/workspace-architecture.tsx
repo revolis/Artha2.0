@@ -29,7 +29,7 @@ interface Surface {
 
 const SURFACES: Surface[] = [
   {
-    href: "/dashboard",
+    href: "/demo?next=/dashboard",
     label: "Dashboard",
     x: 10,
     y: 20,
@@ -37,7 +37,7 @@ const SURFACES: Surface[] = [
     d: "M 10 20 h 79.5 q 5 0 5 5 v 15",
   },
   {
-    href: "/entries",
+    href: "/demo?next=/entries",
     label: "Entries",
     x: 10,
     y: 50,
@@ -45,7 +45,7 @@ const SURFACES: Surface[] = [
     d: "M 10 50 h 75",
   },
   {
-    href: "/p2p",
+    href: "/demo?next=/p2p",
     label: "Fiat/P2P",
     x: 10,
     y: 80,
@@ -53,7 +53,7 @@ const SURFACES: Surface[] = [
     d: "M 10 80 h 79.5 q 5 0 5 -5 v -15",
   },
   {
-    href: "/portfolio",
+    href: "/demo?next=/portfolio",
     label: "Portfolio",
     x: 190,
     y: 20,
@@ -61,7 +61,7 @@ const SURFACES: Surface[] = [
     d: "M 190 20 h -79.7 q -5 0 -5 5 v 15",
   },
   {
-    href: "/analytics",
+    href: "/demo?next=/analytics",
     label: "Analytics",
     x: 190,
     y: 50,
@@ -69,7 +69,7 @@ const SURFACES: Surface[] = [
     d: "M 190 50 h -75",
   },
   {
-    href: "/goals",
+    href: "/demo?next=/goals",
     label: "Goals",
     x: 190,
     y: 80,
@@ -77,7 +77,7 @@ const SURFACES: Surface[] = [
     d: "M 190 80 h -79.7 q -5 0 -5 -5 v -15",
   },
   {
-    href: "/heatmap",
+    href: "/demo?next=/heatmap",
     label: "Heatmap",
     x: 100,
     y: 6,
@@ -85,7 +85,7 @@ const SURFACES: Surface[] = [
     d: "M 100 6 v 34",
   },
   {
-    href: "/reports",
+    href: "/demo?next=/reports",
     label: "Reports",
     x: 100,
     y: 94,

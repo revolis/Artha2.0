@@ -15,6 +15,22 @@ import { ArthaMark } from "@/components/layout/artha-mark"
 import { Button } from "@/components/ui/button"
 import { enterDemo } from "@/lib/demo"
 
+/**
+ * Where to land after signing in.
+ *
+ * Read from the address bar rather than useSearchParams, which would want a
+ * Suspense boundary around the page. Only same-site paths are accepted: a
+ * value like "//evil.example.com" is a valid URL to a browser, and handing an
+ * open redirect to a page anyone can reach is how a demo link becomes a
+ * phishing link.
+ */
+function destination(): string {
+  if (typeof window === "undefined") return "/dashboard"
+  const next = new URLSearchParams(window.location.search).get("next")
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/dashboard"
+  return next
+}
+
 export function DemoEntry() {
   const [error, setError] = React.useState<string | null>(null)
   const started = React.useRef(false)
@@ -25,9 +41,14 @@ export function DemoEntry() {
     if (started.current) return
     started.current = true
 
+    const next = destination()
+
     void enterDemo()
       .then(() => {
-        window.location.replace("/dashboard")
+        // A full navigation, not a client-side push: the session cookie has
+        // only just been set and the middleware has to see it on the next
+        // request, or the visitor is sent straight back to sign in.
+        window.location.replace(next)
       })
       .catch(() => {
         setError(

@@ -10,19 +10,19 @@ const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
     {
       heading: "Overview",
       links: [
-        { label: "Dashboard", href: "/dashboard" },
-        { label: "Entries", href: "/entries" },
-        { label: "Fiat/P2P", href: "/p2p" },
-        { label: "Portfolio", href: "/portfolio" },
-        { label: "Analytics", href: "/analytics" },
+        { label: "Dashboard", href: "/demo?next=/dashboard" },
+        { label: "Entries", href: "/demo?next=/entries" },
+        { label: "Fiat/P2P", href: "/demo?next=/p2p" },
+        { label: "Portfolio", href: "/demo?next=/portfolio" },
+        { label: "Analytics", href: "/demo?next=/analytics" },
       ],
     },
     {
       heading: "Planning",
       links: [
-        { label: "Goals", href: "/goals" },
-        { label: "Year Heatmap", href: "/heatmap" },
-        { label: "Reports", href: "/reports" },
+        { label: "Goals", href: "/demo?next=/goals" },
+        { label: "Year Heatmap", href: "/demo?next=/heatmap" },
+        { label: "Reports", href: "/demo?next=/reports" },
       ],
     },
     {
