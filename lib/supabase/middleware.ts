@@ -13,6 +13,10 @@ const PUBLIC_ROUTES = [
   "/about",
   "/contact",
   "/help",
+  // Scheduled jobs arrive with no session, so they have to be let through or
+  // the scheduler just collects redirects to the sign-in page. Only /api/cron
+  // rather than all of /api, so a future route is not made public by accident.
+  "/api/cron",
 ]
 
 function isPublic(pathname: string): boolean {

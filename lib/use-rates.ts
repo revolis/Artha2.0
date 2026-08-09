@@ -1,22 +1,22 @@
 "use client"
 
-// The exchange rates the whole app converts with. Seeded from real rates,
-// refreshed from a live feed when the user presses Update, and kept in
-// localStorage so the last fetched set is what the site uses next time.
+// The exchange rates the whole app converts with.
+//
+// These used to live in each browser's localStorage and only moved when
+// somebody pressed "Update rates" — so a device that had never been told to
+// refresh kept converting at the seeded figures indefinitely, and two devices
+// could disagree about what a rupee was worth.
+//
+// They come from the database now, written once a day by a scheduled job. The
+// app reads; it does not fetch. Pressing Update asks the job to run early
+// rather than reaching for the feed itself, so every device ends up on the
+// same numbers.
 
 import * as React from "react"
 
 import { SEED_RATES, SEED_RATES_DATE, type RateTable } from "@/lib/rate-data"
+import { createClient } from "@/lib/supabase/client"
 import type { Currency } from "@/lib/types"
-
-const STORAGE_KEY = "artha.rates"
-
-/**
- * Daily mid-market rates, served from a CDN as plain JSON. No key, no signup,
- * and CORS-open so the browser can read it directly.
- */
-const RATES_URL =
-  "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json"
 
 export type RateSource = "seed" | "live"
 
@@ -34,29 +34,12 @@ const SEED_STATE: RateState = {
   source: "seed",
 }
 
-let cache: RateState | null = null
+let cache: RateState = SEED_STATE
+let loaded = false
+let inFlight: Promise<void> | null = null
 const listeners = new Set<() => void>()
 
-function load(): RateState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<RateState>
-      return {
-        // Merge over the seed so a currency added later still has a rate.
-        rates: { ...SEED_STATE.rates, ...(parsed.rates ?? {}) },
-        updatedAt: parsed.updatedAt ?? SEED_STATE.updatedAt,
-        source: parsed.source === "live" ? "live" : "seed",
-      }
-    }
-  } catch {
-    // corrupted or unavailable storage — fall back to the seeded rates
-  }
-  return SEED_STATE
-}
-
 function getSnapshot(): RateState {
-  if (cache === null) cache = load()
   return cache
 }
 
@@ -64,18 +47,51 @@ function getServerSnapshot(): RateState {
   return SEED_STATE
 }
 
+function write(next: RateState) {
+  cache = next
+  for (const listener of listeners) listener()
+}
+
+/** Reads the most recent day's rates. Falls back to the seed on any trouble. */
+async function load(): Promise<void> {
+  if (inFlight) return inFlight
+  inFlight = (async () => {
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from("fx_rates")
+        .select("as_of, rates, source")
+        .order("as_of", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (data?.rates) {
+        write({
+          // Merged over the seed so a currency added later still has a rate
+          // even if the stored row predates it.
+          rates: { ...SEED_RATES, ...(data.rates as Partial<RateTable>) },
+          updatedAt: data.as_of,
+          source: data.source === "live" ? "live" : "seed",
+        })
+      }
+    } finally {
+      loaded = true
+      inFlight = null
+    }
+  })()
+  return inFlight
+}
+
 function subscribe(onChange: () => void) {
   listeners.add(onChange)
+  if (!loaded) void load()
   return () => listeners.delete(onChange)
 }
 
-function write(next: RateState) {
-  cache = next
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  } catch {
-    // storage full or blocked — the change still applies for this session
-  }
+/** Forgets the loaded rates. Used on sign-out, with the rest of the caches. */
+export function resetRates() {
+  cache = SEED_STATE
+  loaded = false
   for (const listener of listeners) listener()
 }
 
@@ -86,55 +102,29 @@ export function todayISO(now = new Date()): string {
     .slice(0, 10)
 }
 
-interface RatesResponse {
-  date?: string
-  usd?: Record<string, number>
-}
-
 /**
- * Pulls today's mid-market rates and applies them everywhere. Throws if the
- * feed can't be reached or gives back something unusable, so the caller can
- * show the failure rather than silently keeping stale numbers.
+ * Asks for a refresh now rather than waiting for the daily job, then reads
+ * the result back.
+ *
+ * The browser no longer talks to the rates feed itself. Doing so gave whoever
+ * pressed the button a private set of numbers, so two people looking at the
+ * same figures could convert them differently. The function writes one row
+ * that everybody then reads.
+ *
+ * Throws on failure so the card can say so instead of quietly keeping the old
+ * numbers and looking refreshed.
  */
 export async function fetchLiveRates(): Promise<RateState> {
-  const response = await fetch(RATES_URL, { cache: "no-store" })
-  if (!response.ok) {
-    throw new Error(`Rates feed returned ${response.status}`)
-  }
+  const supabase = createClient()
+  const { data, error } = await supabase.functions.invoke("refresh-rates", {
+    body: {},
+  })
+  if (error) throw new Error("Could not reach the rates service.")
+  if (data?.error) throw new Error(String(data.error))
 
-  const payload = (await response.json()) as RatesResponse
-  const table = payload.usd
-  if (!table) {
-    throw new Error("Rates feed returned an unexpected shape")
-  }
-
-  const next: RateTable = { ...SEED_RATES }
-  let matched = 0
-  for (const code of Object.keys(next) as Currency[]) {
-    const value = table[code.toLowerCase()]
-    if (typeof value === "number" && value > 0) {
-      next[code] = value
-      matched += 1
-    }
-  }
-  // USD is always 1, so anything less than two means the payload was wrong.
-  if (matched < 2) {
-    throw new Error("Rates feed had none of the currencies we track")
-  }
-  next.USD = 1
-
-  const state: RateState = {
-    rates: next,
-    updatedAt: payload.date ?? todayISO(),
-    source: "live",
-  }
-  write(state)
-  return state
-}
-
-/** Puts the built-in rates back. */
-export function resetRates() {
-  write(SEED_STATE)
+  loaded = false
+  await load()
+  return cache
 }
 
 export function useRates() {

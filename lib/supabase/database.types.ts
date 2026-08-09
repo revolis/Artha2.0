@@ -119,6 +119,27 @@ export type Database = {
           },
         ]
       }
+      fx_rates: {
+        Row: {
+          as_of: string
+          fetched_at: string
+          rates: Json
+          source: string
+        }
+        Insert: {
+          as_of: string
+          fetched_at?: string
+          rates: Json
+          source?: string
+        }
+        Update: {
+          as_of?: string
+          fetched_at?: string
+          rates?: Json
+          source?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           color: string | null

@@ -1,0 +1,51 @@
+# Keeps the Supabase project awake, and the exchange rates current.
+#
+# Supabase pauses a free project after seven days without database traffic.
+# Artha is used in bursts — a few entries at the end of a month, then nothing —
+# so a quiet fortnight would put the project to sleep and take the site down
+# with it. The docs ask for "a few user requests to the database each day", so
+# this runs four times a day.
+#
+# It is deliberately a second mechanism rather than the only one. Vercel Cron
+# (see vercel.json) does the same job once a day, and the two fail for
+# different reasons: this one stops if GitHub disables the schedule, that one
+# stops if a deployment breaks. Either alone keeps the project up.
+#
+# The endpoint needs no key. It takes no input, refreshes a public exchange
+# rate, and refuses to re-fetch within the hour — but every call still reads
+# the database, which is the traffic that matters.
+
+name: Keep awake
+
+on:
+  schedule:
+    # 00:00, 06:00, 12:00 and 18:00 UTC.
+    - cron: "0 */6 * * *"
+  # So it can be run by hand from the Actions tab to check it works.
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh rates and touch the database
+        run: |
+          set -euo pipefail
+          url="https://vosxgtbaizimrbdoztir.supabase.co/functions/v1/refresh-rates"
+
+          # Three attempts: a single flaky minute should not look like an
+          # outage, and a false alarm every few days would train us to ignore
+          # the one that matters.
+          for attempt in 1 2 3; do
+            code=$(curl -sS -o /tmp/body.json -w '%{http_code}' -X POST "$url" --max-time 30 || echo 000)
+            echo "attempt $attempt -> HTTP $code"
+            cat /tmp/body.json || true
+            echo
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 15
+          done
+
+          echo "::error::Supabase did not answer after three attempts. The project may be paused."
+          exit 1
