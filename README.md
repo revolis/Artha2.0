@@ -111,6 +111,21 @@ select vault.create_secret('<service role key>', 'service_role_key');
 
 Until that secret exists the job runs and quietly does nothing.
 
+## The live demo
+
+The Live demo buttons point at `/demo`, which signs the visitor into a shared
+demo account and sends them to the dashboard. They see three years of sample
+entries, real charts and every page working — without signing up.
+
+The credentials in `lib/demo.ts` are public on purpose; the account exists to
+be signed into by strangers. It is deliberately not a personal account, so
+nobody's real address appears in the sidebar. Two things keep it usable:
+
+- `delete-account` refuses that one user id, so a visitor cannot take the demo
+  down from the Danger zone.
+- `reset_demo_account()` runs nightly at 03:00 UTC and copies the ledger back
+  from the template account, so one visitor's edits do not greet the next.
+
 ## Deploying
 
 Any host that runs Next.js works. On Vercel:

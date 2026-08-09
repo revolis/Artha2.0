@@ -13,6 +13,7 @@ import { NavSearch } from "@/components/layout/nav-search"
 import { NotificationsMenu } from "@/components/layout/notifications-menu"
 import { PrivacyToggle } from "@/components/layout/privacy-toggle"
 import { ThemeToggler } from "@/components/layout/theme-toggler"
+import { DemoBanner } from "@/components/layout/demo-banner"
 import { ProfileAvatar } from "@/components/profile/profile-avatar"
 import { ProfileCard } from "@/components/profile/profile-card"
 import {
@@ -123,6 +124,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </header>
+
+        <DemoBanner />
 
         <div className="flex flex-col gap-6 p-4 md:p-6">{children}</div>
       </main>

@@ -17,6 +17,11 @@ const PUBLIC_ROUTES = [
   // the scheduler just collects redirects to the sign-in page. Only /api/cron
   // rather than all of /api, so a future route is not made public by accident.
   "/api/cron",
+  // The doorway into the live demo. It signs the visitor in and then leaves
+  // for the dashboard, so it has to be reachable before there is a session —
+  // otherwise the Live demo button lands on the sign-in page, which is the
+  // one place a demo should never send anybody.
+  "/demo",
 ]
 
 function isPublic(pathname: string): boolean {

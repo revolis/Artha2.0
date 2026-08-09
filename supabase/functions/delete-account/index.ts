@@ -15,6 +15,15 @@ import { createClient } from "jsr:@supabase/supabase-js@2"
 
 const BUCKETS = ["entry-attachments", "avatars"]
 
+/**
+ * The account the landing page signs visitors into.
+ *
+ * Anyone can reach it without signing up, so anyone could otherwise press
+ * Delete everything in the Danger zone and take the demo down for good. It is
+ * the one account that must survive being poked at by strangers.
+ */
+const DEMO_USER = "d3300000-0000-4000-8000-000000000001"
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, content-type, apikey",
@@ -44,6 +53,13 @@ Deno.serve(async (req) => {
   const { data: caller, error: whoError } = await asCaller.auth.getUser()
   const userId = caller?.user?.id
   if (whoError || !userId) return json({ error: "Not signed in." }, 401)
+
+  if (userId === DEMO_USER) {
+    return json(
+      { error: "The demo account cannot be deleted. Sign up for one of your own." },
+      403
+    )
+  }
 
   const admin = createClient(url, serviceKey)
 

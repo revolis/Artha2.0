@@ -99,7 +99,7 @@ export function DashboardPreview() {
         <div className="mt-6 flex justify-center">
           <Button
             size="lg"
-            render={<Link href="/dashboard" />}
+            render={<Link href="/demo" />}
             nativeButton={false}
           >
             Open the full workspace

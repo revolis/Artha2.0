@@ -27,7 +27,7 @@ export function FinalCta() {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Button
                 size="lg"
-                render={<Link href="/dashboard" />}
+                render={<Link href="/demo" />}
                 nativeButton={false}
               >
                 Explore the live demo

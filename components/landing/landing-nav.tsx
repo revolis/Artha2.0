@@ -66,7 +66,7 @@ export function LandingNav() {
             variant="ghost"
             size="sm"
             className="hidden sm:inline-flex"
-            render={<Link href="/dashboard" />}
+            render={<Link href="/demo" />}
             nativeButton={false}
           >
             Live demo
