@@ -74,7 +74,9 @@ export function LoginForm() {
       <React.Suspense fallback={null}>
         <QueryParamSync
           name="next"
-          onChange={(value) => setNext(value.startsWith("/") ? value : "/dashboard")}
+          onChange={(value) =>
+            setNext(value.startsWith("/") ? value : "/dashboard")
+          }
         />
       </React.Suspense>
 

@@ -49,6 +49,7 @@ import {
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry, EntryType } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { CURRENT_YEAR, useSelectedYear } from "@/lib/use-selected-year"
 
 type ScopeKind =
   | "all"
@@ -117,19 +118,25 @@ const presets: { label: string; description: string; scope: ScopeKind }[] = [
 export function ReportsPage() {
   const { formatMoney } = useMoney()
   const { entries, sources } = useEntryData()
-  const currentYear = new Date().getFullYear()
+  const currentYear = CURRENT_YEAR
 
   // Deep link support, e.g. /reports?year=2026&scope=all — used by the
   // "export before deleting" prompt on the dashboard. The params arrive from
   // the QueryParamSync leaves below rather than being read here, so that
   // reading them cannot hold up the rest of the page.
-  const [year, setYear] = React.useState(currentYear)
+  //
+  // The year itself is the shared one, so arriving from another page reports
+  // on the year you were just looking at.
+  const [year, setYear] = useSelectedYear()
   const [scope, setScope] = React.useState<ScopeKind>("all")
 
-  const applyLinkedYear = React.useCallback((value: string) => {
-    const parsed = Number(value)
-    if (Number.isFinite(parsed) && parsed > 0) setYear(parsed)
-  }, [])
+  const applyLinkedYear = React.useCallback(
+    (value: string) => {
+      const parsed = Number(value)
+      if (Number.isFinite(parsed) && parsed > 0) setYear(parsed)
+    },
+    [setYear]
+  )
 
   const applyLinkedScope = React.useCallback((value: string) => {
     if (scopeItems.some((item) => item.value === value)) {

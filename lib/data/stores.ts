@@ -157,13 +157,18 @@ export const goalsStore: RemoteStore<Goal> = createRemoteStore<Goal>({
     const { inserted, updated, deletedIds } = diffById(next, prev)
 
     if (deletedIds.length > 0) {
-      const { error } = await supabase.from("goals").delete().in("id", deletedIds)
+      const { error } = await supabase
+        .from("goals")
+        .delete()
+        .in("id", deletedIds)
       fail("Could not delete goal", error)
     }
 
     const written = [...inserted, ...updated]
     if (written.length > 0) {
-      const { error } = await supabase.from("goals").upsert(written.map(goalToRow))
+      const { error } = await supabase
+        .from("goals")
+        .upsert(written.map(goalToRow))
       fail("Could not save goal", error)
     }
   },

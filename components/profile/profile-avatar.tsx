@@ -8,7 +8,10 @@
 // Now it has to be fetched from Storage, and having the fetching written out
 // three times is how one of them ends up subtly different.
 
-import { getAvatarPreset, PresetAvatar } from "@/components/profile/avatar-presets"
+import {
+  getAvatarPreset,
+  PresetAvatar,
+} from "@/components/profile/avatar-presets"
 import { avatarUrl } from "@/lib/avatars"
 import { useStoredUrl } from "@/lib/use-stored-url"
 import { cn } from "@/lib/utils"

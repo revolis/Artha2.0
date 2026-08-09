@@ -63,10 +63,12 @@ async function write(next: AppSettings) {
   publish()
 
   const supabase = createClient()
-  const { error } = await supabase.from("settings").update(settingsToRow(next)).
+  const { error } = await supabase
+    .from("settings")
+    .update(settingsToRow(next))
     // The row belongs to the signed-in user; RLS makes this the only one
     // reachable, and the filter keeps PostgREST from refusing a blanket update.
-    not("user_id", "is", null)
+    .not("user_id", "is", null)
 
   if (error) {
     cache = previous

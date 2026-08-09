@@ -60,6 +60,7 @@ import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { tagStyle } from "@/lib/tag-colors"
 import { cn } from "@/lib/utils"
+import { useSelectedYear } from "@/lib/use-selected-year"
 
 type Timeframe = "year" | "month" | "all" | "custom"
 
@@ -74,9 +75,18 @@ function timeframeBounds(
   timeframe: Timeframe,
   customFrom: string,
   customTo: string,
+  // The year being explored, which is not always the year we are in. Reading
+  // the clock for this meant that picking 2025 elsewhere and arriving here
+  // showed 2026 under a heading that said "This Year".
+  selectedYear: number,
   now = new Date()
 ): { from?: Date; to?: Date } {
-  if (timeframe === "year") return { from: new Date(now.getFullYear(), 0, 1) }
+  if (timeframe === "year") {
+    return {
+      from: new Date(selectedYear, 0, 1),
+      to: new Date(selectedYear, 11, 31, 23, 59, 59),
+    }
+  }
   if (timeframe === "month")
     return { from: new Date(now.getFullYear(), now.getMonth(), 1) }
   if (timeframe === "custom") {
@@ -114,6 +124,7 @@ export function P2PPage() {
     saveEntry,
   } = useEntryData()
 
+  const [selectedYear] = useSelectedYear()
   const [timeframe, setTimeframe] = React.useState<Timeframe>("year")
   const [customFrom, setCustomFrom] = React.useState("")
   const [customTo, setCustomTo] = React.useState("")
@@ -128,7 +139,12 @@ export function P2PPage() {
   )
 
   const trades = React.useMemo(() => {
-    const { from, to } = timeframeBounds(timeframe, customFrom, customTo)
+    const { from, to } = timeframeBounds(
+      timeframe,
+      customFrom,
+      customTo,
+      selectedYear
+    )
     return entries
       .filter((entry) => {
         if (entry.type !== "p2p" || !entry.p2p) return false
@@ -138,7 +154,7 @@ export function P2PPage() {
         return true
       })
       .sort((a, b) => b.datetime.localeCompare(a.datetime))
-  }, [entries, timeframe, customFrom, customTo])
+  }, [entries, timeframe, customFrom, customTo, selectedYear])
 
   const sold = trades.filter((t) => t.p2p!.direction === "usd-to-cash")
   const bought = trades.filter((t) => t.p2p!.direction === "cash-to-usd")

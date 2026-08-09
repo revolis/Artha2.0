@@ -160,7 +160,9 @@ export function EntryFormDialog({
         if (attachment.path) uploadedHere.current.push(attachment.path)
       } catch (error) {
         setAttachError(
-          error instanceof Error ? error.message : "Could not attach that image."
+          error instanceof Error
+            ? error.message
+            : "Could not attach that image."
         )
       }
     }

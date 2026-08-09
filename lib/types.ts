@@ -115,7 +115,17 @@ export interface Goal {
   id: string
   title: string
   targetAmount: number
+  /**
+   * Stored, but every screen shows progress worked out from the entries
+   * instead. Kept so older rows still load.
+   */
   currentAmount: number
+  /**
+   * Which entries count toward this goal. Undefined counts all net income,
+   * which suits a savings or portfolio target; a category narrows it to the
+   * entries that belong to it.
+   */
+  trackCategory?: string
   currency: Currency
   startDate?: string // period start (ISO) — a goal can span days, months, a quarter, a year…
   endDate?: string // period end (ISO)

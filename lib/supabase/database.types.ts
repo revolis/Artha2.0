@@ -132,6 +132,7 @@ export type Database = {
           start_date: string | null
           target_amount: number
           title: string
+          track_category: string | null
           updated_at: string
           user_id: string
         }
@@ -147,6 +148,7 @@ export type Database = {
           start_date?: string | null
           target_amount: number
           title: string
+          track_category?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -162,6 +164,7 @@ export type Database = {
           start_date?: string | null
           target_amount?: number
           title?: string
+          track_category?: string | null
           updated_at?: string
           user_id?: string
         }

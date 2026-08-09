@@ -69,6 +69,7 @@ import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { tagStyle } from "@/lib/tag-colors"
 import { cn } from "@/lib/utils"
+import { useSelectedYear } from "@/lib/use-selected-year"
 
 type RangePreset = "all" | "7d" | "30d" | "month" | "year" | "custom"
 
@@ -85,6 +86,7 @@ function rangeBounds(
   preset: RangePreset,
   customFrom: string,
   customTo: string,
+  selectedYear: number,
   now = new Date()
 ): { from?: Date; to?: Date } {
   if (preset === "all") return {}
@@ -93,7 +95,14 @@ function rangeBounds(
     return { from: new Date(now.getTime() - 30 * 86_400_000) }
   if (preset === "month")
     return { from: new Date(now.getFullYear(), now.getMonth(), 1) }
-  if (preset === "year") return { from: new Date(now.getFullYear(), 0, 1) }
+  // The year being explored, not the year we happen to be in — otherwise
+  // picking 2025 elsewhere and filtering by "This year" here showed 2026.
+  if (preset === "year") {
+    return {
+      from: new Date(selectedYear, 0, 1),
+      to: new Date(selectedYear, 11, 31, 23, 59, 59),
+    }
+  }
   return {
     from: customFrom ? new Date(`${customFrom}T00:00:00`) : undefined,
     to: customTo ? new Date(`${customTo}T23:59:59`) : undefined,
@@ -151,6 +160,7 @@ export function EntriesPage() {
   const [typeFilter, setTypeFilter] = React.useState<string>("all")
   const [sourceFilter, setSourceFilter] = React.useState<string>("all")
   const [tagFilter, setTagFilter] = React.useState<string>("all")
+  const [selectedYear] = useSelectedYear()
   const [range, setRange] = React.useState<RangePreset>("all")
   const [customFrom, setCustomFrom] = React.useState("")
   const [customTo, setCustomTo] = React.useState("")
@@ -168,7 +178,7 @@ export function EntriesPage() {
     range !== "all"
 
   const filtered = React.useMemo(() => {
-    const { from, to } = rangeBounds(range, customFrom, customTo)
+    const { from, to } = rangeBounds(range, customFrom, customTo, selectedYear)
     const q = search.trim().toLowerCase()
     return entries
       .filter((entry) => {
@@ -206,6 +216,7 @@ export function EntriesPage() {
     range,
     customFrom,
     customTo,
+    selectedYear,
     sourceById,
   ])
 

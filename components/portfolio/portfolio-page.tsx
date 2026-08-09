@@ -37,6 +37,7 @@ import {
 import { monthBucketsForYear, toStatPoints, trendOf } from "@/lib/stat-series"
 import type { Entry } from "@/lib/types"
 import { useEntryData } from "@/lib/use-entry-data"
+import { useSelectedYear } from "@/lib/use-selected-year"
 
 type Preset = "7d" | "30d" | "90d" | "ytd" | "custom"
 
@@ -64,7 +65,9 @@ function formatDay(value: Date | string): string {
 export function PortfolioPage() {
   const { formatMoney } = useMoney()
   const { entries, sources } = useEntryData()
-  const year = new Date().getFullYear()
+  // Was pinned to the current year, so this page ignored the year you had
+  // picked everywhere else and quietly showed something different.
+  const [year] = useSelectedYear()
 
   const [preset, setPreset] = React.useState<Preset>("ytd")
   const [customFrom, setCustomFrom] = React.useState("")

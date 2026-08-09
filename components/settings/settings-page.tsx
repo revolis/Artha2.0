@@ -406,7 +406,6 @@ export function SettingsPage() {
                       Change password
                     </Button>
                   </SettingRow>
-
                 </div>
               </CardContent>
             </Card>
@@ -423,9 +422,9 @@ export function SettingsPage() {
               <CardContent className="flex flex-col gap-2">
                 <p className="rounded-2xl border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground">
                   Everything here shows in the notifications panel. The weekly
-                  summary and monthly report can also arrive by email — the
-                  rest are worked out as you use Artha, so there is nothing to
-                  send between visits.
+                  summary and monthly report can also arrive by email — the rest
+                  are worked out as you use Artha, so there is nothing to send
+                  between visits.
                 </p>
                 <div className="hidden items-center justify-end gap-8 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase sm:flex">
                   <span className="w-16 text-center">In-app</span>
@@ -848,7 +847,10 @@ export function SettingsPage() {
                       value: "USD, NPR, INR, EUR, GBP, AED",
                     },
                     { label: "Exports", value: "PDF, CSV, JSON" },
-                    { label: "Data location", value: "Your account, on Supabase" },
+                    {
+                      label: "Data location",
+                      value: "Your account, on Supabase",
+                    },
                   ].map((row) => (
                     <div
                       key={row.label}

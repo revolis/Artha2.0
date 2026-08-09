@@ -130,7 +130,9 @@ export function saveProfile(profile: UserProfile) {
     if (profile.socials.length > 0) {
       await supabase.from("social_links").insert(
         profile.socials
-          .filter((link) => link.platform.trim() !== "" || link.url.trim() !== "")
+          .filter(
+            (link) => link.platform.trim() !== "" || link.url.trim() !== ""
+          )
           .map((link, index) => ({
             id: link.id,
             platform: link.platform,

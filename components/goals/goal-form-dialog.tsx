@@ -13,6 +13,14 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { newId } from "@/lib/id"
 import type { Goal } from "@/lib/types"
@@ -64,10 +72,15 @@ function formatPeriodPreview(from?: string, to?: string): string | null {
   return `${fmt.format(new Date(`${from}T00:00:00`))} – ${fmt.format(new Date(`${to}T00:00:00`))}`
 }
 
+/** Stands in for "no category filter" — a Select cannot hold an empty value. */
+const ALL_INCOME = "__all__"
+
 interface GoalFormDialogProps {
   goal: Goal | null // null = create mode
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Categories already in use, to choose what the goal counts. */
+  categoryOptions: string[]
   onSave: (goal: Goal) => void
 }
 
@@ -75,14 +88,21 @@ export function GoalFormDialog({
   goal,
   open,
   onOpenChange,
+  categoryOptions,
   onSave,
 }: GoalFormDialogProps) {
   const [name, setName] = React.useState(goal?.title ?? "")
   const [amountText, setAmountText] = React.useState(
     goal ? String(goal.targetAmount) : ""
   )
-  const [achievedText, setAchievedText] = React.useState(
-    goal ? String(goal.currentAmount) : ""
+  const [tracks, setTracks] = React.useState(goal?.trackCategory ?? ALL_INCOME)
+
+  const trackItems = React.useMemo(
+    () => [
+      { value: ALL_INCOME, label: "All net income" },
+      ...categoryOptions.map((name) => ({ value: name, label: name })),
+    ],
+    [categoryOptions]
   )
   const [preset, setPreset] = React.useState<PeriodPreset>(detectPreset(goal))
   const [customFrom, setCustomFrom] = React.useState(goal?.startDate ?? "")
@@ -94,7 +114,6 @@ export function GoalFormDialog({
       : presetRange(preset)
 
   const targetAmount = Number(amountText.replace(/[^0-9.]/g, ""))
-  const achievedAmount = Number(achievedText.replace(/[^0-9.]/g, "")) || 0
   const validPeriod = preset !== "custom" || (!!from && !!to && from <= to)
   const canSave = name.trim().length > 0 && targetAmount > 0 && validPeriod
 
@@ -104,7 +123,9 @@ export function GoalFormDialog({
       id: goal?.id ?? newId(),
       title: name.trim(),
       targetAmount,
-      currentAmount: goal ? achievedAmount : 0,
+      // Stored for compatibility; every screen reads the derived figure.
+      currentAmount: 0,
+      trackCategory: tracks === ALL_INCOME ? undefined : tracks,
       currency: goal?.currency ?? "USD",
       startDate: from,
       endDate: to,
@@ -139,30 +160,47 @@ export function GoalFormDialog({
               onChange={(e) => setName(e.target.value)}
             />
           </Field>
-          <div className="grid grid-cols-2 gap-4">
-            <Field>
-              <FieldLabel htmlFor="goal-amount">Target Amount</FieldLabel>
-              <Input
-                id="goal-amount"
-                placeholder="$15,000"
-                inputMode="decimal"
-                value={amountText}
-                onChange={(e) => setAmountText(e.target.value)}
-              />
-            </Field>
-            {goal ? (
-              <Field>
-                <FieldLabel htmlFor="goal-achieved">Achieved Amount</FieldLabel>
-                <Input
-                  id="goal-achieved"
-                  placeholder="$0"
-                  inputMode="decimal"
-                  value={achievedText}
-                  onChange={(e) => setAchievedText(e.target.value)}
-                />
-              </Field>
-            ) : null}
-          </div>
+          {/* No "achieved" field any more: progress is added up from the
+              entries inside the period below, so there is nothing to keep in
+              step by hand — and the field only appeared when editing, which
+              left every new goal sitting at zero until someone noticed. */}
+          <Field>
+            <FieldLabel htmlFor="goal-amount">Target Amount</FieldLabel>
+            <Input
+              id="goal-amount"
+              placeholder="$15,000"
+              inputMode="decimal"
+              value={amountText}
+              onChange={(e) => setAmountText(e.target.value)}
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="goal-tracks">Counts</FieldLabel>
+            <Select
+              items={trackItems}
+              value={tracks}
+              onValueChange={(value) => setTracks(value as string)}
+            >
+              <SelectTrigger id="goal-tracks">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {trackItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {tracks === ALL_INCOME
+                ? "Counts what you came out ahead by: income less loss, fees and tax."
+                : `Counts how much ${tracks} adds up to in the period.`}
+            </p>
+          </Field>
           <Field>
             <FieldLabel>Target Date</FieldLabel>
             <ToggleGroup

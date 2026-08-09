@@ -27,6 +27,8 @@ import {
 } from "@/lib/mock-data"
 import { goalCoversYear } from "@/lib/goals"
 import { useSettings } from "@/lib/use-settings"
+import { CURRENT_YEAR, useSelectedYear } from "@/lib/use-selected-year"
+import { useGoalsWithProgress } from "@/lib/use-goal-progress"
 import {
   buildDualDailySeries,
   getMonthOverMonth,
@@ -40,10 +42,10 @@ import { useDashboardYears } from "@/lib/use-years"
 import type { Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-const CURRENT_YEAR = new Date().getFullYear()
-
 export function DashboardPage() {
-  const [selectedYear, setSelectedYear] = React.useState(CURRENT_YEAR)
+  // Shared with every other page, and mirrored into the URL, so switching
+  // year here survives both a navigation and a refresh.
+  const [selectedYear, setSelectedYear] = useSelectedYear()
   // Subscribing re-renders every amount when the display currency changes.
   useSettings()
 
@@ -106,9 +108,11 @@ export function DashboardPage() {
   }
   const avgMonthlyIncomeUsd = getAvgMonthlyIncome(entries, selectedYear)
   const { goals } = useGoals()
+  // Progress read off the ledger, same as the Goals page.
+  const goalsWithProgress = useGoalsWithProgress(goals)
   // Pinned goals belonging to the year on screen. Without the year check the
   // same cards followed you from tab to tab, whichever year you were looking at.
-  const pinnedGoals = goals.filter(
+  const pinnedGoals = goalsWithProgress.filter(
     (goal) => goal.showOnDashboard && goalCoversYear(goal, selectedYear)
   )
 

@@ -63,6 +63,7 @@ import { useGoals } from "@/lib/use-goals"
 import { formatMemberSince, useProfile } from "@/lib/use-profile"
 import type { Entry } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { CURRENT_YEAR, useSelectedYear } from "@/lib/use-selected-year"
 
 const INCOME_COLOR = "var(--success)"
 const EXPENSE_COLOR = "var(--destructive)"
@@ -310,8 +311,9 @@ export function AnalyticsPage() {
   const { entries, sources } = useEntryData()
   const { goals } = useGoals()
   const { profile } = useProfile()
-  const currentYear = new Date().getFullYear()
-  const [year, setYear] = React.useState(currentYear)
+  // Shared with the dashboard and the rest, so the year follows you here.
+  const currentYear = CURRENT_YEAR
+  const [year, setYear] = useSelectedYear()
 
   const yearItems = React.useMemo(() => {
     const years = new Set(entries.map(getEntryYear))

@@ -10,6 +10,7 @@ import { resetAllStores } from "@/lib/data/stores"
 import { clearSignedUrls } from "@/lib/storage"
 import { resetNotificationReads } from "@/lib/use-notifications"
 import { resetProfile } from "@/lib/use-profile"
+import { resetSelectedYear } from "@/lib/use-selected-year"
 import { resetSettings } from "@/lib/use-settings"
 import { resetYears } from "@/lib/use-years"
 
@@ -19,6 +20,7 @@ export function clearAllData() {
   resetProfile()
   resetYears()
   resetNotificationReads()
+  resetSelectedYear()
   // Signed links outlive the session that made them, so a shared machine could
   // otherwise still load the previous account's photos and attachments.
   clearSignedUrls()
