@@ -3,10 +3,7 @@
 import { useRouter } from "next/navigation"
 import { ArrowUpRight } from "@/components/icons"
 
-import {
-  getAvatarPreset,
-  PresetAvatar,
-} from "@/components/profile/avatar-presets"
+import { ProfileAvatar } from "@/components/profile/profile-avatar"
 import { SocialIcon, socialLabel } from "@/components/profile/social-icons"
 import {
   Tooltip,
@@ -95,21 +92,11 @@ export function ProfileCard({
         {/* Avatar beside the name rather than above it — half the height. */}
         <div className="flex items-center gap-3">
           <div className="size-11 shrink-0 rounded-full border border-border/60 p-0.5">
-            {profile.avatarUrl ? (
-              // Data URL from the local file picker, so next/image adds nothing
-              // but configuration.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profile.avatarUrl}
-                alt=""
-                className="size-full rounded-full object-cover"
-              />
-            ) : (
-              <PresetAvatar
-                preset={getAvatarPreset(profile.avatarId)}
-                className="size-full rounded-full"
-              />
-            )}
+            <ProfileAvatar
+              avatarPath={profile.avatarPath}
+              avatarId={profile.avatarId}
+              className="size-full rounded-full"
+            />
           </div>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold text-card-foreground">

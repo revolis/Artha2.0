@@ -47,8 +47,8 @@ export interface UserProfile {
   username: string
   name: string
   email: string
-  /** Uploaded photo as a data URL. Takes priority over avatarId. */
-  avatarUrl?: string
+  /** Object path in the avatars bucket. Takes priority over avatarId. */
+  avatarPath?: string
   /** Id of a built-in preset avatar when no photo is uploaded. */
   avatarId?: string
   bio?: string

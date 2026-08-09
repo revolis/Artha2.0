@@ -9,6 +9,7 @@
 
 import * as React from "react"
 
+import { removeAvatar } from "@/lib/avatars"
 import { profileFromRow, profileToRow } from "@/lib/data/mappers"
 import { createClient } from "@/lib/supabase/client"
 import type { UserProfile } from "@/lib/types"
@@ -115,6 +116,14 @@ export function saveProfile(profile: UserProfile) {
       return
     }
 
+    // The photo that was just replaced is now unreachable. Deleted only after
+    // the write succeeds, so a failed save does not destroy the picture the
+    // profile has been rolled back to.
+    const replaced = previous.profile.avatarPath
+    if (replaced && replaced !== profile.avatarPath) {
+      void removeAvatar(replaced)
+    }
+
     // Replace the links rather than work out which moved: there are only ever
     // a handful, and position is part of what is being saved.
     await supabase.from("social_links").delete().eq("user_id", id)
@@ -184,7 +193,7 @@ export function getProfileCompletion(profile: UserProfile) {
     { label: "Email", done: profile.email.trim().length > 0 },
     {
       label: "Profile photo",
-      done: Boolean(profile.avatarUrl || profile.avatarId),
+      done: Boolean(profile.avatarPath || profile.avatarId),
     },
     { label: "Bio", done: (profile.bio ?? "").trim().length > 0 },
     { label: "Location", done: (profile.location ?? "").trim().length > 0 },

@@ -6,8 +6,8 @@
 // signing out has to reach each one. Kept in its own file so lib/auth-flow.ts
 // does not have to import the whole data layer.
 
-import { clearAttachmentUrls } from "@/lib/attachments"
 import { resetAllStores } from "@/lib/data/stores"
+import { clearSignedUrls } from "@/lib/storage"
 import { resetNotificationReads } from "@/lib/use-notifications"
 import { resetProfile } from "@/lib/use-profile"
 import { resetSettings } from "@/lib/use-settings"
@@ -20,6 +20,6 @@ export function clearAllData() {
   resetYears()
   resetNotificationReads()
   // Signed links outlive the session that made them, so a shared machine could
-  // otherwise still load the previous account's attachment images.
-  clearAttachmentUrls()
+  // otherwise still load the previous account's photos and attachments.
+  clearSignedUrls()
 }

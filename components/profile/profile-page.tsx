@@ -13,9 +13,9 @@ import {
 
 import {
   AVATAR_PRESETS,
-  getAvatarPreset,
   PresetAvatar,
 } from "@/components/profile/avatar-presets"
+import { ProfileAvatar } from "@/components/profile/profile-avatar"
 import { SocialIcon } from "@/components/profile/social-icons"
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
@@ -47,6 +47,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useEntryData } from "@/lib/use-entry-data"
+import { removeAvatar, uploadAvatar } from "@/lib/avatars"
 import { useGoals } from "@/lib/use-goals"
 import {
   formatMemberSince,
@@ -83,7 +84,6 @@ const SOCIAL_SUGGESTIONS = [
   "Reddit",
 ]
 
-const MAX_AVATAR_PX = 256
 const BIO_LIMIT = 160
 
 const emptySubscribe = () => () => {}
@@ -96,46 +96,6 @@ function useMounted() {
   )
 }
 
-/**
- * Shrinks an uploaded image to a square thumbnail before it is stored.
- * Full-size photos as data URLs blow past the localStorage quota.
- */
-function readImageAsThumbnail(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onerror = () => reject(new Error("Could not read that file."))
-    reader.onload = () => {
-      const image = new window.Image()
-      image.onerror = () => reject(new Error("That file isn't a valid image."))
-      image.onload = () => {
-        const size = Math.min(image.width, image.height)
-        const canvas = document.createElement("canvas")
-        canvas.width = MAX_AVATAR_PX
-        canvas.height = MAX_AVATAR_PX
-        const context = canvas.getContext("2d")
-        if (!context) {
-          reject(new Error("Could not process that image."))
-          return
-        }
-        context.drawImage(
-          image,
-          (image.width - size) / 2,
-          (image.height - size) / 2,
-          size,
-          size,
-          0,
-          0,
-          MAX_AVATAR_PX,
-          MAX_AVATAR_PX
-        )
-        resolve(canvas.toDataURL("image/jpeg", 0.85))
-      }
-      image.src = String(reader.result)
-    }
-    reader.readAsDataURL(file)
-  })
-}
-
 function ProfileForm({ profile }: { profile: UserProfile }) {
   const { saveProfile } = useProfile()
   const { entries, sources } = useEntryData()
@@ -143,9 +103,15 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
 
   const [draft, setDraft] = React.useState<UserProfile>(profile)
   const [uploadError, setUploadError] = React.useState<string | null>(null)
+  const [uploading, setUploading] = React.useState(false)
   const [copied, setCopied] = React.useState(false)
   const [saved, setSaved] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  // A photo goes to Storage as soon as it is picked, so that the preview shows
+  // the stored image rather than a copy of it. Anything uploaded here that is
+  // not saved has to be deleted, or discarding leaves the file behind.
+  const uploadedHere = React.useRef<string[]>([])
 
   const usernameError = validateUsername(draft.username)
   const completion = getProfileCompletion(draft)
@@ -171,21 +137,43 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
     event.target.value = ""
     if (!file) return
     setUploadError(null)
+    setUploading(true)
     try {
-      const dataUrl = await readImageAsThumbnail(file)
-      setDraft((prev) => ({ ...prev, avatarUrl: dataUrl }))
+      const path = await uploadAvatar(file)
+      uploadedHere.current.push(path)
+      setDraft((prev) => ({ ...prev, avatarPath: path }))
       setSaved(false)
     } catch (error) {
       setUploadError(
         error instanceof Error ? error.message : "Could not use that image."
       )
+    } finally {
+      setUploading(false)
     }
   }
 
   function handleSave() {
     if (usernameError) return
     saveProfile(draft)
+    // Whatever was uploaded and then replaced before saving is now unreachable.
+    // The photo being saved is spared; the previous one is dealt with by
+    // saveProfile, which is the only place that knows what it replaced.
+    const abandoned = uploadedHere.current.filter(
+      (path) => path !== draft.avatarPath
+    )
+    uploadedHere.current = draft.avatarPath ? [draft.avatarPath] : []
+    for (const path of abandoned) void removeAvatar(path)
     setSaved(true)
+  }
+
+  /** Puts the form back to the saved profile, throwing away unsaved uploads. */
+  function handleDiscard() {
+    const abandoned = uploadedHere.current.filter(
+      (path) => path !== profile.avatarPath
+    )
+    uploadedHere.current = []
+    for (const path of abandoned) void removeAvatar(path)
+    setDraft(profile)
   }
 
   async function copyProfileUrl() {
@@ -220,7 +208,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
         </div>
         <div className="flex items-center gap-2">
           {dirty ? (
-            <Button variant="ghost" onClick={() => setDraft(profile)}>
+            <Button variant="ghost" onClick={handleDiscard}>
               Discard
             </Button>
           ) : null}
@@ -240,35 +228,26 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
             <div className="flex items-center gap-4">
-              {draft.avatarUrl ? (
-                // Data URL from the local file picker, so next/image would add
-                // nothing but configuration.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={draft.avatarUrl}
-                  alt=""
-                  className="size-20 rounded-full object-cover ring-2 ring-border"
-                />
-              ) : (
-                <PresetAvatar
-                  preset={getAvatarPreset(draft.avatarId)}
-                  className="size-20 rounded-full ring-2 ring-border"
-                />
-              )}
+              <ProfileAvatar
+                avatarPath={draft.avatarPath}
+                avatarId={draft.avatarId}
+                className="size-20 rounded-full ring-2 ring-border"
+              />
               <div className="flex flex-col gap-2">
                 <Button
                   variant="outline"
                   size="sm"
+                  disabled={uploading}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload data-icon="inline-start" />
-                  Upload photo
+                  {uploading ? "Uploading…" : "Upload photo"}
                 </Button>
-                {draft.avatarUrl ? (
+                {draft.avatarPath ? (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => update("avatarUrl", undefined)}
+                    onClick={() => update("avatarPath", undefined)}
                   >
                     <Trash2 data-icon="inline-start" />
                     Remove photo
@@ -298,7 +277,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
               <div className="grid grid-cols-6 gap-2">
                 {AVATAR_PRESETS.map((preset) => {
                   const selected =
-                    !draft.avatarUrl && draft.avatarId === preset.id
+                    !draft.avatarPath && draft.avatarId === preset.id
                   return (
                     <button
                       key={preset.id}
@@ -309,7 +288,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
                         setDraft((prev) => ({
                           ...prev,
                           avatarId: preset.id,
-                          avatarUrl: undefined,
+                          avatarPath: undefined,
                         }))
                         setSaved(false)
                       }}
@@ -326,7 +305,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
                   )
                 })}
               </div>
-              {draft.avatarUrl ? (
+              {draft.avatarPath ? (
                 <p className="text-xs text-muted-foreground">
                   Remove your photo to use one of these instead.
                 </p>

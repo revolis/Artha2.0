@@ -13,10 +13,7 @@ import { NavSearch } from "@/components/layout/nav-search"
 import { NotificationsMenu } from "@/components/layout/notifications-menu"
 import { PrivacyToggle } from "@/components/layout/privacy-toggle"
 import { ThemeToggler } from "@/components/layout/theme-toggler"
-import {
-  getAvatarPreset,
-  PresetAvatar,
-} from "@/components/profile/avatar-presets"
+import { ProfileAvatar } from "@/components/profile/profile-avatar"
 import { ProfileCard } from "@/components/profile/profile-card"
 import {
   Popover,
@@ -107,20 +104,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     />
                   }
                 >
-                  {profile.avatarUrl ? (
-                    // Data URL from the local file picker.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={profile.avatarUrl}
-                      alt=""
-                      className="size-9 rounded-full object-cover"
-                    />
-                  ) : (
-                    <PresetAvatar
-                      preset={getAvatarPreset(profile.avatarId)}
-                      className="size-9 rounded-full"
-                    />
-                  )}
+                  <ProfileAvatar
+                    avatarPath={profile.avatarPath}
+                    avatarId={profile.avatarId}
+                    className="size-9 rounded-full"
+                  />
                 </PopoverTrigger>
                 <PopoverContent
                   align="end"
