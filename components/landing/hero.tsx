@@ -1,10 +1,8 @@
 "use client"
 
-import Link from "next/link"
-
-import { ArrowRight, Sparkles } from "@/components/icons"
+import { Sparkles } from "@/components/icons"
+import { LiveDemoButton } from "@/components/landing/live-demo-button"
 import { Reveal } from "@/components/landing/reveal"
-import { Button } from "@/components/ui/button"
 import { DotPattern } from "@/components/ui/dot-pattern"
 import { cn } from "@/lib/utils"
 
@@ -60,24 +58,12 @@ export function Hero() {
           </p>
         </Reveal>
 
+        {/* One call to action. "See it in action" sat beside this and pointed
+            further down the same page, which asked the reader to choose
+            between seeing the product and seeing a picture of it. */}
         <Reveal delay={440}>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button
-              size="lg"
-              render={<Link href="/demo" />}
-              nativeButton={false}
-            >
-              Explore the live demo
-              <ArrowRight data-icon="inline-end" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              render={<a href="#dashboard" />}
-              nativeButton={false}
-            >
-              See it in action
-            </Button>
+            <LiveDemoButton />
           </div>
         </Reveal>
 

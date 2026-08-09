@@ -10,14 +10,36 @@
 // Shown only to the demo account, so nobody signed into their own ledger ever
 // sees it.
 
-import Link from "next/link"
+import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { signOut } from "@/lib/auth-flow"
 import { DEMO_USER_ID } from "@/lib/demo"
 import { useProfile } from "@/lib/use-profile"
 
 export function DemoBanner() {
   const { profile } = useProfile()
+  const [leaving, setLeaving] = React.useState(false)
+
+  /**
+   * Leaves the demo, then goes to sign up.
+   *
+   * This used to be a plain link to /signup, which did nothing visible: the
+   * middleware sends anyone already signed in away from the sign-up screen,
+   * and a demo visitor is signed in — as the demo. So the click made a round
+   * trip back to the dashboard and looked like a dead button. Signing out
+   * first is what the button was always claiming to do.
+   */
+  async function leaveDemo() {
+    setLeaving(true)
+    try {
+      await signOut()
+    } finally {
+      // A full navigation so the middleware sees the cleared cookie.
+      window.location.href = "/signup"
+    }
+  }
+
   if (profile.id !== DEMO_USER_ID) return null
 
   return (
@@ -29,8 +51,8 @@ export function DemoBanner() {
         Sample entries across three years — edit anything you like, it resets
         overnight.
       </p>
-      <Button size="sm" render={<Link href="/signup" />} nativeButton={false}>
-        Create your own
+      <Button size="sm" disabled={leaving} onClick={leaveDemo}>
+        {leaving ? "Leaving demo…" : "Create your own"}
       </Button>
     </div>
   )

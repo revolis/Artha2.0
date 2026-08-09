@@ -5,7 +5,6 @@ import Link from "next/link"
 
 import { ArthaMark } from "@/components/layout/artha-mark"
 import { ThemeToggler } from "@/components/layout/theme-toggler"
-import { Button } from "@/components/ui/button"
 import { GlowBorderButton } from "@/components/ui/glow-border-button"
 import TextRoll from "@/components/ui/text-roll"
 import { cn } from "@/lib/utils"
@@ -60,17 +59,11 @@ export function LandingNav() {
           ))}
         </div>
 
+        {/* The theme toggle and one button. A ghost "Live demo" sat here too,
+            competing with the lit one beside it and repeating what the hero
+            already offers more prominently. */}
         <div className="ml-auto flex items-center gap-2 lg:ml-0">
           <ThemeToggler />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden sm:inline-flex"
-            render={<Link href="/demo" />}
-            nativeButton={false}
-          >
-            Live demo
-          </Button>
           {/* Log in only. Signing up is the page's closing ask, not something
               to press before reading anything. */}
           <GlowBorderButton render={<Link href="/login" />}>

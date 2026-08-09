@@ -108,6 +108,10 @@
   --shadow-lift: 0px 12px 28px -14px oklch(0.178 0 0 / 0.16);
   --animate-fade-in: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   --animate-shimmer: shimmer 1.6s linear infinite;
+  /* The halo behind the Live demo button. Long cycle on purpose: the ring
+     expands and fades in the first second and the rest is stillness, because
+     something that never stops moving stops being noticed. */
+  --animate-demo-halo: demo-halo 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -117,6 +121,21 @@
   @keyframes shimmer {
     to {
       background-position: -200% 0;
+    }
+  }
+  @keyframes demo-halo {
+    0% {
+      opacity: 0.45;
+      transform: scale(1);
+    }
+    /* Fully faded well before the cycle ends, leaving a deliberate pause. */
+    35% {
+      opacity: 0;
+      transform: scale(1.35);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.35);
     }
   }
 }
