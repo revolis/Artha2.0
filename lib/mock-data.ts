@@ -27,15 +27,15 @@ export const mockSettings: AppSettings = {
   language: "en",
   timezone: "Asia/Kathmandu",
   timeFormat: "12h",
-  // Email is off across the board, matching the column default. Two of these
-  // used to default to true, from a time when the switches did nothing — which
-  // would have meant the first working schedule mailing people who had never
-  // agreed to hear from it. Turning email on is a decision, so it is made in
-  // Settings and nowhere else.
+  // Matches the settings column default. The monthly statement is the one
+  // email that arrives without being asked for — a summary of your own month,
+  // to an address verified at sign-up, with a switch in Settings that turns it
+  // off. The weekly one stays opt-in: twelve a year is a service, fifty-two is
+  // a habit someone should choose.
   notifications: {
     goalMilestones: { inApp: true, email: false },
     weeklySummary: { inApp: true, email: false },
-    monthlyReport: { inApp: true, email: false },
+    monthlyReport: { inApp: true, email: true },
     largeEntries: { inApp: true, email: false },
     rateSync: { inApp: false, email: false },
     productNews: { inApp: false, email: false },
