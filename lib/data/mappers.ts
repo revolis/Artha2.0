@@ -165,7 +165,6 @@ export function settingsFromRow(
     privacyMode: row.privacy_mode,
     loginMethod: row.login_method as "google" | "password",
     hasPassword: row.has_password,
-    twoFactor: row.two_factor,
   }
 }
 
@@ -191,7 +190,6 @@ export function settingsToRow(settings: AppSettings) {
     privacy_mode: settings.privacyMode,
     login_method: settings.loginMethod,
     has_password: settings.hasPassword,
-    two_factor: settings.twoFactor,
   }
 }
 

@@ -38,7 +38,6 @@ export const mockSettings: AppSettings = {
   privacyMode: false,
   loginMethod: "google",
   hasPassword: false,
-  twoFactor: false,
 }
 
 // Display currency, privacy and the active rate table used to live here as

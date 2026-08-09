@@ -167,6 +167,42 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          body: string
+          created_at: string
+          emailed_at: string | null
+          id: string
+          reply_to: string
+          source: string
+          subject: string | null
+          topic: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          emailed_at?: string | null
+          id?: string
+          reply_to: string
+          source: string
+          subject?: string | null
+          topic: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          emailed_at?: string | null
+          id?: string
+          reply_to?: string
+          source?: string
+          subject?: string | null
+          topic?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notification_reads: {
         Row: { notification_id: string; read_at: string; user_id: string }
         Insert: { notification_id: string; read_at?: string; user_id?: string }
@@ -228,7 +264,6 @@ export type Database = {
           privacy_mode: boolean
           time_format: string
           timezone: string
-          two_factor: boolean
           updated_at: string
           user_id: string
         }
@@ -241,7 +276,6 @@ export type Database = {
           privacy_mode?: boolean
           time_format?: string
           timezone?: string
-          two_factor?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -254,7 +288,6 @@ export type Database = {
           privacy_mode?: boolean
           time_format?: string
           timezone?: string
-          two_factor?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -319,7 +352,26 @@ export type Database = {
       }
     }
     Views: { [_ in never]: never }
-    Functions: { [_ in never]: never }
+    Functions: {
+      dispatch_notification_emails: {
+        Args: { kind: string }
+        Returns: undefined
+      }
+      notification_digest: {
+        Args: { kind: string }
+        Returns: {
+          display_name: string
+          email: string
+          entry_count: number
+          income: number
+          net: number
+          outgoings: number
+          period_end: string
+          period_start: string
+          user_id: string
+        }[]
+      }
+    }
     Enums: { [_ in never]: never }
     CompositeTypes: { [_ in never]: never }
   }

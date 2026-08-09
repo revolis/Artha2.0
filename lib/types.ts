@@ -31,7 +31,6 @@ export interface AppSettings {
   /** How the account was created — drives the security recommendations. */
   loginMethod: "google" | "password"
   hasPassword: boolean
-  twoFactor: boolean
 }
 
 export interface SocialLink {

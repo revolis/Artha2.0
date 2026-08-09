@@ -67,6 +67,46 @@ short-lived signed link when a picture is actually shown.
 emails. They are pasted into the Supabase dashboard under
 Authentication → Email Templates; they are not applied automatically.
 
+## Edge functions
+
+Three, all deployed to Supabase rather than Vercel, because each needs a key
+that must not reach a browser.
+
+| Function | Called by | Why it is server-side |
+| --- | --- | --- |
+| `delete-account` | The Danger zone in Settings | Deleting a user needs the service role key. It only ever deletes the caller — the id comes from their own verified token, never the request. |
+| `send-message` | Contact and feedback forms | Holds the mail provider's key. The only endpoint open to signed-out visitors, so it validates its input and caps messages per address and per hour. |
+| `send-notification-emails` | `pg_cron`, weekly and monthly | Reads every subscriber's address, so it stays behind a service-role call. |
+
+### Outbound email
+
+Account email (sign-up, password, address changes) goes through the SMTP
+settings under Authentication. Everything else — contact, feedback, summaries —
+goes through the Resend API and needs one secret:
+
+```bash
+supabase secrets set RESEND_API_KEY=re_your_key
+```
+
+Optionally `MESSAGES_FROM` (default `Artha <noreply@0xr8n.me>`) and
+`MESSAGES_TO` (where contact mail lands).
+
+Without the key nothing breaks: messages are still stored in the `messages`
+table and the summary job reports that it sent nothing.
+
+### Scheduled email
+
+`pg_cron` runs the weekly summary on Mondays at 08:00 UTC and the monthly
+report on the 1st at 08:05 UTC. Both call `send-notification-emails`, which
+needs a service role key — read from Vault at run time rather than written into
+the schedule, where anyone able to read `cron.job` could read the key:
+
+```sql
+select vault.create_secret('<service role key>', 'service_role_key');
+```
+
+Until that secret exists the job runs and quietly does nothing.
+
 ## Deploying
 
 Any host that runs Next.js works. On Vercel:

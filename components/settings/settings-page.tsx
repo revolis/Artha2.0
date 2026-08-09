@@ -79,6 +79,8 @@ import {
   sendPasswordChangeCode,
 } from "@/lib/account"
 import { signOut } from "@/lib/auth-flow"
+import { clearAllData } from "@/lib/data/clear"
+import { deleteAccount, sendMessage } from "@/lib/messages"
 import {
   CURRENCY_OPTIONS,
   LANGUAGE_OPTIONS,
@@ -176,6 +178,54 @@ export function SettingsPage() {
   const [feedbackTopic, setFeedbackTopic] = React.useState("idea")
   const [feedbackText, setFeedbackText] = React.useState("")
   const [feedbackSent, setFeedbackSent] = React.useState(false)
+  const [feedbackError, setFeedbackError] = React.useState<string | null>(null)
+  const [feedbackSending, setFeedbackSending] = React.useState(false)
+
+  const [deleting, setDeleting] = React.useState(false)
+  const [deleteError, setDeleteError] = React.useState<string | null>(null)
+
+  async function handleSendFeedback() {
+    setFeedbackSending(true)
+    setFeedbackError(null)
+    try {
+      await sendMessage({
+        source: "feedback",
+        topic: feedbackTopic,
+        replyTo: profile.email,
+        body: feedbackText,
+      })
+      setFeedbackText("")
+      setFeedbackSent(true)
+    } catch (cause) {
+      setFeedbackError(
+        cause instanceof Error ? cause.message : "Could not send that."
+      )
+    } finally {
+      setFeedbackSending(false)
+    }
+  }
+
+  /**
+   * Deletes the account for good, then leaves.
+   *
+   * No sign-out call afterwards: the session belongs to a user who no longer
+   * exists, so a hard reload to the landing page is both simpler and surer
+   * than asking the auth server about someone it has just forgotten.
+   */
+  async function handleDeleteAccount() {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await deleteAccount()
+      clearAllData()
+      window.location.href = "/"
+    } catch (cause) {
+      setDeleteError(
+        cause instanceof Error ? cause.message : "Could not delete the account."
+      )
+      setDeleting(false)
+    }
+  }
 
   /** Asks Supabase to mail a code, then opens the dialog that consumes it. */
   async function startPasswordChange() {
@@ -357,17 +407,6 @@ export function SettingsPage() {
                     </Button>
                   </SettingRow>
 
-                  {/* Disabled rather than removed: the switch saved a setting
-                      that nothing read, so turning it on announced a
-                      protection that was never applied. Better to show it as
-                      not built yet than to have someone believe their account
-                      asks for a code when it does not. */}
-                  <SettingRow
-                    title="Two-factor authentication"
-                    description="Not available yet. Sign-in uses your password or your Google account."
-                  >
-                    <Switch checked={false} disabled />
-                  </SettingRow>
                 </div>
               </CardContent>
             </Card>
@@ -378,18 +417,15 @@ export function SettingsPage() {
               <CardHeader>
                 <CardTitle>Notifications</CardTitle>
                 <CardDescription>
-                  Choose what reaches you in the notifications panel.
+                  Choose what reaches you, and where.
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-2">
-                {/* The email column is switched off at the source. Artha only
-                    sends account email — sign-up, password, address changes —
-                    and nothing sends a notification, so leaving these live let
-                    someone turn on a weekly summary that was never coming.
-                    The saved values are kept for when it is built. */}
                 <p className="rounded-2xl border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground">
-                  Email notifications are not built yet — only account emails
-                  are sent today. These arrive in the notifications panel.
+                  Everything here shows in the notifications panel. The weekly
+                  summary and monthly report can also arrive by email — the
+                  rest are worked out as you use Artha, so there is nothing to
+                  send between visits.
                 </p>
                 <div className="hidden items-center justify-end gap-8 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase sm:flex">
                   <span className="w-16 text-center">In-app</span>
@@ -421,9 +457,19 @@ export function SettingsPage() {
                         </div>
                         <div className="flex w-16 justify-center">
                           <Switch
-                            aria-label={`${item.title} email — not available yet`}
-                            checked={false}
-                            disabled
+                            aria-label={
+                              item.emailable
+                                ? `${item.title} email`
+                                : `${item.title} email — not sent by email`
+                            }
+                            checked={
+                              item.emailable &&
+                              settings.notifications[item.key].email
+                            }
+                            disabled={!item.emailable}
+                            onCheckedChange={(checked) =>
+                              setNotification(item.key, "email", checked)
+                            }
                           />
                         </div>
                       </div>
@@ -637,25 +683,27 @@ export function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
-                {/* This form has no delivery behind it. It used to answer
-                    "that has been noted", which was not true of anything —
-                    the message went nowhere. The Contact page says the same
-                    thing honestly, and so does this. */}
                 {feedbackSent ? (
-                  <div className="flex animate-in items-start gap-2 rounded-2xl border border-dashed bg-muted/40 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
-                    <TriangleAlert className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <div className="flex animate-in items-center gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
+                    <BadgeCheck className="size-4 shrink-0 text-success" />
+                    Thanks — that has arrived. I read every message.
+                  </div>
+                ) : null}
+
+                {feedbackError ? (
+                  <div className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm">
+                    <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
                     <div className="flex flex-col gap-1">
-                      <span className="font-medium">Not delivered yet</span>
+                      <span className="font-medium">Not sent</span>
                       <span className="text-muted-foreground">
-                        This form is waiting on a backend, so nothing has
-                        actually been sent. Email{" "}
+                        {feedbackError} You can always email{" "}
                         <a
                           href={mailtoLink("Artha feedback")}
                           className="font-medium text-foreground underline underline-offset-4"
                         >
                           {CONTACT.email}
-                        </a>{" "}
-                        and it will reach me today.
+                        </a>
+                        .
                       </span>
                     </div>
                   </div>
@@ -707,14 +755,11 @@ export function SettingsPage() {
 
                 <Button
                   className="w-fit"
-                  disabled={feedbackText.trim().length < 5}
-                  onClick={() => {
-                    setFeedbackText("")
-                    setFeedbackSent(true)
-                  }}
+                  disabled={feedbackText.trim().length < 5 || feedbackSending}
+                  onClick={handleSendFeedback}
                 >
                   <Send data-icon="inline-start" />
-                  Send feedback
+                  {feedbackSending ? "Sending…" : "Send feedback"}
                 </Button>
               </CardContent>
             </Card>
@@ -782,7 +827,7 @@ export function SettingsPage() {
                       {SITE.name}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      Version 0.1 · Design preview
+                      Version {SITE.version}
                     </span>
                   </div>
                 </div>
@@ -956,25 +1001,26 @@ export function SettingsPage() {
             </Button>
           </div>
 
-          {/* Erasing an account is the one thing here that cannot be done from
-              the browser: it needs a privileged key, and a key that can delete
-              any account has no business being shipped to everyone. Until that
-              runs on a server, this says so rather than showing a button that
-              reports success and deletes nothing. */}
           <p className="text-sm text-muted-foreground">
-            Deletion is handled by hand for now. Email{" "}
-            <a
-              href={mailtoLink("Delete my Artha account")}
-              className="font-medium text-foreground underline underline-offset-4"
-            >
-              {CONTACT.email}
-            </a>{" "}
-            from <span className="font-medium">{profile.email}</span> and your
-            account and everything in it will be removed.
+            This removes your account, every entry, goal, source and image, and
+            the files behind them. Nothing is kept and nothing can be restored.
           </p>
 
+          {deleteError ? (
+            <p className="text-sm text-destructive">{deleteError}</p>
+          ) : null}
+
           <DialogFooter>
-            <Button onClick={() => setDeleteOpen(false)}>Keep my account</Button>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+              Keep my account
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={handleDeleteAccount}
+            >
+              {deleting ? "Deleting…" : "Delete everything"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

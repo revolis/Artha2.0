@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
+  BadgeCheck,
   TriangleAlert,
   Bug,
   Clock,
@@ -35,6 +36,8 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useProfile } from "@/lib/use-profile"
+import { CONTACT } from "@/lib/contact"
+import { sendMessage } from "@/lib/messages"
 import { cn } from "@/lib/utils"
 
 const TOPICS = [
@@ -54,6 +57,8 @@ export function ContactPage() {
   const [subject, setSubject] = React.useState("")
   const [message, setMessage] = React.useState("")
   const [sent, setSent] = React.useState(false)
+  const [sending, setSending] = React.useState(false)
+  const [sendError, setSendError] = React.useState<string | null>(null)
 
   // The signed-in address arrives from the database a moment after this form
   // mounts, so it is filled in when it lands. Once the visitor has typed an
@@ -63,8 +68,33 @@ export function ContactPage() {
     if (!typedOwnAddress.current && profile.email) setReplyTo(profile.email)
   }, [profile.email])
 
-  const canSend = message.trim().length >= 10 && replyTo.includes("@")
+  const canSend =
+    message.trim().length >= 10 && replyTo.includes("@") && !sending
   const selected = TOPICS.find((item) => item.value === topic)
+
+  async function handleSend() {
+    if (!canSend) return
+    setSending(true)
+    setSendError(null)
+    try {
+      await sendMessage({
+        source: "contact",
+        topic,
+        replyTo,
+        subject,
+        body: message,
+      })
+      setMessage("")
+      setSubject("")
+      setSent(true)
+    } catch (cause) {
+      setSendError(
+        cause instanceof Error ? cause.message : "Could not send that message."
+      )
+    } finally {
+      setSending(false)
+    }
+  }
 
   return (
     <AppShell>
@@ -84,16 +114,26 @@ export function ContactPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            {/* Not the success treatment: a green tick over the words "Not
-                delivered yet" reads as though it went through. */}
             {sent ? (
-              <div className="flex animate-in items-start gap-2 rounded-2xl border border-dashed bg-muted/40 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
-                <TriangleAlert className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <div className="flex animate-in items-start gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
+                <BadgeCheck className="mt-0.5 size-4 shrink-0 text-success" />
                 <div className="flex flex-col gap-1">
-                  <span className="font-medium">Not delivered yet</span>
+                  <span className="font-medium">Message sent</span>
                   <span className="text-muted-foreground">
-                    This form is waiting on the backend, so nothing has actually
-                    been sent. Use email or Telegram and it will reach me today.
+                    It has arrived. I&apos;ll reply to {replyTo} when there is
+                    something useful to say.
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
+            {sendError ? (
+              <div className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm">
+                <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
+                <div className="flex flex-col gap-1">
+                  <span className="font-medium">Not sent</span>
+                  <span className="text-muted-foreground">
+                    {sendError} You can always reach me at {CONTACT.email}.
                   </span>
                 </div>
               </div>
@@ -200,17 +240,9 @@ export function ContactPage() {
               </Field>
             </FieldGroup>
 
-            <Button
-              className="w-fit"
-              disabled={!canSend}
-              onClick={() => {
-                setMessage("")
-                setSubject("")
-                setSent(true)
-              }}
-            >
+            <Button className="w-fit" disabled={!canSend} onClick={handleSend}>
               <Send data-icon="inline-start" />
-              Send message
+              {sending ? "Sending…" : "Send message"}
             </Button>
           </CardContent>
         </Card>

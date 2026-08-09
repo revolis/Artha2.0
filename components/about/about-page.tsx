@@ -75,7 +75,7 @@ export function AboutPage() {
             </span>
             <span className="text-muted-foreground">{SITE.tagline}</span>
           </div>
-          <Badge variant="secondary">Version 0.1 · Design preview</Badge>
+          <Badge variant="secondary">Version {SITE.version}</Badge>
           <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
             Artha began with a problem worth solving properly: income arriving
             from airdrops, trades, launchpads and peer-to-peer cash-outs, and no

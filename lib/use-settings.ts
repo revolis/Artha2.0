@@ -142,35 +142,51 @@ export const NOTIFICATION_ITEMS: {
   key: NotificationKey
   title: string
   description: string
+  /**
+   * Whether this one can actually arrive by email.
+   *
+   * Only the two summaries are sent — a scheduled job works them out from the
+   * ledger and mails them. The rest are worked out in the browser from data
+   * already on screen, so there is nothing on a server to notice them and
+   * nothing to send. Their email switch stays off rather than quietly saving a
+   * preference no job will ever read.
+   */
+  emailable: boolean
 }[] = [
   {
     key: "goalMilestones",
     title: "Goal milestones",
     description: "When a goal hits 50%, 100%, or its deadline passes.",
+    emailable: false,
   },
   {
     key: "weeklySummary",
     title: "Weekly summary",
     description: "A short recap of the week's entries every Monday.",
+    emailable: true,
   },
   {
     key: "monthlyReport",
     title: "Monthly report",
-    description: "Your full month in review, with net P/L and top sources.",
+    description: "Your full month in review, on the 1st.",
+    emailable: true,
   },
   {
     key: "largeEntries",
     title: "Large entries",
     description: "When a single entry is unusually big for you.",
+    emailable: false,
   },
   {
     key: "rateSync",
     title: "Exchange rate updates",
     description: "When the daily USD to NPR rate refreshes.",
+    emailable: false,
   },
   {
     key: "productNews",
     title: "Product news",
     description: "New Artha features and improvements. No marketing.",
+    emailable: false,
   },
 ]
