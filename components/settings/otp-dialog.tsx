@@ -17,27 +17,25 @@ import { Input } from "@/components/ui/input"
 
 const RESEND_SECONDS = 30
 
-/**
- * Design-phase verification step. A real deployment sends the code from the
- * server and checks it there; here the code is generated locally and shown on
- * screen so the flow can be walked through end to end.
- */
-export function generateOtp(): string {
-  return String(Math.floor(100000 + Math.random() * 900000))
-}
-
 interface OtpDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
   description: string
+  /** Where the code was sent, shown so the reader knows which inbox to open. */
   email: string
-  /** The code the dialog will accept. */
-  code: string
   confirmLabel: string
   destructive?: boolean
-  onVerified: () => void
-  onResend: () => void
+  /**
+   * Checks the code and does the thing. Rejects with a message to show if the
+   * code is wrong or the change is refused.
+   *
+   * The dialog deliberately cannot tell whether a code is valid on its own —
+   * it used to hold the answer and compare against it, which made the whole
+   * step decorative. Verification belongs to whoever issued the code.
+   */
+  onVerify: (code: string) => Promise<void>
+  onResend: () => Promise<void>
 }
 
 export function OtpDialog({
@@ -46,14 +44,14 @@ export function OtpDialog({
   title,
   description,
   email,
-  code,
   confirmLabel,
   destructive = false,
-  onVerified,
+  onVerify,
   onResend,
 }: OtpDialogProps) {
   const [entered, setEntered] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
+  const [pending, setPending] = React.useState(false)
   const [secondsLeft, setSecondsLeft] = React.useState(RESEND_SECONDS)
 
   // Countdown for the resend link. Timer-based so it keeps running even when
@@ -66,15 +64,32 @@ export function OtpDialog({
     return () => window.clearInterval(timer)
   }, [open])
 
-  function verify() {
-    if (entered.trim() === code) {
+  async function verify() {
+    setPending(true)
+    setError(null)
+    try {
+      await onVerify(entered)
       setEntered("")
-      setError(null)
-      onVerified()
       onOpenChange(false)
-      return
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "That code doesn't match. Check the email and try again."
+      )
+    } finally {
+      setPending(false)
     }
-    setError("That code doesn't match. Check the email and try again.")
+  }
+
+  async function resend() {
+    setError(null)
+    setSecondsLeft(RESEND_SECONDS)
+    try {
+      await onResend()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not resend.")
+    }
   }
 
   return (
@@ -122,15 +137,6 @@ export function OtpDialog({
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </Field>
 
-          {/* Stand-in for the email that a backend would send. */}
-          <p className="rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
-            Design preview — no email is actually sent. Your code is{" "}
-            <span className="font-mono font-medium text-foreground">
-              {code}
-            </span>
-            .
-          </p>
-
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {secondsLeft > 0 ? (
               <span>Resend available in {secondsLeft}s</span>
@@ -139,11 +145,7 @@ export function OtpDialog({
                 variant="link"
                 size="sm"
                 className="h-auto px-0"
-                onClick={() => {
-                  onResend()
-                  setSecondsLeft(RESEND_SECONDS)
-                  setError(null)
-                }}
+                onClick={resend}
               >
                 Resend code
               </Button>
@@ -157,10 +159,10 @@ export function OtpDialog({
           </Button>
           <Button
             variant={destructive ? "destructive" : "default"}
-            disabled={entered.length !== 6}
+            disabled={entered.length !== 6 || pending}
             onClick={verify}
           >
-            {confirmLabel}
+            {pending ? "Checking…" : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

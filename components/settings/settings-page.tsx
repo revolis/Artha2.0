@@ -25,7 +25,7 @@ import {
 } from "@/components/icons"
 
 import { CurrencyConverter } from "@/components/currency/currency-converter"
-import { OtpDialog, generateOtp } from "@/components/settings/otp-dialog"
+import { OtpDialog } from "@/components/settings/otp-dialog"
 import {
   SettingsNav,
   type SettingsNavItem,
@@ -72,6 +72,12 @@ import { HELP_ARTICLES } from "@/lib/help-content"
 import { useMoney } from "@/lib/use-money"
 import { SITE } from "@/lib/site"
 import { useProfile } from "@/lib/use-profile"
+import { CONTACT, mailtoLink } from "@/lib/contact"
+import {
+  changePassword,
+  requestEmailChange,
+  sendPasswordChangeCode,
+} from "@/lib/account"
 import { signOut } from "@/lib/auth-flow"
 import {
   CURRENCY_OPTIONS,
@@ -146,15 +152,16 @@ export function SettingsPage() {
   const mounted = useMounted()
   const { settings, updateSettings, setNotification } = useSettings()
   const { formatMoney } = useMoney()
-  const { profile, saveProfile } = useProfile()
+  const { profile } = useProfile()
   const { theme, setTheme } = useTheme()
 
   const [section, setSection] = React.useState("security")
 
-  const [otpFlow, setOtpFlow] = React.useState<
-    "password" | "email" | "delete" | null
-  >(null)
-  const [otpCode, setOtpCode] = React.useState("")
+  // Only the password change ends in a code now. Changing an email is
+  // confirmed by following a link Supabase sends to the new address, and
+  // deleting an account needs a server, so neither goes through this dialog.
+  const [otpFlow, setOtpFlow] = React.useState<"password" | null>(null)
+  const [otpError, setOtpError] = React.useState<string | null>(null)
   const [passwordOpen, setPasswordOpen] = React.useState(false)
   const [emailOpen, setEmailOpen] = React.useState(false)
   const [deleteOpen, setDeleteOpen] = React.useState(false)
@@ -162,26 +169,57 @@ export function SettingsPage() {
 
   const [newPassword, setNewPassword] = React.useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
-  const [currentPassword, setCurrentPassword] = React.useState("")
   const [pendingEmail, setPendingEmail] = React.useState("")
   const [notice, setNotice] = React.useState<string | null>(null)
+  const [busy, setBusy] = React.useState(false)
 
   const [feedbackTopic, setFeedbackTopic] = React.useState("idea")
   const [feedbackText, setFeedbackText] = React.useState("")
   const [feedbackSent, setFeedbackSent] = React.useState(false)
 
-  function startOtp(flow: "password" | "email" | "delete") {
-    setOtpCode(generateOtp())
-    setOtpFlow(flow)
+  /** Asks Supabase to mail a code, then opens the dialog that consumes it. */
+  async function startPasswordChange() {
+    setBusy(true)
+    setOtpError(null)
+    try {
+      await sendPasswordChangeCode()
+      setPasswordOpen(false)
+      setOtpFlow("password")
+    } catch (cause) {
+      setOtpError(
+        cause instanceof Error ? cause.message : "Could not send the code."
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function submitEmailChange() {
+    setBusy(true)
+    setOtpError(null)
+    try {
+      await requestEmailChange(pendingEmail)
+      setEmailOpen(false)
+      setNotice(
+        `Confirmation sent to ${pendingEmail}. The address changes once you follow the link in that email.`
+      )
+      setPendingEmail("")
+    } catch (cause) {
+      setOtpError(
+        cause instanceof Error ? cause.message : "Could not start the change."
+      )
+    } finally {
+      setBusy(false)
+    }
   }
 
   const passwordMismatch =
     confirmPassword.length > 0 && newPassword !== confirmPassword
   const passwordTooShort = newPassword.length > 0 && newPassword.length < 8
+  // No current-password condition: the emailed code is what proves this is
+  // your account, and a Google account has no password to type here anyway.
   const canSubmitPassword =
-    newPassword.length >= 8 &&
-    newPassword === confirmPassword &&
-    (!settings.hasPassword || currentPassword.length > 0)
+    newPassword.length >= 8 && newPassword === confirmPassword && !busy
 
   return (
     <AppShell>
@@ -309,9 +347,9 @@ export function SettingsPage() {
                       variant="outline"
                       disabled={!settings.hasPassword}
                       onClick={() => {
-                        setCurrentPassword("")
                         setNewPassword("")
                         setConfirmPassword("")
+                        setOtpError(null)
                         setPasswordOpen(true)
                       }}
                     >
@@ -768,26 +806,11 @@ export function SettingsPage() {
               {settings.hasPassword ? "Change password" : "Add a password"}
             </DialogTitle>
             <DialogDescription>
-              {settings.hasPassword
-                ? "Pick a new password for your account."
-                : `We'll email a code to ${profile.email} to confirm it is you.`}
+              {`Pick a new password. We'll email a code to ${profile.email} to confirm it is you.`}
             </DialogDescription>
           </DialogHeader>
 
           <FieldGroup>
-            {settings.hasPassword ? (
-              <Field>
-                <FieldLabel htmlFor="current-password">
-                  Current password
-                </FieldLabel>
-                <Input
-                  id="current-password"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(event) => setCurrentPassword(event.target.value)}
-                />
-              </Field>
-            ) : null}
             <Field data-invalid={passwordTooShort ? true : undefined}>
               <FieldLabel htmlFor="new-password">New password</FieldLabel>
               <Input
@@ -822,18 +845,16 @@ export function SettingsPage() {
             </Field>
           </FieldGroup>
 
+          {otpError ? (
+            <p className="text-sm text-destructive">{otpError}</p>
+          ) : null}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setPasswordOpen(false)}>
               Cancel
             </Button>
-            <Button
-              disabled={!canSubmitPassword}
-              onClick={() => {
-                setPasswordOpen(false)
-                startOtp("password")
-              }}
-            >
-              Continue
+            <Button disabled={!canSubmitPassword} onClick={startPasswordChange}>
+              {busy ? "Sending code…" : "Continue"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -845,8 +866,8 @@ export function SettingsPage() {
           <DialogHeader>
             <DialogTitle>Change email address</DialogTitle>
             <DialogDescription>
-              We&apos;ll send a code to your current address to confirm the
-              change.
+              We&apos;ll send a confirmation to the new address. Your email
+              changes once you follow the link in it.
             </DialogDescription>
           </DialogHeader>
 
@@ -863,18 +884,19 @@ export function SettingsPage() {
             </Field>
           </FieldGroup>
 
+          {otpError ? (
+            <p className="text-sm text-destructive">{otpError}</p>
+          ) : null}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setEmailOpen(false)}>
               Cancel
             </Button>
             <Button
-              disabled={!pendingEmail.includes("@")}
-              onClick={() => {
-                setEmailOpen(false)
-                startOtp("email")
-              }}
+              disabled={!pendingEmail.includes("@") || busy}
+              onClick={submitEmailChange}
             >
-              Continue
+              {busy ? "Sending…" : "Send confirmation"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -910,24 +932,25 @@ export function SettingsPage() {
             </Button>
           </div>
 
+          {/* Erasing an account is the one thing here that cannot be done from
+              the browser: it needs a privileged key, and a key that can delete
+              any account has no business being shipped to everyone. Until that
+              runs on a server, this says so rather than showing a button that
+              reports success and deletes nothing. */}
           <p className="text-sm text-muted-foreground">
-            To continue, we&apos;ll email a confirmation code to{" "}
-            <span className="font-medium">{profile.email}</span>.
+            Deletion is handled by hand for now. Email{" "}
+            <a
+              href={mailtoLink("Delete my Artha account")}
+              className="font-medium text-foreground underline underline-offset-4"
+            >
+              {CONTACT.email}
+            </a>{" "}
+            from <span className="font-medium">{profile.email}</span> and your
+            account and everything in it will be removed.
           </p>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
-              Keep my account
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setDeleteOpen(false)
-                startOtp("delete")
-              }}
-            >
-              Continue to delete
-            </Button>
+            <Button onClick={() => setDeleteOpen(false)}>Keep my account</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -972,35 +995,22 @@ export function SettingsPage() {
           if (!open) setOtpFlow(null)
         }}
         email={profile.email}
-        code={otpCode}
-        destructive={otpFlow === "delete"}
-        title={
-          otpFlow === "delete"
-            ? "Confirm account deletion"
-            : otpFlow === "email"
-              ? "Confirm your new email"
-              : "Confirm your password"
-        }
-        description={
-          otpFlow === "delete"
-            ? "This is the last step. Enter the code to delete your account."
-            : "Enter the code we sent to finish."
-        }
-        confirmLabel={otpFlow === "delete" ? "Delete account" : "Confirm"}
-        onResend={() => setOtpCode(generateOtp())}
-        onVerified={() => {
-          if (otpFlow === "password") {
-            updateSettings({ hasPassword: true, loginMethod: "password" })
-            setNotice("Password added. You can now sign in with either method.")
-          } else if (otpFlow === "email") {
-            saveProfile({ ...profile, email: pendingEmail })
-            setNotice(`Email changed to ${pendingEmail}.`)
-          } else if (otpFlow === "delete") {
-            setNotice(
-              "Account deletion confirmed. Wiring this to a backend comes later."
-            )
-          }
+        title="Confirm your password change"
+        description="Enter the code we sent to finish."
+        confirmLabel="Change password"
+        onResend={sendPasswordChangeCode}
+        onVerify={async (code) => {
+          // Throws if the code is wrong, which the dialog turns into a message
+          // and stays open for. The password is only actually changed here.
+          await changePassword(newPassword, code)
           setOtpFlow(null)
+          setNewPassword("")
+          setConfirmPassword("")
+          setNotice(
+            settings.hasPassword
+              ? "Password changed. Use the new one next time you sign in."
+              : "Password added. You can now sign in with either method."
+          )
         }}
       />
     </AppShell>
