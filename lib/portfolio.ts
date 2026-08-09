@@ -28,6 +28,23 @@ function toIso(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
 }
 
+/**
+ * The last day a year's figures count up to: today for the year in progress,
+ * 31 December for any other.
+ *
+ * Shared by the chart and the summary figures beside it. They used to decide
+ * this separately — the chart stopped at today while the totals ran to the end
+ * of December — so an entry dated later in the year was counted by one and not
+ * the other. The two figures are shown side by side and described as differing
+ * only by cash movement, which stopped being true the moment anyone recorded
+ * something ahead of time.
+ */
+export function periodEnd(year: number, now = new Date()): Date {
+  return year === now.getFullYear()
+    ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    : new Date(year, 11, 31)
+}
+
 export interface DualSeriesPoint {
   // Index signature so the array satisfies the chart's Record<string, unknown>.
   [key: string]: Date | number
@@ -57,10 +74,7 @@ export function buildDualDailySeries(
     incomeByDay.set(day, (incomeByDay.get(day) ?? 0) + getNetAmount(entry))
   }
 
-  const end =
-    year === now.getFullYear()
-      ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      : new Date(year, 11, 31)
+  const end = periodEnd(year, now)
 
   const series: DualSeriesPoint[] = []
   const cursor = new Date(year, 0, 1)
@@ -153,8 +167,12 @@ export interface PortfolioStats {
 
 export function getPortfolioStats(
   entries: Entry[],
-  year: number
+  year: number,
+  now = new Date()
 ): PortfolioStats {
+  // Same cut-off as the chart, so the totals describe exactly the period the
+  // lines beside them cover.
+  const endIso = toIso(periodEnd(year, now))
   const stats: PortfolioStats = {
     grossIncome: 0,
     loss: 0,
@@ -168,6 +186,7 @@ export function getPortfolioStats(
   }
   for (const entry of entries) {
     if (getEntryYear(entry) !== year) continue
+    if (entry.datetime.slice(0, 10) > endIso) continue
     stats.entryCount += 1
     switch (entry.type) {
       case "profit":

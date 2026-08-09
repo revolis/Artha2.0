@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import {
-  BadgeCheck,
+  TriangleAlert,
   Bug,
   Clock,
   Lightbulb,
@@ -84,9 +84,11 @@ export function ContactPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
+            {/* Not the success treatment: a green tick over the words "Not
+                delivered yet" reads as though it went through. */}
             {sent ? (
-              <div className="flex animate-in items-start gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
-                <BadgeCheck className="mt-0.5 size-4 shrink-0 text-success" />
+              <div className="flex animate-in items-start gap-2 rounded-2xl border border-dashed bg-muted/40 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
+                <TriangleAlert className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                 <div className="flex flex-col gap-1">
                   <span className="font-medium">Not delivered yet</span>
                   <span className="text-muted-foreground">

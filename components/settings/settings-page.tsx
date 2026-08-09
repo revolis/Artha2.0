@@ -357,16 +357,16 @@ export function SettingsPage() {
                     </Button>
                   </SettingRow>
 
+                  {/* Disabled rather than removed: the switch saved a setting
+                      that nothing read, so turning it on announced a
+                      protection that was never applied. Better to show it as
+                      not built yet than to have someone believe their account
+                      asks for a code when it does not. */}
                   <SettingRow
                     title="Two-factor authentication"
-                    description="Ask for a code from your email on every new sign-in."
+                    description="Not available yet. Sign-in uses your password or your Google account."
                   >
-                    <Switch
-                      checked={settings.twoFactor}
-                      onCheckedChange={(checked) =>
-                        updateSettings({ twoFactor: checked })
-                      }
-                    />
+                    <Switch checked={false} disabled />
                   </SettingRow>
                 </div>
               </CardContent>
@@ -378,10 +378,19 @@ export function SettingsPage() {
               <CardHeader>
                 <CardTitle>Notifications</CardTitle>
                 <CardDescription>
-                  Choose what reaches you, and where.
+                  Choose what reaches you in the notifications panel.
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-2">
+                {/* The email column is switched off at the source. Artha only
+                    sends account email — sign-up, password, address changes —
+                    and nothing sends a notification, so leaving these live let
+                    someone turn on a weekly summary that was never coming.
+                    The saved values are kept for when it is built. */}
+                <p className="rounded-2xl border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground">
+                  Email notifications are not built yet — only account emails
+                  are sent today. These arrive in the notifications panel.
+                </p>
                 <div className="hidden items-center justify-end gap-8 pb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase sm:flex">
                   <span className="w-16 text-center">In-app</span>
                   <span className="w-16 text-center">Email</span>
@@ -412,11 +421,9 @@ export function SettingsPage() {
                         </div>
                         <div className="flex w-16 justify-center">
                           <Switch
-                            aria-label={`${item.title} email`}
-                            checked={settings.notifications[item.key].email}
-                            onCheckedChange={(checked) =>
-                              setNotification(item.key, "email", checked)
-                            }
+                            aria-label={`${item.title} email — not available yet`}
+                            checked={false}
+                            disabled
                           />
                         </div>
                       </div>
@@ -630,10 +637,27 @@ export function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
+                {/* This form has no delivery behind it. It used to answer
+                    "that has been noted", which was not true of anything —
+                    the message went nowhere. The Contact page says the same
+                    thing honestly, and so does this. */}
                 {feedbackSent ? (
-                  <div className="flex animate-in items-center gap-2 rounded-2xl border border-success/30 bg-success/10 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
-                    <BadgeCheck className="size-4 shrink-0 text-success" />
-                    Thanks — that has been noted. We read every message.
+                  <div className="flex animate-in items-start gap-2 rounded-2xl border border-dashed bg-muted/40 p-4 text-sm duration-300 fade-in-0 zoom-in-95">
+                    <TriangleAlert className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div className="flex flex-col gap-1">
+                      <span className="font-medium">Not delivered yet</span>
+                      <span className="text-muted-foreground">
+                        This form is waiting on a backend, so nothing has
+                        actually been sent. Email{" "}
+                        <a
+                          href={mailtoLink("Artha feedback")}
+                          className="font-medium text-foreground underline underline-offset-4"
+                        >
+                          {CONTACT.email}
+                        </a>{" "}
+                        and it will reach me today.
+                      </span>
+                    </div>
                   </div>
                 ) : null}
 
@@ -779,7 +803,7 @@ export function SettingsPage() {
                       value: "USD, NPR, INR, EUR, GBP, AED",
                     },
                     { label: "Exports", value: "PDF, CSV, JSON" },
-                    { label: "Data location", value: "This browser, for now" },
+                    { label: "Data location", value: "Your account, on Supabase" },
                   ].map((row) => (
                     <div
                       key={row.label}
