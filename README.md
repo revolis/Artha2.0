@@ -69,14 +69,18 @@ Authentication → Email Templates; they are not applied automatically.
 
 ## Edge functions
 
-Three, all deployed to Supabase rather than Vercel, because each needs a key
-that must not reach a browser.
+Four, all deployed to Supabase rather than Vercel, because each needs a key
+that must not reach a browser. The source lives in `supabase/functions/`, and
+that directory's README covers deployment — including which of them run with
+JWT verification off, which is configuration rather than code and so cannot be
+read from the files.
 
 | Function | Called by | Why it is server-side |
 | --- | --- | --- |
 | `delete-account` | The Danger zone in Settings | Deleting a user needs the service role key. It only ever deletes the caller — the id comes from their own verified token, never the request. |
 | `send-message` | Contact and feedback forms | Holds the mail provider's key. The only endpoint open to signed-out visitors, so it validates its input and caps messages per address and per hour. |
 | `send-notification-emails` | `pg_cron`, weekly and monthly | Reads every subscriber's address, so it stays behind a service-role call. |
+| `refresh-rates` | Vercel Cron and a GitHub Action, daily | Writes the shared rate table, and the call is what keeps a free project from being paused for inactivity. |
 
 ### Outbound email
 
