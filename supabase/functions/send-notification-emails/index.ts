@@ -26,13 +26,27 @@ interface Counts {
   cashout: number
 }
 
+interface Goal {
+  title: string
+  /** Target in USD, whatever currency it was set in. */
+  targetUsd: number
+  /** Everything counted toward it so far. */
+  achievedUsd: number
+  /** What this period alone contributed. */
+  monthUsd: number
+  /** achievedUsd as a share of target. */
+  percent: number
+  /** monthUsd as a share of target. */
+  monthPercent: number
+}
+
 interface Detail {
   counts?: Counts
   cashedOut?: number
   topIncome?: { category: string; amount: number; shareOfIncome: number }
   topLoss?: { category: string; amount: number; shareOfOutgoings: number }
-  monthlyGoal?: { title: string; percent: number }
-  yearlyGoal?: { title: string; percent: number }
+  monthlyGoal?: Goal
+  yearlyGoal?: Goal
 }
 
 interface DigestRow {
@@ -90,15 +104,36 @@ function esc(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 }
 
-/** A progress bar. Two table cells with widths — the one thing every client draws. */
-function bar(percent: number, colour: string): string {
-  const filled = Math.max(0, Math.min(100, Math.round(percent)))
-  const empty = 100 - filled
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;table-layout:fixed">
-<tr>
-${filled > 0 ? `<td width="${filled}%" style="height:8px;background:${colour};border-radius:4px 0 0 4px;font-size:0;line-height:0">&nbsp;</td>` : ""}
-${empty > 0 ? `<td width="${empty}%" style="height:8px;background:${LINE};border-radius:${filled > 0 ? "0 4px 4px 0" : "4px"};font-size:0;line-height:0">&nbsp;</td>` : ""}
-</tr></table>`
+/**
+ * A progress bar in up to three parts: what was already there, what this
+ * period added, and what is left to go.
+ *
+ * The middle segment is the point of the whole thing — it shows the month's
+ * contribution as a piece of the bar rather than as a number to be taken on
+ * trust. Table cells with percentage widths, which is the one layout every
+ * mail client draws correctly.
+ */
+function bar(priorPercent: number, addedPercent: number): string {
+  const prior = Math.max(0, Math.min(100, Math.round(priorPercent)))
+  const added = Math.max(0, Math.min(100 - prior, Math.round(addedPercent)))
+  const rest = 100 - prior - added
+
+  const segments = [
+    { width: prior, colour: INK },
+    { width: added, colour: UP },
+    { width: rest, colour: LINE },
+  ].filter((segment) => segment.width > 0)
+
+  const cells = segments
+    .map((segment, index) => {
+      const first = index === 0
+      const last = index === segments.length - 1
+      const radius = `${first ? "5px" : "0"} ${last ? "5px" : "0"} ${last ? "5px" : "0"} ${first ? "5px" : "0"}`
+      return `<td width="${segment.width}%" style="height:10px;background:${segment.colour};border-radius:${radius};font-size:0;line-height:0">&nbsp;</td>`
+    })
+    .join("")
+
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;table-layout:fixed"><tr>${cells}</tr></table>`
 }
 
 function shell(title: string, inner: string, footerNote: string): string {
@@ -213,26 +248,48 @@ function monthlyEmail(row: DigestRow) {
     ? `<div style="margin:24px 0 0 0;padding:16px 18px;background:${PAGE};border-radius:12px">${story}</div>`
     : ""
 
-  const goalRow = (g: { title: string; percent: number }, label: string) => {
-    const pct = Math.round(g.percent)
-    return `<tr><td style="padding:12px 0 0 0">
+  const goalRow = (g: Goal, label: string) => {
+    const total = Math.round(g.percent)
+    const added = Math.round(g.monthPercent)
+    const before = Math.max(0, total - added)
+    const done = total >= 100
+
+    // What the month did to this goal. When the goal only started this period
+    // there is no "from" to speak of, so it just states the share.
+    const movement =
+      g.monthUsd > 0
+        ? before > 0
+          ? `${month} added <strong style="color:${UP}">${money(g.monthUsd)}</strong> &mdash; ${added}% of the target &mdash; taking this goal from ${before}% to <strong>${total}%</strong>.`
+          : `${month} added <strong style="color:${UP}">${money(g.monthUsd)}</strong>, ${added}% of the target.`
+        : `Nothing counted toward this goal in ${month}.`
+
+    return `<tr><td style="padding:16px 0 0 0">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-        <td style="font-size:13px;color:${INK}"><strong>${esc(g.title)}</strong>
+        <td style="font-size:14px;color:${INK}"><strong>${esc(g.title)}</strong>
           <span style="color:${MUTED}">&middot; ${label}</span></td>
-        <td align="right" style="font-size:13px;font-weight:700;color:${pct >= 100 ? UP : INK}">${pct}%</td>
+        <td align="right" style="font-size:14px;font-weight:700;color:${done ? UP : INK}">${total}%</td>
       </tr></table>
-      <div style="padding-top:6px">${bar(pct, pct >= 100 ? UP : INK)}</div>
+
+      <div style="padding-top:7px">${bar(before, added)}</div>
+
+      <div style="padding-top:7px;font-size:13px;color:${MUTED}">
+        <strong style="color:${INK}">${money(g.achievedUsd)}</strong> of ${money(g.targetUsd)}
+      </div>
+      <div style="padding-top:4px;font-size:13px;line-height:1.6;color:${MUTED}">${movement}</div>
     </td></tr>`
   }
 
   const goals =
     d.monthlyGoal || d.yearlyGoal
-      ? `<div style="margin:26px 0 0 0">
-          <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${MUTED};padding-bottom:2px">Goals</div>
+      ? `<div style="margin:26px 0 0 0;padding-top:18px;border-top:1px solid ${LINE}">
+          <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${MUTED}">Goals</div>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
             ${d.monthlyGoal ? goalRow(d.monthlyGoal, "this month") : ""}
             ${d.yearlyGoal ? goalRow(d.yearlyGoal, "this year") : ""}
           </table>
+          <div style="padding-top:12px;font-size:11px;color:${MUTED}">
+            <span style="color:${UP}">&#9632;</span> added in ${month}
+          </div>
         </div>`
       : ""
 
