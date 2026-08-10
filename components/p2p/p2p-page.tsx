@@ -379,16 +379,29 @@ export function P2PPage() {
           <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
+                {/* Ten columns need about 1,140px, so on a phone most of a
+                    trade sat off-screen. Below md the columns that are not the
+                    headline numbers fold away and come back stacked under the
+                    date. Rate and cash amount ride under the USD figure, since
+                    a trade is unreadable without all three. */}
                 <TableRow>
                   <TableHead className="w-10" />
                   <TableHead>Date</TableHead>
-                  <TableHead>Direction</TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Direction
+                  </TableHead>
                   <TableHead className="text-right">USD Amount</TableHead>
-                  <TableHead className="text-right">Rate</TableHead>
-                  <TableHead className="text-right">Cash Amount</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Tags</TableHead>
-                  <TableHead>Note</TableHead>
+                  <TableHead className="hidden text-right lg:table-cell">
+                    Rate
+                  </TableHead>
+                  <TableHead className="hidden text-right lg:table-cell">
+                    Cash Amount
+                  </TableHead>
+                  <TableHead className="hidden 2xl:table-cell">
+                    Source
+                  </TableHead>
+                  <TableHead className="hidden 2xl:table-cell">Tags</TableHead>
+                  <TableHead className="hidden 2xl:table-cell">Note</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -406,7 +419,7 @@ export function P2PPage() {
                   return (
                     <React.Fragment key={entry.id}>
                       <TableRow>
-                        <TableCell className="pr-0">
+                        <TableCell className="px-1 sm:pr-0 sm:pl-3">
                           {hasDetail ? (
                             <button
                               type="button"
@@ -419,7 +432,7 @@ export function P2PPage() {
                               onClick={() =>
                                 setExpanded(isOpen ? null : entry.id)
                               }
-                              className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                              className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:size-6"
                             >
                               <ChevronDown
                                 className={cn(
@@ -431,14 +444,48 @@ export function P2PPage() {
                           ) : null}
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col">
+                          <div className="flex max-w-[8.25rem] flex-col sm:max-w-none">
                             <span className="font-medium">{date}</span>
                             <span className="text-xs text-muted-foreground">
                               {time}
                             </span>
+                            {/* What the folded columns were carrying. */}
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1 lg:hidden">
+                              <Badge variant="secondary">
+                                {isSold ? (
+                                  <ArrowUpRight className="text-destructive" />
+                                ) : (
+                                  <ArrowDownLeft className="text-success" />
+                                )}
+                                {isSold ? "Sold USD" : "Bought USD"}
+                              </Badge>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1 2xl:hidden">
+                              {source?.name ? (
+                                <span className="text-xs text-muted-foreground">
+                                  {source.name}
+                                </span>
+                              ) : null}
+                              {entry.tags.slice(0, 2).map((tag) => (
+                                <Badge
+                                  key={tag}
+                                  variant="outline"
+                                  className="px-1.5 py-0 text-[10px]"
+                                  style={tagStyle(tag)}
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {entry.tags.length > 2 ? (
+                                <span className="text-[10px] text-muted-foreground">
+                                  +{entry.tags.length - 2}
+                                </span>
+                              ) : null}
+                              <AttachmentCount entry={entry} />
+                            </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <Badge variant="secondary">
                             {isSold ? (
                               <ArrowUpRight className="text-destructive" />
@@ -449,16 +496,28 @@ export function P2PPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-medium tabular-nums">
-                          {formatMoney(entry.amount, "USD")}
+                          <div className="flex flex-col items-end">
+                            {formatMoney(entry.amount, "USD")}
+                            {/* A trade means nothing without what it converted
+                                at, so these two follow the amount down rather
+                                than disappearing with their columns. */}
+                            <span className="max-w-[8.5rem] text-xs font-normal whitespace-normal text-muted-foreground lg:hidden">
+                              {formatCash(p2p.cashAmount, p2p.cashCurrency)}
+                              {" @ "}
+                              {formatPlain(p2p.rate)}
+                            </span>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">
+                        <TableCell className="hidden text-right tabular-nums lg:table-cell">
                           {formatPlain(p2p.rate)}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">
+                        <TableCell className="hidden text-right tabular-nums lg:table-cell">
                           {formatCash(p2p.cashAmount, p2p.cashCurrency)}
                         </TableCell>
-                        <TableCell>{source?.name ?? "—"}</TableCell>
-                        <TableCell>
+                        <TableCell className="hidden 2xl:table-cell">
+                          {source?.name ?? "—"}
+                        </TableCell>
+                        <TableCell className="hidden 2xl:table-cell">
                           {entry.tags.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {/* Each tag keeps its own colour, derived from its
@@ -482,7 +541,7 @@ export function P2PPage() {
                             "—"
                           )}
                         </TableCell>
-                        <TableCell className="max-w-48">
+                        <TableCell className="hidden max-w-48 2xl:table-cell">
                           <div className="flex items-center gap-1.5">
                             <span className="truncate text-muted-foreground">
                               {entry.note ?? "—"}

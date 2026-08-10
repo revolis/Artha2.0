@@ -434,14 +434,19 @@ export function EntriesPage() {
         <div className="overflow-x-auto rounded-lg border">
           <Table>
             <TableHeader>
+              {/* Nine columns need about 1,150px. On a phone that left a third
+                  of a row on screen and the rest behind a sideways drag, which
+                  is no way to read a ledger. Below md the middle columns fold
+                  away and their content reappears stacked under the date, so
+                  nothing is lost and the row fits the screen. */}
               <TableRow>
                 <TableHead className="w-10" />
                 <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Tags</TableHead>
-                <TableHead>Note</TableHead>
+                <TableHead className="hidden lg:table-cell">Type</TableHead>
+                <TableHead className="hidden lg:table-cell">Category</TableHead>
+                <TableHead className="hidden lg:table-cell">Source</TableHead>
+                <TableHead className="hidden 2xl:table-cell">Tags</TableHead>
+                <TableHead className="hidden 2xl:table-cell">Note</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
@@ -458,7 +463,7 @@ export function EntriesPage() {
                 return (
                   <React.Fragment key={entry.id}>
                     <TableRow>
-                      <TableCell className="pr-0">
+                      <TableCell className="px-1 sm:pr-0 sm:pl-3">
                         {hasDetail ? (
                           <button
                             type="button"
@@ -471,7 +476,7 @@ export function EntriesPage() {
                             onClick={() =>
                               setExpanded(isOpen ? null : entry.id)
                             }
-                            className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:size-6"
                           >
                             <ChevronDown
                               className={cn(
@@ -483,21 +488,60 @@ export function EntriesPage() {
                         ) : null}
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col">
+                        <div className="flex max-w-[8.25rem] flex-col sm:max-w-none">
                           <span className="font-medium">{date}</span>
                           <span className="text-xs text-muted-foreground">
                             {time}
                           </span>
+                          {/* What the hidden columns were carrying, folded in
+                              underneath on the sizes where they are gone. */}
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1 lg:hidden">
+                            <Badge variant="secondary">
+                              {entryTypeLabels[entry.type]}
+                            </Badge>
+                            {entry.category ? (
+                              <span className="text-xs text-muted-foreground">
+                                {entry.category}
+                              </span>
+                            ) : null}
+                            {source?.name ? (
+                              <span className="text-xs text-muted-foreground">
+                                · {source.name}
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1 2xl:hidden">
+                            {entry.tags.slice(0, 2).map((tag) => (
+                              <Badge
+                                key={tag}
+                                variant="outline"
+                                className="px-1.5 py-0 text-[10px]"
+                                style={tagStyle(tag)}
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                            {entry.tags.length > 2 ? (
+                              <span className="text-[10px] text-muted-foreground">
+                                +{entry.tags.length - 2}
+                              </span>
+                            ) : null}
+                            <AttachmentCount entry={entry} />
+                          </div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Badge variant="secondary">
                           {entryTypeLabels[entry.type]}
                         </Badge>
                       </TableCell>
-                      <TableCell>{entry.category ?? "—"}</TableCell>
-                      <TableCell>{source?.name ?? "—"}</TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {entry.category ?? "—"}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {source?.name ?? "—"}
+                      </TableCell>
+                      <TableCell className="hidden 2xl:table-cell">
                         {entry.tags.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {/* Each tag keeps its own colour, derived from its
@@ -521,7 +565,7 @@ export function EntriesPage() {
                           "—"
                         )}
                       </TableCell>
-                      <TableCell className="max-w-48">
+                      <TableCell className="hidden max-w-48 2xl:table-cell">
                         <div className="flex items-center gap-1.5">
                           <span className="truncate text-muted-foreground">
                             {entry.note ?? "—"}
@@ -533,7 +577,10 @@ export function EntriesPage() {
                         <div className="flex flex-col items-end">
                           <AmountCell entry={entry} />
                           {entry.p2p ? (
-                            <span className="text-xs text-muted-foreground">
+                            // Table cells never wrap, so this one line was
+                            // holding the amount column open at 247px on a
+                            // 341px screen. It wraps below md instead.
+                            <span className="max-w-[8.5rem] text-xs whitespace-normal text-muted-foreground lg:max-w-none lg:whitespace-nowrap">
                               {entry.p2p.direction === "usd-to-cash"
                                 ? "Sold USD"
                                 : "Bought USD"}

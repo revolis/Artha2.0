@@ -281,7 +281,12 @@ export function SettingsPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-        <div className="lg:sticky lg:top-24 lg:self-start">
+        {/* min-w-0 or the column refuses to shrink. A grid item defaults to
+            min-width:auto, so the scrolling tab strip inside held this column
+            open at its full content width — 1,026px on a 375px phone, which
+            dragged the whole settings page sideways instead of letting the
+            strip scroll on its own. */}
+        <div className="min-w-0 lg:sticky lg:top-24 lg:self-start">
           <SettingsNav
             items={NAV_ITEMS}
             active={section}

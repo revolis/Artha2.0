@@ -114,14 +114,12 @@ Deno.serve(async (req) => {
 
   const asOf = payload.date ?? todayIso()
 
-  const { error } = await admin
-    .from("fx_rates")
-    .upsert({
-      as_of: asOf,
-      rates,
-      source: "live",
-      fetched_at: new Date().toISOString(),
-    })
+  const { error } = await admin.from("fx_rates").upsert({
+    as_of: asOf,
+    rates,
+    source: "live",
+    fetched_at: new Date().toISOString(),
+  })
 
   if (error) return json({ refreshed: false, error: error.message }, 500)
 
