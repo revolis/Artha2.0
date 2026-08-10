@@ -68,20 +68,29 @@ Deno.serve(async (req) => {
       MIN_MINUTES_BETWEEN_FETCHES * 60 * 1000
 
   if (freshEnough) {
-    return json({ refreshed: false, reason: "already fetched recently", asOf: latest.as_of })
+    return json({
+      refreshed: false,
+      reason: "already fetched recently",
+      asOf: latest.as_of,
+    })
   }
 
   let payload: { date?: string; usd?: Record<string, number> }
   try {
     const res = await fetch(RATES_URL, { cache: "no-store" })
-    if (!res.ok) return json({ refreshed: false, error: `feed returned ${res.status}` }, 502)
+    if (!res.ok)
+      return json(
+        { refreshed: false, error: `feed returned ${res.status}` },
+        502
+      )
     payload = await res.json()
   } catch (cause) {
     return json({ refreshed: false, error: String(cause) }, 502)
   }
 
   const table = payload.usd
-  if (!table) return json({ refreshed: false, error: "unexpected feed shape" }, 502)
+  if (!table)
+    return json({ refreshed: false, error: "unexpected feed shape" }, 502)
 
   const rates: Record<string, number> = { USD: 1 }
   let matched = 0
@@ -97,14 +106,22 @@ Deno.serve(async (req) => {
   // A payload missing almost everything is a broken feed, not new rates —
   // better to keep yesterday's figures than to overwrite them with nothing.
   if (matched < WANTED.length - 1) {
-    return json({ refreshed: false, error: `feed had only ${matched} of the currencies` }, 502)
+    return json(
+      { refreshed: false, error: `feed had only ${matched} of the currencies` },
+      502
+    )
   }
 
   const asOf = payload.date ?? todayIso()
 
   const { error } = await admin
     .from("fx_rates")
-    .upsert({ as_of: asOf, rates, source: "live", fetched_at: new Date().toISOString() })
+    .upsert({
+      as_of: asOf,
+      rates,
+      source: "live",
+      fetched_at: new Date().toISOString(),
+    })
 
   if (error) return json({ refreshed: false, error: error.message }, 500)
 

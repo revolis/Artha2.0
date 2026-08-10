@@ -101,7 +101,10 @@ function longDate(iso: string): string {
 }
 
 function esc(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
 }
 
 /**
@@ -328,7 +331,11 @@ ${mixBlock}
 
   return {
     subject: `${month}: ${up ? "+" : ""}${money(row.net)} net · your Artha statement`,
-    html: shell(`Your ${month} statement`, inner, "You asked for the monthly report."),
+    html: shell(
+      `Your ${month} statement`,
+      inner,
+      "You asked for the monthly report."
+    ),
   }
 }
 
@@ -362,7 +369,11 @@ function weeklyEmail(row: DigestRow) {
 
   return {
     subject: `Your week: ${up ? "+" : ""}${money(row.net)}`,
-    html: shell("Your week in Artha", inner, "You asked for the weekly summary."),
+    html: shell(
+      "Your week in Artha",
+      inner,
+      "You asked for the weekly summary."
+    ),
   }
 }
 
@@ -393,13 +404,21 @@ Deno.serve(async (req) => {
     if (rows.length === 0) return json({ preview: true, recipients: 0 })
     const { subject, html } = build(rows[0])
     return new Response(html, {
-      headers: { "Content-Type": "text/html; charset=utf-8", "X-Subject": subject },
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Subject": subject,
+      },
     })
   }
 
   const resendKey = Deno.env.get("RESEND_API_KEY")
   if (!resendKey) {
-    return json({ kind, recipients: rows.length, sent: 0, reason: "RESEND_API_KEY not set" })
+    return json({
+      kind,
+      recipients: rows.length,
+      sent: 0,
+      reason: "RESEND_API_KEY not set",
+    })
   }
 
   const from = Deno.env.get("MESSAGES_FROM") ?? "Artha <noreply@0xr8n.me>"

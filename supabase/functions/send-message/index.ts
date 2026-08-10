@@ -51,9 +51,13 @@ Deno.serve(async (req) => {
 
   const source = String(payload.source ?? "")
   const topic = String(payload.topic ?? "").slice(0, 40)
-  const replyTo = String(payload.replyTo ?? "").trim().slice(0, 200)
+  const replyTo = String(payload.replyTo ?? "")
+    .trim()
+    .slice(0, 200)
   const subject = String(payload.subject ?? "").slice(0, 200)
-  const body = String(payload.body ?? "").trim().slice(0, 5000)
+  const body = String(payload.body ?? "")
+    .trim()
+    .slice(0, 5000)
 
   if (source !== "contact" && source !== "feedback") {
     return json({ error: "Unknown form." }, 400)
@@ -88,7 +92,10 @@ Deno.serve(async (req) => {
     .gte("created_at", anHourAgo)
 
   if ((fromThisAddress ?? 0) >= PER_HOUR_PER_ADDRESS) {
-    return json({ error: "That's a lot of messages. Try again in an hour." }, 429)
+    return json(
+      { error: "That's a lot of messages. Try again in an hour." },
+      429
+    )
   }
 
   const { count: overall } = await admin
@@ -97,7 +104,10 @@ Deno.serve(async (req) => {
     .gte("created_at", anHourAgo)
 
   if ((overall ?? 0) >= PER_HOUR_TOTAL) {
-    return json({ error: "Too many messages right now. Try again shortly." }, 429)
+    return json(
+      { error: "Too many messages right now. Try again shortly." },
+      429
+    )
   }
 
   const { data: saved, error: saveError } = await admin

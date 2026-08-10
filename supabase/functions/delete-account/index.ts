@@ -56,7 +56,10 @@ Deno.serve(async (req) => {
 
   if (userId === DEMO_USER) {
     return json(
-      { error: "The demo account cannot be deleted. Sign up for one of your own." },
+      {
+        error:
+          "The demo account cannot be deleted. Sign up for one of your own.",
+      },
       403
     )
   }

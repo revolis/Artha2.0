@@ -27,7 +27,8 @@ import { enterDemo } from "@/lib/demo"
 function destination(): string {
   if (typeof window === "undefined") return "/dashboard"
   const next = new URLSearchParams(window.location.search).get("next")
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/dashboard"
+  if (!next || !next.startsWith("/") || next.startsWith("//"))
+    return "/dashboard"
   return next
 }
 

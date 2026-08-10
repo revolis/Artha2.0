@@ -97,11 +97,7 @@ export function DashboardPreview() {
 
       <Reveal delay={220}>
         <div className="mt-6 flex justify-center">
-          <Button
-            size="lg"
-            render={<Link href="/demo" />}
-            nativeButton={false}
-          >
+          <Button size="lg" render={<Link href="/demo" />} nativeButton={false}>
             Open the full workspace
             <ArrowRight data-icon="inline-end" />
           </Button>

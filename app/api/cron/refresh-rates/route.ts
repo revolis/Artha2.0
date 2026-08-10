@@ -50,7 +50,10 @@ export async function GET() {
     )
   } catch (cause) {
     return NextResponse.json(
-      { ok: false, error: cause instanceof Error ? cause.message : String(cause) },
+      {
+        ok: false,
+        error: cause instanceof Error ? cause.message : String(cause),
+      },
       { status: 502 }
     )
   }
