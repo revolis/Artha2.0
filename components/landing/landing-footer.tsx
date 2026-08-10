@@ -87,7 +87,11 @@ export function LandingFooter() {
         <div className="flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
           <span>© {new Date().getFullYear()} Artha</span>
           <MadeBy className="font-medium" />
-          <span>Crypto · Equities · Cash income — in NPR and USD</span>
+          {/* Named after what the app does with money rather than what kind
+              of money it is — and it matches the three things you can
+              actually record: what you hold, what it paid, and what you
+              converted. */}
+          <span>Holdings · Income · Conversions — reported in NPR and USD</span>
         </div>
 
         {/* Clipped at the baseline so the wordmark sits into the bottom edge

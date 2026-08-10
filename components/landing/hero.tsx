@@ -1,6 +1,6 @@
 "use client"
 
-import { Sparkles } from "@/components/icons"
+import { HeroBadge } from "@/components/landing/hero-badge"
 import { LiveDemoButton } from "@/components/landing/live-demo-button"
 import { Reveal } from "@/components/landing/reveal"
 import { DotPattern } from "@/components/ui/dot-pattern"
@@ -34,10 +34,7 @@ export function Hero() {
 
       <div className="relative mx-auto flex w-full max-w-4xl flex-col items-center gap-7 px-5 pt-20 pb-16 text-center sm:pt-28">
         <Reveal delay={40} y={10}>
-          <span className="inline-flex items-center gap-2 rounded-full border bg-card/60 px-3.5 py-1.5 text-xs text-muted-foreground backdrop-blur">
-            <Sparkles className="size-3.5 text-[var(--chart-2)]" />
-            Crypto, equities and cash income in a single ledger
-          </span>
+          <HeroBadge />
         </Reveal>
 
         <h1 className="text-4xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-6xl">

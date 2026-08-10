@@ -41,6 +41,7 @@ import {
   File01Icon,
   FileDownloadIcon,
   FilterRemoveIcon,
+  GemIcon,
   Globe02Icon,
   Home01Icon,
   Idea01Icon,
@@ -139,6 +140,7 @@ export const EyeOff = makeIcon(ViewOffIcon)
 export const FileDown = makeIcon(FileDownloadIcon)
 export const FileText = makeIcon(File01Icon)
 export const FilterX = makeIcon(FilterRemoveIcon)
+export const Gem = makeIcon(GemIcon)
 export const Globe = makeIcon(Globe02Icon)
 export const Heart = makeIcon(FavouriteIcon)
 export const Home = makeIcon(Home01Icon)
