@@ -40,13 +40,15 @@ export function GlowBorderButton({
           animation: "artha-border-spin 3.5s linear infinite",
         }}
       />
-      {/* A static edge underneath, so it still reads as a button between
-          sweeps and wherever animation is turned off. */}
+      {/* A static edge, so it still reads as a button between sweeps and
+          wherever animation is turned off. It is drawn over the same ring the
+          arc travels along and paints after it, so --glow-edge has to stay
+          translucent in every theme or it becomes a lid on the light. */}
       <span
         aria-hidden
         className="absolute inset-0 rounded-[inherit] border border-[var(--glow-edge)]"
       />
-      <span className="relative inline-flex items-center justify-center gap-1.5 rounded-[inherit] bg-background px-4 py-1.5 text-sm font-medium transition-colors duration-300 group-hover:bg-accent">
+      <span className="relative inline-flex items-center justify-center gap-1.5 rounded-[inherit] bg-background px-4 py-1.5 text-sm font-medium transition-colors duration-300 group-hover:bg-[var(--glow-hover)]">
         {children}
       </span>
     </>

@@ -186,7 +186,16 @@
      --chart-2 is a light gold and scored 2.51 against this background where
      the dark theme scores 9.79. */
   --glow-sweep: oklch(0.6 0.16 62);
-  --glow-edge: oklch(0.87 0 0);
+  /* Must be translucent. This hairline is drawn over the same one-pixel ring
+     the arc travels along, and it paints after it — an opaque value here hides
+     the sweep completely, which is what the light theme did for as long as it
+     borrowed --border. */
+  --glow-edge: oklch(0.145 0 0 / 0.14);
+  /* Hover. --accent is a near-white grey that shifts this button by a contrast
+     ratio of 1.09 against the page, which is not a visible response to a
+     pointer. Warming it instead of darkening it keeps the button's own
+     identity and reads at a glance. */
+  --glow-hover: oklch(0.95 0.035 75);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -260,6 +269,7 @@
   /* Unchanged from what the accent gold already gave here. */
   --glow-sweep: oklch(0.78 0.13 85);
   --glow-edge: oklch(1 0 0 / 10%);
+  --glow-hover: oklch(0.269 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
