@@ -26,7 +26,13 @@ const DEMO_USER = "d3300000-0000-4000-8000-000000000001"
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type, apikey",
+  "Access-Control-Allow-Headers":
+    // supabase-js sends x-client-info on every functions.invoke, and
+    // newer versions add x-supabase-api-version. A header the browser
+    // asks for and does not get back fails the preflight, and the POST
+    // is then never sent — the request does not fail loudly, it simply
+    // never happens.
+    "authorization, content-type, apikey, x-client-info, x-supabase-api-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 }
 
