@@ -91,9 +91,27 @@ export function RecentTransactions({
   const router = useRouter()
   const { formatMoney, formatCash, formatPlain } = useMoney()
   const sourceById = new Map(sources.map((source) => [source.id, source.name]))
-  const recent = [...entries]
-    .sort((a, b) => b.datetime.localeCompare(a.datetime))
-    .slice(0, RECENT_LIMIT)
+
+  // Latest activity means latest that has happened. Artha lets an entry be
+  // dated ahead, and sorting the year by date alone put those first — in
+  // August this card led with a loss dated 9 December and called it your
+  // most recent activity.
+  //
+  // A year with nothing behind it yet still falls back to plain date order,
+  // so a year set up in advance shows what is coming rather than an empty
+  // card.
+  const byNewest = [...entries].sort((a, b) =>
+    b.datetime.localeCompare(a.datetime)
+  )
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+  const happened = byNewest.filter(
+    (entry) => entry.datetime.slice(0, 10) <= today
+  )
+  const recent = (happened.length > 0 ? happened : byNewest).slice(
+    0,
+    RECENT_LIMIT
+  )
 
   return (
     <Card>
