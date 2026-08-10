@@ -70,14 +70,29 @@ async function load() {
   inFlight = (async () => {
     try {
       const supabase = createClient()
-      const [{ data: profile }, { data: socials }] = await Promise.all([
-        supabase.from("profiles").select("*").maybeSingle(),
-        supabase.from("social_links").select("*"),
-      ])
+      const [{ data: profile }, { data: socials }, { data: auth }] =
+        await Promise.all([
+          supabase.from("profiles").select("*").maybeSingle(),
+          supabase.from("social_links").select("*"),
+          supabase.auth.getUser(),
+        ])
+
+      const loadedProfile = profile
+        ? profileFromRow(profile, socials ?? [])
+        : cache.profile
+
+      // The address someone signs in with is the one they expect to see. A
+      // Google sign-up can land in the profiles table with this blank — the
+      // provider carries the address in its own metadata and auth.users.email
+      // is not always set by the time the row is written — and Settings then
+      // showed "Signed in as" followed by nothing at all. Falling back to the
+      // session means the screen is right even when the row is not yet.
+      const signedInEmail = auth?.user?.email ?? ""
       cache = {
-        profile: profile
-          ? profileFromRow(profile, socials ?? [])
-          : cache.profile,
+        profile:
+          loadedProfile.email.trim() === "" && signedInEmail
+            ? { ...loadedProfile, email: signedInEmail }
+            : loadedProfile,
         loaded: true,
       }
       publish()
