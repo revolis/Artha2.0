@@ -1,7 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown, Plus, X } from "@/components/icons"
+import {
+  Check,
+  ChevronsUpDown,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "@/components/icons"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,6 +31,55 @@ function hasOption(options: string[], query: string): boolean {
   return options.some((o) => o.toLowerCase() === query.toLowerCase())
 }
 
+/**
+ * Editing and removing an option from the list it appears in.
+ *
+ * Sources, categories and tags are all created here and, until now, could only
+ * ever be created here — a typo was permanent and an unused one stayed on the
+ * list forever. Handing the list the two verbs it was missing is cheaper than
+ * a page to manage them, and it puts them where they are already being read.
+ */
+export interface OptionActions {
+  onEdit: (option: string) => void
+  onDelete: (option: string) => void
+}
+
+function RowActions({
+  option,
+  actions,
+}: {
+  option: string
+  actions: OptionActions
+}) {
+  // Buttons inside a command item: the click must not also choose the option,
+  // which is what the row itself does.
+  const stop = (run: () => void) => (event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    run()
+  }
+  return (
+    <span className="ml-auto flex items-center gap-0.5">
+      <button
+        type="button"
+        aria-label={`Edit ${option}`}
+        onClick={stop(() => actions.onEdit(option))}
+        className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+      >
+        <Pencil className="size-3.5" />
+      </button>
+      <button
+        type="button"
+        aria-label={`Delete ${option}`}
+        onClick={stop(() => actions.onDelete(option))}
+        className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+      >
+        <Trash2 className="size-3.5" />
+      </button>
+    </span>
+  )
+}
+
 interface CreatableComboboxProps {
   value: string | null
   onValueChange: (value: string | null) => void
@@ -31,6 +87,8 @@ interface CreatableComboboxProps {
   placeholder: string
   createLabel?: string // e.g. "category", "source" — used in the Create row
   id?: string
+  /** When given, each option carries an edit and a delete control. */
+  actions?: OptionActions
 }
 
 // Pick one existing option or type to create a new one.
@@ -41,6 +99,7 @@ export function CreatableCombobox({
   placeholder,
   createLabel = "option",
   id,
+  actions,
 }: CreatableComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState("")
@@ -50,6 +109,22 @@ export function CreatableCombobox({
     setOpen(false)
     setQuery("")
   }
+
+  // Editing or deleting opens a panel beneath the field, so the list has to
+  // get out of the way first — otherwise the popover covers the thing the
+  // click just opened.
+  const rowActions = actions
+    ? {
+        onEdit: (option: string) => {
+          setOpen(false)
+          actions.onEdit(option)
+        },
+        onDelete: (option: string) => {
+          setOpen(false)
+          actions.onDelete(option)
+        },
+      }
+    : undefined
 
   const trimmed = query.trim()
   const showCreate = trimmed.length > 0 && !hasOption(options, trimmed)
@@ -88,6 +163,9 @@ export function CreatableCombobox({
                 >
                   <Check className={cn(option !== value && "invisible")} />
                   {option}
+                  {rowActions ? (
+                    <RowActions option={option} actions={rowActions} />
+                  ) : null}
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -116,6 +194,7 @@ interface CreatableMultiComboboxProps {
   placeholder: string
   createLabel?: string
   id?: string
+  actions?: OptionActions
 }
 
 // Pick several existing options and/or type to create new ones. Selected
@@ -127,6 +206,7 @@ export function CreatableMultiCombobox({
   placeholder,
   createLabel = "tag",
   id,
+  actions,
 }: CreatableMultiComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState("")
@@ -139,6 +219,22 @@ export function CreatableMultiCombobox({
     )
     setQuery("")
   }
+
+  // Editing or deleting opens a panel beneath the field, so the list has to
+  // get out of the way first — otherwise the popover covers the thing the
+  // click just opened.
+  const rowActions = actions
+    ? {
+        onEdit: (option: string) => {
+          setOpen(false)
+          actions.onEdit(option)
+        },
+        onDelete: (option: string) => {
+          setOpen(false)
+          actions.onDelete(option)
+        },
+      }
+    : undefined
 
   const allOptions = Array.from(new Set([...options, ...values]))
   const trimmed = query.trim()
@@ -186,6 +282,9 @@ export function CreatableMultiCombobox({
                       className={cn(!values.includes(option) && "invisible")}
                     />
                     {option}
+                    {rowActions ? (
+                      <RowActions option={option} actions={rowActions} />
+                    ) : null}
                   </CommandItem>
                 ))}
               </CommandGroup>

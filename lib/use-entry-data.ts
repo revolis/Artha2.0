@@ -53,6 +53,93 @@ export function useEntryData() {
     []
   )
 
+  // --- Managing the things entries are filed under ------------------------
+  //
+  // A source is a row, so editing one is an update and every entry pointing at
+  // it follows by id. Categories and tags are not rows — they are text held on
+  // each entry — so renaming one means rewriting every entry that carries it,
+  // and deleting one means taking it off them. All three are done in a single
+  // store mutation so the whole rename lands or none of it does.
+
+  const updateSource = React.useCallback((next: Source) => {
+    void sourcesStore
+      .mutate((prev) => prev.map((s) => (s.id === next.id ? next : s)))
+      .catch(() => {})
+  }, [])
+
+  const deleteSource = React.useCallback((id: string) => {
+    // entries.source_id is ON DELETE SET NULL, so the entries survive and are
+    // simply no longer attributed. Nothing to clean up on this side.
+    void sourcesStore
+      .mutate((prev) => prev.filter((s) => s.id !== id))
+      .catch(() => {})
+  }, [])
+
+  const renameCategory = React.useCallback((from: string, to: string) => {
+    const target = to.trim()
+    if (!target || target === from) return
+    void entriesStore
+      .mutate((prev) =>
+        prev.map((e) => (e.category === from ? { ...e, category: target } : e))
+      )
+      .catch(() => {})
+  }, [])
+
+  const deleteCategory = React.useCallback((name: string) => {
+    void entriesStore
+      .mutate((prev) =>
+        prev.map((e) =>
+          e.category === name ? { ...e, category: undefined } : e
+        )
+      )
+      .catch(() => {})
+  }, [])
+
+  const renameTag = React.useCallback((from: string, to: string) => {
+    const target = to.trim()
+    if (!target || target === from) return
+    void entriesStore
+      .mutate((prev) =>
+        prev.map((e) =>
+          e.tags.includes(from)
+            ? // Set, because an entry already carrying both would otherwise end
+              // up with the same tag twice.
+              {
+                ...e,
+                tags: Array.from(
+                  new Set(e.tags.map((t) => (t === from ? target : t)))
+                ),
+              }
+            : e
+        )
+      )
+      .catch(() => {})
+  }, [])
+
+  const deleteTag = React.useCallback((name: string) => {
+    void entriesStore
+      .mutate((prev) =>
+        prev.map((e) =>
+          e.tags.includes(name)
+            ? { ...e, tags: e.tags.filter((t) => t !== name) }
+            : e
+        )
+      )
+      .catch(() => {})
+  }, [])
+
+  /** How many entries a rename or a delete would touch, for the warning. */
+  const usage = React.useMemo(
+    () => ({
+      source: (id: string) => entries.filter((e) => e.sourceId === id).length,
+      category: (name: string) =>
+        entries.filter((e) => e.category === name).length,
+      tag: (name: string) =>
+        entries.filter((e) => e.tags.includes(name)).length,
+    }),
+    [entries]
+  )
+
   return {
     entries,
     setEntries,
@@ -60,5 +147,12 @@ export function useEntryData() {
     categoryOptions,
     tagOptions,
     saveEntry,
+    updateSource,
+    deleteSource,
+    renameCategory,
+    deleteCategory,
+    renameTag,
+    deleteTag,
+    usage,
   }
 }

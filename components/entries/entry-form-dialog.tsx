@@ -41,6 +41,7 @@ import {
   uploadAttachment,
 } from "@/lib/attachments"
 import { newId } from "@/lib/id"
+import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry, EntryAttachment, EntryType, Source } from "@/lib/types"
 
 export const entryTypeLabels: Record<EntryType, string> = {
@@ -84,6 +85,9 @@ interface EntryFormDialogProps {
   onSave: (entry: Entry, newSource?: Omit<Source, "id">) => void
 }
 
+type ManageKind = "source" | "category" | "tag"
+type Managing = { kind: ManageKind; mode: "edit" | "delete"; name: string }
+
 export function EntryFormDialog({
   entry,
   open,
@@ -93,6 +97,24 @@ export function EntryFormDialog({
   tagOptions,
   onSave,
 }: EntryFormDialogProps) {
+  // Taken from the shared store rather than passed down: three pages open this
+  // dialog, and threading seven more callbacks through all of them to reach
+  // one panel is a lot of wiring for no extra clarity.
+  const {
+    updateSource,
+    deleteSource,
+    renameCategory,
+    deleteCategory,
+    renameTag,
+    deleteTag,
+    usage,
+  } = useEntryData()
+
+  const [managing, setManaging] = React.useState<Managing | null>(null)
+  const [draftName, setDraftName] = React.useState("")
+  const [draftHandle, setDraftHandle] = React.useState("")
+  const [draftPlatform, setDraftPlatform] = React.useState("")
+  const [draftCampaign, setDraftCampaign] = React.useState("")
   const [datetime, setDatetime] = React.useState(entry?.datetime ?? nowLocal())
   const [type, setType] = React.useState<EntryType>(entry?.type ?? "profit")
   const [category, setCategory] = React.useState<string | null>(
@@ -229,6 +251,164 @@ export function EntryFormDialog({
     onOpenChange(false)
   }
 
+  function startEdit(kind: ManageKind, name: string) {
+    setDraftName(name)
+    if (kind === "source") {
+      const found = sources.find((item) => item.name === name)
+      setDraftHandle(found?.socialHandle ?? "")
+      setDraftPlatform(found?.platformUrl ?? "")
+      setDraftCampaign(found?.campaignUrl ?? "")
+    }
+    setManaging({ kind, mode: "edit", name })
+  }
+
+  function commitEdit() {
+    if (!managing) return
+    const next = draftName.trim()
+    if (!next) return
+    if (managing.kind === "source") {
+      const found = sources.find((item) => item.name === managing.name)
+      if (found) {
+        updateSource({
+          ...found,
+          name: next,
+          socialHandle: draftHandle.trim() || undefined,
+          platformUrl: draftPlatform.trim() || undefined,
+          campaignUrl: draftCampaign.trim() || undefined,
+        })
+        // The field holds a name, so a rename has to be followed here or the
+        // entry would be saved against a source that no longer goes by it.
+        if (sourceName === managing.name) setSourceName(next)
+      }
+    } else if (managing.kind === "category") {
+      renameCategory(managing.name, next)
+      if (category === managing.name) setCategory(next)
+    } else {
+      renameTag(managing.name, next)
+      setTags((prev) => prev.map((t) => (t === managing.name ? next : t)))
+    }
+    setManaging(null)
+  }
+
+  function commitDelete() {
+    if (!managing) return
+    if (managing.kind === "source") {
+      const found = sources.find((item) => item.name === managing.name)
+      if (found) {
+        deleteSource(found.id)
+        if (sourceName === managing.name) setSourceName(null)
+      }
+    } else if (managing.kind === "category") {
+      deleteCategory(managing.name)
+      if (category === managing.name) setCategory(null)
+    } else {
+      deleteTag(managing.name)
+      setTags((prev) => prev.filter((t) => t !== managing.name))
+    }
+    setManaging(null)
+  }
+
+  function usageOf(kind: ManageKind, name: string): number {
+    if (kind === "source") {
+      const found = sources.find((item) => item.name === name)
+      return found ? usage.source(found.id) : 0
+    }
+    return kind === "category" ? usage.category(name) : usage.tag(name)
+  }
+
+  const actionsFor = (kind: ManageKind) => ({
+    onEdit: (name: string) => startEdit(kind, name),
+    onDelete: (name: string) => setManaging({ kind, mode: "delete", name }),
+  })
+
+  const managePanel =
+    managing === null ? null : managing.mode === "edit" ? (
+      <div className="flex flex-col gap-3 rounded-lg border p-4">
+        <p className="text-sm font-medium">
+          Edit {managing.kind}: {managing.name}
+        </p>
+        <Field>
+          <FieldLabel htmlFor="manage-name">Name</FieldLabel>
+          <Input
+            id="manage-name"
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+          />
+        </Field>
+        {managing.kind === "source" ? (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <Field>
+                <FieldLabel htmlFor="manage-handle">Social Handle</FieldLabel>
+                <Input
+                  id="manage-handle"
+                  placeholder="@handle"
+                  value={draftHandle}
+                  onChange={(e) => setDraftHandle(e.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="manage-platform">Platform Link</FieldLabel>
+                <Input
+                  id="manage-platform"
+                  placeholder="https://…"
+                  value={draftPlatform}
+                  onChange={(e) => setDraftPlatform(e.target.value)}
+                />
+              </Field>
+            </div>
+            <Field>
+              <FieldLabel htmlFor="manage-campaign">Campaign Link</FieldLabel>
+              <Input
+                id="manage-campaign"
+                placeholder="https://…"
+                value={draftCampaign}
+                onChange={(e) => setDraftCampaign(e.target.value)}
+              />
+            </Field>
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Renaming updates {usageOf(managing.kind, managing.name)}{" "}
+            {usageOf(managing.kind, managing.name) === 1 ? "entry" : "entries"}.
+          </p>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setManaging(null)}>
+            Cancel
+          </Button>
+          <Button size="sm" onClick={commitEdit} disabled={!draftName.trim()}>
+            Save {managing.kind}
+          </Button>
+        </div>
+      </div>
+    ) : (
+      <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+        <p className="text-sm font-medium">
+          Delete {managing.kind} &quot;{managing.name}&quot;?
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {/* Never silent about what it touches: the count is the whole
+              decision, and none of these deletes an entry. */}
+          {usageOf(managing.kind, managing.name)}{" "}
+          {usageOf(managing.kind, managing.name) === 1 ? "entry" : "entries"}{" "}
+          {managing.kind === "source"
+            ? "will keep their amounts and lose the source."
+            : managing.kind === "category"
+              ? "will keep their amounts and lose the category."
+              : "will keep their amounts and lose the tag."}
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setManaging(null)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" size="sm" onClick={commitDelete}>
+            Delete {managing.kind}
+          </Button>
+        </div>
+      </div>
+    )
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -283,6 +463,7 @@ export function EntryFormDialog({
                 options={categoryOptions}
                 placeholder="Pick or create…"
                 createLabel="category"
+                actions={actionsFor("category")}
               />
             </Field>
             <Field>
@@ -294,6 +475,7 @@ export function EntryFormDialog({
                 options={tagOptions}
                 placeholder="Pick or create…"
                 createLabel="tag"
+                actions={actionsFor("tag")}
               />
             </Field>
           </div>
@@ -306,8 +488,13 @@ export function EntryFormDialog({
               options={sources.map((s) => s.name)}
               placeholder="Pick or create…"
               createLabel="source"
+              actions={actionsFor("source")}
             />
           </Field>
+
+          {/* One panel for all three, directly under the fields it belongs to,
+              rather than a dialog stacked on a dialog. */}
+          {managePanel}
           {isNewSource ? (
             <div className="flex flex-col gap-4 rounded-lg border p-4">
               <p className="text-sm font-medium">New source: {sourceName}</p>
