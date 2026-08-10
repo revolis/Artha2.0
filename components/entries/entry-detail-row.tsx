@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/dialog"
 import { AttachmentImage } from "@/components/entries/attachment-image"
 import { normaliseAttachments } from "@/lib/attachments"
-import type { Entry, EntryAttachment } from "@/lib/types"
+import { externalHref, linkLabel } from "@/lib/links"
+import type { Entry, EntryAttachment, Source } from "@/lib/types"
 
 /**
  * The panel revealed under an entry: the note in full, and any images as
@@ -22,9 +23,12 @@ import type { Entry, EntryAttachment } from "@/lib/types"
 export function EntryDetailRow({
   entry,
   colSpan,
+  source,
 }: {
   entry: Entry
   colSpan: number
+  /** The entry's source, so its handle and links have somewhere to be seen. */
+  source?: Source
 }) {
   const [preview, setPreview] = React.useState<EntryAttachment | null>(null)
   const attachments = React.useMemo(
@@ -52,6 +56,58 @@ export function EntryDetailRow({
                 No note on this entry.
               </span>
             )}
+
+            {/* Where it came from. The entry form asks for a handle, a
+                platform link and a campaign link when a source is created,
+                and until now stored all three and showed none of them —
+                written once and never readable again. */}
+            {source &&
+            (source.socialHandle ||
+              source.platformUrl ||
+              source.campaignUrl) ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                  {source.name}
+                </span>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                  {source.socialHandle ? (
+                    <span className="text-muted-foreground">
+                      {source.socialHandle}
+                    </span>
+                  ) : null}
+                  {(
+                    [
+                      ["Platform", source.platformUrl],
+                      ["Campaign", source.campaignUrl],
+                    ] as const
+                  ).map(([label, value]) => {
+                    if (!value) return null
+                    const href = externalHref(value)
+                    return (
+                      <span key={label} className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground">{label}</span>
+                        {href ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            // noreferrer as well as noopener: the target page
+                            // has no business knowing where the click came from.
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-4 hover:text-foreground"
+                          >
+                            {linkLabel(value)}
+                          </a>
+                        ) : (
+                          // Not a link we are willing to follow — shown as
+                          // text so it can still be read and corrected.
+                          <span className="text-muted-foreground">{value}</span>
+                        )}
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
 
             {attachments.length > 0 ? (
               <div className="flex flex-col gap-2">

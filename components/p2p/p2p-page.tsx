@@ -56,37 +56,39 @@ import { StatCard } from "@/components/stats/stat-card"
 import { useMoney } from "@/lib/use-money"
 import { autoBuckets, toStatPoints, trendOf } from "@/lib/stat-series"
 import { newId } from "@/lib/id"
+import { getEntryYear } from "@/lib/mock-data"
 import { useEntryData } from "@/lib/use-entry-data"
 import type { Entry } from "@/lib/types"
 import { tagStyle } from "@/lib/tag-colors"
 import { cn } from "@/lib/utils"
 import { useSelectedYear } from "@/lib/use-selected-year"
 
-type Timeframe = "year" | "month" | "all" | "custom"
+type Timeframe = "all" | "month" | "custom"
 
-const timeframeItems: { value: Timeframe; label: string }[] = [
-  { value: "year", label: "This Year" },
-  { value: "month", label: "This Month" },
-  { value: "all", label: "All Time" },
-  { value: "custom", label: "Custom range" },
-]
+/**
+ * Scoped to the year on the tabs, like every other page, so these narrow
+ * within it. "All Time" used to reach across every year from under a heading
+ * naming one; it is the whole of the selected year now, and says so.
+ *
+ * "This Month" is only offered for the year in progress — against a past year
+ * it could only ever be empty.
+ */
+function timeframeItemsFor(
+  selectedYear: number,
+  now = new Date()
+): { value: Timeframe; label: string }[] {
+  const whole = { value: "all" as const, label: "Whole year" }
+  const custom = { value: "custom" as const, label: "Custom range" }
+  if (selectedYear !== now.getFullYear()) return [whole, custom]
+  return [whole, { value: "month", label: "This Month" }, custom]
+}
 
 function timeframeBounds(
   timeframe: Timeframe,
   customFrom: string,
   customTo: string,
-  // The year being explored, which is not always the year we are in. Reading
-  // the clock for this meant that picking 2025 elsewhere and arriving here
-  // showed 2026 under a heading that said "This Year".
-  selectedYear: number,
   now = new Date()
 ): { from?: Date; to?: Date } {
-  if (timeframe === "year") {
-    return {
-      from: new Date(selectedYear, 0, 1),
-      to: new Date(selectedYear, 11, 31, 23, 59, 59),
-    }
-  }
   if (timeframe === "month")
     return { from: new Date(now.getFullYear(), now.getMonth(), 1) }
   if (timeframe === "custom") {
@@ -125,7 +127,7 @@ export function P2PPage() {
   } = useEntryData()
 
   const [selectedYear] = useSelectedYear()
-  const [timeframe, setTimeframe] = React.useState<Timeframe>("year")
+  const [timeframe, setTimeframe] = React.useState<Timeframe>("all")
   const [customFrom, setCustomFrom] = React.useState("")
   const [customTo, setCustomTo] = React.useState("")
   const [dialogOpen, setDialogOpen] = React.useState(false)
@@ -138,23 +140,37 @@ export function P2PPage() {
     [sources]
   )
 
+  const timeframeItems = React.useMemo(
+    () => timeframeItemsFor(selectedYear),
+    [selectedYear]
+  )
+  // Derived, not corrected in an effect: moving to a past year takes "This
+  // Month" off the list, and there should be no render where the control says
+  // one thing and the table shows another.
+  const effectiveTimeframe = timeframeItems.some(
+    (item) => item.value === timeframe
+  )
+    ? timeframe
+    : "all"
+
   const trades = React.useMemo(() => {
     const { from, to } = timeframeBounds(
-      timeframe,
+      effectiveTimeframe,
       customFrom,
-      customTo,
-      selectedYear
+      customTo
     )
     return entries
       .filter((entry) => {
         if (entry.type !== "p2p" || !entry.p2p) return false
+        // The year on the tabs scopes this page too.
+        if (getEntryYear(entry) !== selectedYear) return false
         const when = new Date(entry.datetime)
         if (from && when < from) return false
         if (to && when > to) return false
         return true
       })
       .sort((a, b) => b.datetime.localeCompare(a.datetime))
-  }, [entries, timeframe, customFrom, customTo, selectedYear])
+  }, [entries, effectiveTimeframe, customFrom, customTo, selectedYear])
 
   const sold = trades.filter((t) => t.p2p!.direction === "usd-to-cash")
   const bought = trades.filter((t) => t.p2p!.direction === "cash-to-usd")
@@ -269,7 +285,7 @@ export function P2PPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Select
             items={timeframeItems}
-            value={timeframe}
+            value={effectiveTimeframe}
             onValueChange={(v) => setTimeframe(v as Timeframe)}
           >
             <SelectTrigger className="w-36">
@@ -285,7 +301,7 @@ export function P2PPage() {
               </SelectGroup>
             </SelectContent>
           </Select>
-          {timeframe === "custom" ? (
+          {effectiveTimeframe === "custom" ? (
             <div className="flex items-center gap-2">
               <Input
                 type="date"
@@ -413,8 +429,16 @@ export function P2PPage() {
                     ? sourceById.get(entry.sourceId)
                     : undefined
                   const isSold = p2p.direction === "usd-to-cash"
+                  // Same here: a desk with a handle is worth opening for.
+                  const hasSourceDetail = Boolean(
+                    source?.socialHandle ||
+                    source?.platformUrl ||
+                    source?.campaignUrl
+                  )
                   const hasDetail =
-                    Boolean(entry.note) || (entry.attachments?.length ?? 0) > 0
+                    Boolean(entry.note) ||
+                    (entry.attachments?.length ?? 0) > 0 ||
+                    hasSourceDetail
                   const isOpen = expanded === entry.id
                   return (
                     <React.Fragment key={entry.id}>
@@ -592,7 +616,11 @@ export function P2PPage() {
                         </TableCell>
                       </TableRow>
                       {isOpen ? (
-                        <EntryDetailRow entry={entry} colSpan={10} />
+                        <EntryDetailRow
+                          entry={entry}
+                          colSpan={10}
+                          source={source}
+                        />
                       ) : null}
                     </React.Fragment>
                   )

@@ -62,7 +62,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getNetAmount } from "@/lib/mock-data"
+import { getEntryYear, getNetAmount } from "@/lib/mock-data"
 import { useMoney } from "@/lib/use-money"
 import { newId } from "@/lib/id"
 import { useEntryData } from "@/lib/use-entry-data"
@@ -71,38 +71,46 @@ import { tagStyle } from "@/lib/tag-colors"
 import { cn } from "@/lib/utils"
 import { useSelectedYear } from "@/lib/use-selected-year"
 
-type RangePreset = "all" | "7d" | "30d" | "month" | "year" | "custom"
+type RangePreset = "all" | "7d" | "30d" | "month" | "custom"
 
-const rangeItems: { value: RangePreset; label: string }[] = [
-  { value: "all", label: "All time" },
-  { value: "7d", label: "Last 7 days" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "month", label: "This month" },
-  { value: "year", label: "This year" },
-  { value: "custom", label: "Custom range" },
-]
+/**
+ * The page is scoped to the year on the tabs, so every one of these narrows
+ * within that year rather than across the whole ledger. "All time" would be a
+ * lie — it is the whole of the year you are looking at.
+ *
+ * The relative ones are only offered for the year in progress. "Last 7 days"
+ * against 2025, viewed from 2026, can only ever come back empty, and an option
+ * that cannot return anything is a trap rather than a filter.
+ */
+function rangeItemsFor(
+  selectedYear: number,
+  now = new Date()
+): { value: RangePreset; label: string }[] {
+  const whole = { value: "all" as const, label: "Whole year" }
+  const custom = { value: "custom" as const, label: "Custom range" }
+  if (selectedYear !== now.getFullYear()) return [whole, custom]
+  return [
+    whole,
+    { value: "7d", label: "Last 7 days" },
+    { value: "30d", label: "Last 30 days" },
+    { value: "month", label: "This month" },
+    custom,
+  ]
+}
 
 function rangeBounds(
   preset: RangePreset,
   customFrom: string,
   customTo: string,
-  selectedYear: number,
   now = new Date()
 ): { from?: Date; to?: Date } {
+  // Empty: the year filter below already bounds it.
   if (preset === "all") return {}
   if (preset === "7d") return { from: new Date(now.getTime() - 7 * 86_400_000) }
   if (preset === "30d")
     return { from: new Date(now.getTime() - 30 * 86_400_000) }
   if (preset === "month")
     return { from: new Date(now.getFullYear(), now.getMonth(), 1) }
-  // The year being explored, not the year we happen to be in — otherwise
-  // picking 2025 elsewhere and filtering by "This year" here showed 2026.
-  if (preset === "year") {
-    return {
-      from: new Date(selectedYear, 0, 1),
-      to: new Date(selectedYear, 11, 31, 23, 59, 59),
-    }
-  }
   return {
     from: customFrom ? new Date(`${customFrom}T00:00:00`) : undefined,
     to: customTo ? new Date(`${customTo}T23:59:59`) : undefined,
@@ -170,18 +178,34 @@ export function EntriesPage() {
     [sources]
   )
 
+  const rangeItems = React.useMemo(
+    () => rangeItemsFor(selectedYear),
+    [selectedYear]
+  )
+  // Switching from this year to a past one takes "Last 7 days" off the list.
+  // Derived rather than corrected in an effect, so there is never a render
+  // where the filter says one thing and the table shows another.
+  const effectiveRange = rangeItems.some((item) => item.value === range)
+    ? range
+    : "all"
+
   const hasActiveFilters =
     search !== "" ||
     typeFilter !== "all" ||
     sourceFilter !== "all" ||
     tagFilter !== "all" ||
-    range !== "all"
+    effectiveRange !== "all"
 
   const filtered = React.useMemo(() => {
-    const { from, to } = rangeBounds(range, customFrom, customTo, selectedYear)
+    const { from, to } = rangeBounds(effectiveRange, customFrom, customTo)
     const q = search.trim().toLowerCase()
     return entries
       .filter((entry) => {
+        // The year on the tabs scopes this page, the same as every other.
+        // Without it the table listed all three years at once under a heading
+        // that named one, and the total underneath added up a period nobody
+        // had asked to see.
+        if (getEntryYear(entry) !== selectedYear) return false
         if (typeFilter !== "all" && entry.type !== typeFilter) return false
         if (sourceFilter !== "all" && entry.sourceId !== sourceFilter)
           return false
@@ -213,7 +237,7 @@ export function EntriesPage() {
     typeFilter,
     sourceFilter,
     tagFilter,
-    range,
+    effectiveRange,
     customFrom,
     customTo,
     selectedYear,
@@ -353,7 +377,7 @@ export function EntriesPage() {
         </Select>
         <Select
           items={rangeItems}
-          value={range}
+          value={effectiveRange}
           onValueChange={(v) => setRange(v as RangePreset)}
         >
           <SelectTrigger className="w-36">
@@ -369,7 +393,7 @@ export function EntriesPage() {
             </SelectGroup>
           </SelectContent>
         </Select>
-        {range === "custom" ? (
+        {effectiveRange === "custom" ? (
           <div className="flex items-center gap-2">
             <Input
               type="date"
@@ -457,8 +481,18 @@ export function EntriesPage() {
                 const source = entry.sourceId
                   ? sourceById.get(entry.sourceId)
                   : undefined
+                // A source carrying a handle or a link is worth opening for, even on
+                // an entry with no note — otherwise those links have nowhere to
+                // be seen on most rows.
+                const hasSourceDetail = Boolean(
+                  source?.socialHandle ||
+                  source?.platformUrl ||
+                  source?.campaignUrl
+                )
                 const hasDetail =
-                  Boolean(entry.note) || (entry.attachments?.length ?? 0) > 0
+                  Boolean(entry.note) ||
+                  (entry.attachments?.length ?? 0) > 0 ||
+                  hasSourceDetail
                 const isOpen = expanded === entry.id
                 return (
                   <React.Fragment key={entry.id}>
@@ -636,7 +670,11 @@ export function EntriesPage() {
                       </TableCell>
                     </TableRow>
                     {isOpen ? (
-                      <EntryDetailRow entry={entry} colSpan={9} />
+                      <EntryDetailRow
+                        entry={entry}
+                        colSpan={9}
+                        source={source}
+                      />
                     ) : null}
                   </React.Fragment>
                 )
