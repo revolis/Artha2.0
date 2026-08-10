@@ -10,7 +10,7 @@ export const mockUser: UserProfile = {
   name: "Rajan",
   email: "thematrixogs@gmail.com",
   avatarId: "aurora",
-  bio: "Tracking crypto, stocks and cash income in one place.",
+  bio: "Tracking all my income and expenses in one place.",
   location: "Kathmandu, Nepal",
   timezone: "Asia/Kathmandu",
   website: "",

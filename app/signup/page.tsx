@@ -4,7 +4,7 @@ import { SignupForm } from "@/components/auth/signup-form"
 
 export const metadata: Metadata = {
   title: "Create your account",
-  description: "Start tracking crypto, equities and cash income in one ledger.",
+  description: "Start tracking your everyday income/expenses in one ledger.",
 }
 
 export default function Page() {

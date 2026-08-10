@@ -15,7 +15,7 @@ import { WavyBand } from "@/components/landing/wavy-band"
 export const metadata: Metadata = {
   title: "ARTHA — Know exactly where your money stands",
   description:
-    "A precision dashboard for crypto, equities and cash income. Record profit, loss, fees, tax and every conversion to cash — reported in NPR and USD at the day's rate. Explore the live demo.",
+    "A precision dashboard for all your income/expenses. Record every gain, loss, fee and conversion as it happens — reported in your currency, at the day's rate. Explore the live demo.",
 }
 
 export default function Page() {

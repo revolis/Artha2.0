@@ -28,7 +28,7 @@ import { useProfile } from "@/lib/use-profile"
 
 const INCLUDED = [
   "Unlimited entries, every year",
-  "Crypto, stocks and cash in one place",
+  "All your income/expenses in one place",
   "Fiat/P2P tracking with rates",
   "Portfolio, analytics and heatmap",
   "Goals with pacing and milestones",

@@ -12,7 +12,7 @@ import { SectionHeading } from "@/components/landing/section-heading"
 const FAQS = [
   {
     q: "What can I track in Artha?",
-    a: "Earnings and losses across crypto, equities and cash work, alongside the costs that come with them — platform fees, network charges, tax set aside — and every conversion between digital balances and physical cash.",
+    a: "Everything you earn and everything it costs you — profit and loss, platform fees, network charges, tax set aside — and every conversion between what you hold and cash in hand.",
   },
   {
     q: "Does it connect to my exchange or my bank?",
