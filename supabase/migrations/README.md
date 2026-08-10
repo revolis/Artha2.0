@@ -9,9 +9,6 @@ so the database is not the only place it exists.
 | ---- | --------------- |
 | `20260808091707_create_core_schema.sql` | Every table, index, constraint and RLS policy: profiles, social links, settings, sources, entries, entry attachments, goals, dashboard years, notification reads |
 | `20260808091733_create_triggers_and_new_user_bootstrap.sql` | `touch_updated_at`, and `handle_new_user` — the trigger that gives a new account its profile and settings row inside the same transaction that creates the user |
-
-Those two are the foundation: between them they describe the shape of the
-database and how an account comes into being.
 | `20260810170000_current_functions.sql` | `touch_updated_at`, `handle_new_user`, `sync_profile_email`, `dispatch_notification_emails`, `reset_demo_account`, as they stand today |
 | `20260810170100_current_notification_digest.sql` | `notification_digest` — every figure in the monthly statement comes out of this one query |
 | `20260810170200_schema_deltas_since_core.sql` | Everything added after the core schema: the `messages` and `fx_rates` tables, goal category tracking, the move of attachments and avatars to Storage, `auth.uid()` defaults, the storage buckets and their policies, the three cron jobs, the email-sync trigger, and the execute revokes |

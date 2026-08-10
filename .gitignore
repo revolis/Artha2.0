@@ -36,3 +36,6 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# One-off export used to copy the schema out of Supabase.
+migrations-export.csv
