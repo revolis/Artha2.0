@@ -12,45 +12,50 @@ so the database is not the only place it exists.
 
 Those two are the foundation: between them they describe the shape of the
 database and how an account comes into being.
+| `20260810170000_current_functions.sql` | `touch_updated_at`, `handle_new_user`, `sync_profile_email`, `dispatch_notification_emails`, `reset_demo_account`, as they stand today |
+| `20260810170100_current_notification_digest.sql` | `notification_digest` — every figure in the monthly statement comes out of this one query |
+| `20260810170200_schema_deltas_since_core.sql` | Everything added after the core schema: the `messages` and `fx_rates` tables, goal category tracking, the move of attachments and avatars to Storage, `auth.uid()` defaults, the storage buckets and their policies, the three cron jobs, the email-sync trigger, and the execute revokes |
 
-## What is not here yet
+Together these five describe the database as it stands. They are not the
+original history — see below.
 
-Twenty-four later migrations are still only in Supabase. They are recorded in
-`supabase_migrations.schema_migrations` on the project and can be listed with:
+## Why these are a snapshot rather than the history
 
-```bash
-pnpm dlx supabase@latest migration list
-```
+There were twenty-six migrations. `supabase link` reconciles the remote
+migration history against this folder, and at the time this folder held two
+files, so the other twenty-four bookkeeping rows were removed from
+`supabase_migrations.schema_migrations`. The schema itself was untouched — no
+table, function, policy, job or row was affected — but the SQL text of those
+migrations lived only in that table and is gone.
 
-They cover, in order: permission tightening on the trigger functions,
-`default auth.uid()` on user_id columns, moving attachments and avatars to
-Storage, the email sync trigger, the messages table, pg_cron and pg_net,
-`notification_digest` and its scheduling, the notification defaults, goal
-category tracking, the `fx_rates` table, the richer digest and goal
-contribution figures, the demo account reset and its schedule, an index on
-`messages.user_id`, and filling a blank profile email from the provider.
+What matters for rebuilding is the state, not the path taken to it, so the
+state is what is recorded here: definitions read straight out of the live
+project with `pg_get_functiondef` and the catalogue views.
 
-## Completing the copy
+## Rebuilding from these
 
-The whole current schema can be pulled into this folder in one command, which
-is more reliable than transcribing the history by hand:
+Run them in filename order against a fresh project. The later files are
+idempotent (`create or replace`, `if not exists`, `if exists`), so they are
+also safe to re-run against a database that already has some of it.
 
-```bash
-pnpm dlx supabase@latest link --project-ref vosxgtbaizimrbdoztir
-```
+Two things live outside this folder and are needed as well:
+
+- `supabase/functions` — the four edge functions, with a README covering the
+  per-function `verify_jwt` setting, which is deployment configuration rather
+  than code.
+- The Vault secret named `service_role_key`, which
+  `dispatch_notification_emails` reads in order to call the mail function.
+  Secrets are deliberately not in the repo.
+
+## Keeping it current
+
+After changing the schema, capture the change here as well. The CLI can do it
+in one command once Docker Desktop is installed:
 
 ```bash
 pnpm dlx supabase@latest db pull
 ```
 
-`link` asks for the database password — the one under **Project Settings →
-Database** in the Supabase dashboard, not the account password. `db pull` then
-writes the live schema as a migration alongside these.
-
-## Why this matters
-
-Losing the Supabase project would otherwise lose the schema with it. The edge
-functions were committed for the same reason and live in `supabase/functions`.
-The row-level security policies in particular are not something anyone would
-reconstruct correctly from memory, and they are the only thing standing
-between one account's ledger and another's.
+Without Docker, `db pull` and `db dump` both fail — they run `pg_dump` inside a
+container — and the schema has to be read out of the project by hand, as it was
+here.
