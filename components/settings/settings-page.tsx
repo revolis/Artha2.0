@@ -837,7 +837,7 @@ export function SettingsPage() {
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                  Artha brings your crypto, stocks and cash income into one
+                  Artha brings your everyday income/expenses into one
                   place. Everything is entered by hand on purpose — no exchange
                   logins, no read-only API keys, no third party holding your
                   keys. You decide what gets recorded, and your figures stay

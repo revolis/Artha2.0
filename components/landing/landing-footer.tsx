@@ -56,7 +56,7 @@ export function LandingFooter() {
               </span>
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-              A precision dashboard for crypto, equities and cash income —
+              A precision dashboard for all your income/expenses —
               recorded deliberately, reported exactly.
             </p>
           </div>
@@ -91,7 +91,7 @@ export function LandingFooter() {
               of money it is — and it matches the three things you can
               actually record: what you hold, what it paid, and what you
               converted. */}
-          <span>Holdings · Income · Conversions — reported in NPR and USD</span>
+          <span>Holdings · Income · Conversions — reported in your currency</span>
         </div>
 
         {/* Clipped at the baseline so the wordmark sits into the bottom edge

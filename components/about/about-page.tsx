@@ -40,7 +40,7 @@ const PRINCIPLES = [
   {
     icon: Wallet,
     title: "One ledger, one currency",
-    body: "Crypto, equities and cash income sit together and report in whichever currency you work in — rather than scattered across five dashboards and a spreadsheet.",
+    body: "Your everyday income/expenses sit together and report in whichever currency you work in — rather than scattered across five dashboards and a spreadsheet.",
   },
 ]
 

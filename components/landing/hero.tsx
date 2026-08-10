@@ -48,7 +48,7 @@ export function Hero() {
 
         <Reveal delay={340}>
           <p className="max-w-2xl text-base leading-relaxed text-balance text-muted-foreground sm:text-lg">
-            Artha brings crypto, equities and cash income into a single ledger.
+            Artha brings your everyday income/expenses into a single ledger.
             Record each gain, loss, fee and conversion as it happens, and see
             your true position — in the currency you work in, at the day&apos;s
             rate.
