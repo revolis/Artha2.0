@@ -111,7 +111,7 @@
   /* The halo behind the Live demo button. Long cycle on purpose: the ring
      expands and fades in the first second and the rest is stillness, because
      something that never stops moving stops being noticed. */
-  --animate-demo-halo: demo-halo 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  --animate-demo-halo: demo-halo 3.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -123,19 +123,24 @@
       background-position: -200% 0;
     }
   }
+  /* Drawn as a ring of the warm accent rather than a wash of the button's own
+     colour. --primary has no chroma at all, so a translucent one reads as a
+     grey smudge on a white page — it only looked like light in dark mode,
+     where the same token happens to be near-white.
+
+     Spread rather than scale: spread grows in pixels, so the ring stays the
+     same thickness the whole way round. Scaling the box would stretch a wide
+     pill sideways far more than it grew it vertically. */
   @keyframes demo-halo {
     0% {
-      opacity: 0.45;
-      transform: scale(1);
+      box-shadow: 0 0 0 0 var(--demo-ring);
     }
     /* Fully faded well before the cycle ends, leaving a deliberate pause. */
-    35% {
-      opacity: 0;
-      transform: scale(1.35);
+    45% {
+      box-shadow: 0 0 0 14px transparent;
     }
     100% {
-      opacity: 0;
-      transform: scale(1.35);
+      box-shadow: 0 0 0 14px transparent;
     }
   }
 }
@@ -168,6 +173,13 @@
   --chart-3: oklch(0.55 0.15 30);
   --chart-4: oklch(0.55 0.02 60);
   --chart-5: oklch(0.7 0.05 160);
+  /* The glow and pulse ring on the Live demo button. Warm, like the bloom
+     behind the headline, but deeper and more opaque than --chart-2 because
+     this sits on white: --chart-2 is a light gold, and a light colour on a
+     white page has almost no contrast to spend. Measured against the page
+     background, these land where the dark theme's values already land. */
+  --demo-glow: oklch(0.6 0.16 62 / 0.55);
+  --demo-ring: oklch(0.6 0.16 62 / 0.8);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -234,6 +246,10 @@
   --chart-3: oklch(0.65 0.15 30);
   --chart-4: oklch(0.65 0.02 60);
   --chart-5: oklch(0.75 0.05 160);
+  /* Against a near-black page the accent gold can stay light and thin and
+     still read as light, so here it is --chart-2 itself. */
+  --demo-glow: oklch(0.78 0.13 85 / 0.3);
+  --demo-ring: oklch(0.78 0.13 85 / 0.55);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
