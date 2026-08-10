@@ -26,12 +26,22 @@ export interface RateState {
   updatedAt: string
   /** Whether these came off the wire or are still the built-in defaults. */
   source: RateSource
+  /**
+   * When the scheduled job last went and looked, as an ISO timestamp.
+   *
+   * Distinct from `updatedAt`, which is the day the market rate belongs to.
+   * The feed publishes with a lag, so a rate dated yesterday can have been
+   * checked an hour ago — and it is the checking, not the dating, that tells
+   * someone the figure is being looked after.
+   */
+  checkedAt: string | null
 }
 
 const SEED_STATE: RateState = {
   rates: SEED_RATES,
   updatedAt: SEED_RATES_DATE,
   source: "seed",
+  checkedAt: null,
 }
 
 let cache: RateState = SEED_STATE
@@ -60,7 +70,7 @@ async function load(): Promise<void> {
       const supabase = createClient()
       const { data } = await supabase
         .from("fx_rates")
-        .select("as_of, rates, source")
+        .select("as_of, rates, source, fetched_at")
         .order("as_of", { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -72,6 +82,7 @@ async function load(): Promise<void> {
           rates: { ...SEED_RATES, ...(data.rates as Partial<RateTable>) },
           updatedAt: data.as_of,
           source: data.source === "live" ? "live" : "seed",
+          checkedAt: data.fetched_at ?? null,
         })
       }
     } finally {

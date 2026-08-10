@@ -1,15 +1,8 @@
 "use client"
 
 import * as React from "react"
-import {
-  ArrowUpDown,
-  Check,
-  Loader2,
-  Pencil,
-  RefreshCw,
-} from "@/components/icons"
+import { ArrowUpDown, Check, Pencil, RefreshCw } from "@/components/icons"
 
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -48,8 +41,6 @@ const currencyItems = CURRENCIES.map((code) => ({
   value: code,
   label: `${CURRENCY_SYMBOLS[code]}  ${code} — ${CURRENCY_NAMES[code]}`,
 }))
-
-type UpdateState = "idle" | "loading" | "done" | "error"
 
 function CurrencyField({
   id,
@@ -114,44 +105,52 @@ function CurrencyField({
   )
 }
 
-/** Update button that reports what it's doing while it does it. */
-function UpdateRatesButton({
-  state,
-  onClick,
-}: {
-  state: UpdateState
-  onClick: () => void
-}) {
+/**
+ * How long ago the rates were last looked at, in words.
+ *
+ * The card used to carry an Update button. Rates are fetched by a scheduled
+ * job every day now, so pressing it did nothing a person needed doing — and a
+ * button that exists only to be redundant invites the worry that without it
+ * nothing would happen. What actually reassures is evidence, so the button is
+ * gone and the evidence is in its place.
+ */
+function timeAgo(iso: string, now = new Date()): string {
+  const minutes = Math.round((now.getTime() - new Date(iso).getTime()) / 60000)
+  if (minutes < 2) return "just now"
+  if (minutes < 60) return `${minutes} minutes ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return hours === 1 ? "an hour ago" : `${hours} hours ago`
+  const days = Math.round(hours / 24)
+  return days === 1 ? "yesterday" : `${days} days ago`
+}
+
+function RateFreshness({ checkedAt }: { checkedAt: string | null }) {
+  // Re-rendered on a slow timer so "3 minutes ago" does not sit there
+  // claiming to be true an hour later.
+  const [, tick] = React.useState(0)
+  React.useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 60_000)
+    return () => clearInterval(id)
+  }, [])
+
+  if (!checkedAt) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border bg-card/60 px-3 py-1.5 text-xs text-muted-foreground">
+        <RefreshCw className="size-3.5" />
+        Updates daily
+      </span>
+    )
+  }
+
   return (
-    <Button
-      variant={state === "error" ? "destructive" : "outline"}
-      size="sm"
-      onClick={onClick}
-      disabled={state === "loading"}
-      className="min-w-36 transition-all duration-300"
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full border bg-card/60 px-3 py-1.5 text-xs text-muted-foreground"
+      // The exact moment, for anyone who wants to be sure.
+      title={new Date(checkedAt).toLocaleString()}
     >
-      {state === "loading" ? (
-        <>
-          <Loader2 data-icon="inline-start" className="animate-spin" />
-          Updating…
-        </>
-      ) : state === "done" ? (
-        <>
-          <Check data-icon="inline-start" className="text-success" />
-          Done — updated
-        </>
-      ) : state === "error" ? (
-        <>
-          <RefreshCw data-icon="inline-start" />
-          Couldn&apos;t reach — retry
-        </>
-      ) : (
-        <>
-          <RefreshCw data-icon="inline-start" />
-          Update rates
-        </>
-      )}
-    </Button>
+      <Check className="size-3.5 text-success" />
+      Checked {timeAgo(checkedAt)}
+    </span>
   )
 }
 
@@ -161,19 +160,13 @@ function UpdateRatesButton({
  * applies them to every amount on the site.
  */
 export function CurrencyConverter({ className }: { className?: string }) {
-  const { rates, updatedAt, source, fetchLiveRates } = useRates()
+  const { rates, updatedAt, source, checkedAt } = useRates()
 
   const [from, setFrom] = React.useState<Currency>("USD")
   const [to, setTo] = React.useState<Currency>("NPR")
   const [amount, setAmount] = React.useState("1")
   const [useCustomRate, setUseCustomRate] = React.useState(false)
   const [customRate, setCustomRate] = React.useState("")
-  const [updateState, setUpdateState] = React.useState<UpdateState>("idle")
-
-  const resetTimer = React.useRef<number | undefined>(undefined)
-  React.useEffect(() => {
-    return () => window.clearTimeout(resetTimer.current)
-  }, [])
 
   const liveRate = rateFor(rates, from, to)
   const parsedCustom = Number(customRate)
@@ -184,18 +177,6 @@ export function CurrencyConverter({ className }: { className?: string }) {
   const converted = Number.isFinite(parsedAmount) ? parsedAmount * rate : 0
 
   const age = daysSince(updatedAt)
-
-  async function update() {
-    setUpdateState("loading")
-    try {
-      await fetchLiveRates()
-      setUpdateState("done")
-      resetTimer.current = window.setTimeout(() => setUpdateState("idle"), 2200)
-    } catch {
-      setUpdateState("error")
-      resetTimer.current = window.setTimeout(() => setUpdateState("idle"), 3500)
-    }
-  }
 
   function swap() {
     setFrom(to)
@@ -217,10 +198,10 @@ export function CurrencyConverter({ className }: { className?: string }) {
             <CardDescription>
               {source === "live"
                 ? `Market rate from ${formatDate(updatedAt)}${age === 0 ? " — today" : age === 1 ? " — yesterday" : ` — ${age} days ago`}.`
-                : "Built-in rate — press Update for today's market rate."}
+                : "Built-in rate — today's market rate is on its way."}
             </CardDescription>
           </div>
-          <UpdateRatesButton state={updateState} onClick={update} />
+          <RateFreshness checkedAt={checkedAt} />
         </div>
       </CardHeader>
 

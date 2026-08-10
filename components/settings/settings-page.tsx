@@ -837,11 +837,10 @@ export function SettingsPage() {
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                  Artha brings your everyday income/expenses into one
-                  place. Everything is entered by hand on purpose — no exchange
-                  logins, no read-only API keys, no third party holding your
-                  keys. You decide what gets recorded, and your figures stay
-                  yours.
+                  Artha brings your everyday income/expenses into one place.
+                  Everything is entered by hand on purpose — no exchange logins,
+                  no read-only API keys, no third party holding your keys. You
+                  decide what gets recorded, and your figures stay yours.
                 </p>
 
                 <div className="flex flex-col divide-y">
