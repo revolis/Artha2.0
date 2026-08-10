@@ -334,15 +334,29 @@ export function getEntryYear(entry: Entry): number {
 // Average monthly income for a year, in USD, from real entries.
 // The current year divides by the months elapsed so far; any other year
 // divides by 12, whether it's behind us or planned ahead.
+//
+// The current year also stops counting at today. It used to total the whole
+// year and divide by the months gone by, so anything dated ahead — and Artha
+// lets you date an entry ahead — was earned in a month the divisor never
+// counted. Nine entries booked into the rest of 2026 pushed the reported
+// average 6% above what the year had actually paid.
+//
+// The divisor still counts the month in progress as a whole month, so early in
+// a month the figure reads a little low. That is the safer way round for a
+// number a person might plan against, and it is the reading "per month so far"
+// usually gets.
 export function getAvgMonthlyIncome(
   entries: Entry[],
   year: number,
   now = new Date()
 ): number {
+  const current = year === now.getFullYear()
+  const months = current ? now.getMonth() + 1 : 12
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
   const total = entries
     .filter((entry) => getEntryYear(entry) === year)
+    .filter((entry) => !current || entry.datetime.slice(0, 10) <= today)
     .reduce((sum, entry) => sum + getNetAmount(entry), 0)
-  const months = year === now.getFullYear() ? now.getMonth() + 1 : 12
   return total / months
 }
 

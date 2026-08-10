@@ -23,6 +23,25 @@ function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
+/**
+ * The bucket's own calendar month or day, read off the local clock.
+ *
+ * This has to match `entry.datetime`, which is a wall-clock string with no
+ * timezone — "2026-08-15T12:00" means the 15th of August wherever you are.
+ * Reading the key off `toISOString()` instead compared that against UTC, and
+ * bucket dates are local midnight: east of Greenwich local midnight is still
+ * the previous day in UTC, so every bucket answered to the month before its
+ * own. In Kathmandu that filed each entry one month late and dropped the
+ * current month on the floor, because the bucket that would have claimed it
+ * was never built.
+ */
+function localKey(date: Date, granularity: "month" | "day"): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  if (granularity === "month") return `${year}-${month}`
+  return `${year}-${month}-${String(date.getDate()).padStart(2, "0")}`
+}
+
 /** Empty buckets from `from` to `to`, so quiet periods still show as zero. */
 function emptyBuckets(
   from: Date,
@@ -53,11 +72,7 @@ export function bucketEntries(
   const buckets = emptyBuckets(from, to, granularity)
   const indexOf = new Map<string, number>()
   buckets.forEach((bucket, index) => {
-    const key =
-      granularity === "month"
-        ? bucket.date.toISOString().slice(0, 7)
-        : bucket.date.toISOString().slice(0, 10)
-    indexOf.set(key, index)
+    indexOf.set(localKey(bucket.date, granularity), index)
   })
 
   for (const entry of entries) {
