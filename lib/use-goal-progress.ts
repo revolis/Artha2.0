@@ -21,37 +21,59 @@ import { useMoney } from "@/lib/use-money"
 /**
  * What the goal has achieved inside its period, in USD.
  *
- * Two different questions, so two different sums:
- *
  * A goal with no category is about coming out ahead — savings, a portfolio
  * target — so it counts net result: earned less lost, spent and taxed.
  *
- * A goal naming a category is about how much of that thing happened, so it
- * counts the amounts themselves. Net would be useless here: tax and fees
- * subtract, so "set aside the annual tax" ran backwards the more tax you
- * actually paid, and P2P nets to nothing by design, so "cash out $10,000"
- * could never move off zero however much you cashed out.
+ * A goal naming a category asks a different question, and which question
+ * depends on what that category is for. There are two kinds, and the category
+ * itself says which:
  *
- * Floored at zero either way — a losing period has made no progress toward a
- * target rather than negative progress, and a gauge running backwards says
- * nothing worth reading.
+ * A category that earns — Freelance, Launchpad — makes the goal a target for
+ * income, so it counts net: profits less any loss, fee or tax booked against
+ * the same category. Summing raw amounts here would have counted a bad month
+ * as progress, so a $2,000 loss on freelance work would have moved the goal
+ * $2,000 closer to done.
+ *
+ * A category that never earns — Income Tax, Cash Out — makes the goal a target
+ * for how much of that thing happened, so it counts the amounts themselves.
+ * Net is useless on these: tax and fees only subtract, so "set aside the
+ * annual tax" ran backwards the more tax you actually paid, and P2P nets to
+ * nothing by design, so "cash out $10,000" could never move off zero however
+ * much you cashed out.
+ *
+ * Transfers count for nothing either way. Moving money between your own
+ * places is not progress toward having more of it.
+ *
+ * Floored at zero — a losing period has made no progress toward a target
+ * rather than negative progress, and a gauge running backwards says nothing
+ * worth reading.
  */
 export function goalAchievedUsd(goal: Goal, entries: Entry[]): number {
-  let total = 0
-  for (const entry of entries) {
+  const inPeriod = (entry: Entry) => {
     const day = entry.datetime.slice(0, 10)
-    if (goal.startDate && day < goal.startDate) continue
-    if (goal.endDate && day > goal.endDate) continue
-
-    if (goal.trackCategory) {
-      // A goal watching one category ignores everything else. Without this
-      // every goal covering the same dates showed an identical figure.
-      if (entry.category !== goal.trackCategory) continue
-      total += entry.amount
-    } else {
-      total += getNetAmount(entry)
-    }
+    if (goal.startDate && day < goal.startDate) return false
+    if (goal.endDate && day > goal.endDate) return false
+    return true
   }
+
+  if (!goal.trackCategory) {
+    const total = entries
+      .filter(inPeriod)
+      .reduce((sum, entry) => sum + getNetAmount(entry), 0)
+    return Math.max(0, total)
+  }
+
+  // A goal watching one category ignores everything else. Without this every
+  // goal covering the same dates showed an identical figure.
+  const tracked = entries.filter(
+    (entry) => inPeriod(entry) && entry.category === goal.trackCategory
+  )
+  const earns = tracked.some((entry) => entry.type === "profit")
+
+  const total = tracked.reduce((sum, entry) => {
+    if (earns) return sum + getNetAmount(entry)
+    return entry.type === "transfer" ? sum : sum + entry.amount
+  }, 0)
   return Math.max(0, total)
 }
 
