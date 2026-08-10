@@ -33,6 +33,7 @@ import {
 } from "@/lib/rates"
 import type { Currency } from "@/lib/types"
 import { daysSince, rateFor, useRates } from "@/lib/use-rates"
+import { useSettings } from "@/lib/use-settings"
 import { cn } from "@/lib/utils"
 
 const CURRENCIES: Currency[] = ["USD", "NPR", "INR", "EUR", "GBP", "AED"]
@@ -124,6 +125,38 @@ function timeAgo(iso: string, now = new Date()): string {
   return days === 1 ? "yesterday" : `${days} days ago`
 }
 
+/**
+ * A full timestamp — "10 Aug 2026 — 3:06 PM" — in the reader's own preference.
+ *
+ * Not lib/rates' formatDate, which takes a plain calendar date and appends a
+ * midnight of its own; handed a real timestamp it produces Invalid Date.
+ *
+ * Settings has offered a 12h/24h choice since the design phase and nothing has
+ * ever read it, so the control saved a value that changed nothing. This is the
+ * first thing to honour it.
+ */
+function formatStamp(iso: string, timeFormat: "12h" | "24h"): string {
+  const when = new Date(iso)
+  const date = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(when)
+  const time =
+    timeFormat === "24h"
+      ? new Intl.DateTimeFormat("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }).format(when)
+      : new Intl.DateTimeFormat("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }).format(when)
+  return `${date} — ${time}`
+}
+
 function RateFreshness({ checkedAt }: { checkedAt: string | null }) {
   // Re-rendered on a slow timer so "3 minutes ago" does not sit there
   // claiming to be true an hour later.
@@ -161,6 +194,7 @@ function RateFreshness({ checkedAt }: { checkedAt: string | null }) {
  */
 export function CurrencyConverter({ className }: { className?: string }) {
   const { rates, updatedAt, source, checkedAt } = useRates()
+  const { settings } = useSettings()
 
   const [from, setFrom] = React.useState<Currency>("USD")
   const [to, setTo] = React.useState<Currency>("NPR")
@@ -195,10 +229,17 @@ export function CurrencyConverter({ className }: { className?: string }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
             <CardTitle>Fiat Currency</CardTitle>
+            {/* The moment the rate was taken, to the minute. This used to
+                name the day the market figure belongs to and add "yesterday",
+                which is true of the feed — it publishes a day behind — but
+                reads as though nothing has happened since. What someone wants
+                from this line is when the number in front of them arrived. */}
             <CardDescription>
-              {source === "live"
-                ? `Market rate from ${formatDate(updatedAt)}${age === 0 ? " — today" : age === 1 ? " — yesterday" : ` — ${age} days ago`}.`
-                : "Built-in rate — today's market rate is on its way."}
+              {source === "live" && checkedAt
+                ? `Market rate from ${formatStamp(checkedAt, settings.timeFormat)}.`
+                : source === "live"
+                  ? `Market rate from ${formatDate(updatedAt)}${age === 0 ? " — today" : age === 1 ? " — yesterday" : ` — ${age} days ago`}.`
+                  : "Built-in rate — today's market rate is on its way."}
             </CardDescription>
           </div>
           <RateFreshness checkedAt={checkedAt} />
