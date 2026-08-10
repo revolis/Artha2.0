@@ -9,6 +9,7 @@ import {
   navIconClass,
   NavIconButton,
 } from "@/components/layout/nav-icon-button"
+import { MobileNav } from "@/components/layout/mobile-nav"
 import { NavSearch } from "@/components/layout/nav-search"
 import { NotificationsMenu } from "@/components/layout/notifications-menu"
 import { PrivacyToggle } from "@/components/layout/privacy-toggle"
@@ -62,16 +63,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <main className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b bg-background/70 px-4 backdrop-blur-xl md:px-6">
+          {/* Below md the sidebar is not rendered at all, so this is the only
+              way between pages on a phone. Above md the sidebar is there and
+              this disappears. */}
+          <MobileNav />
+
+          {/* The desktop equivalent, and only when the sidebar has been put
+              away on purpose. */}
           {mode === "hidden" ? (
-            <>
-              <NavIconButton
-                label="Show sidebar"
-                onClick={() => setMode("open")}
-              >
-                <PanelLeft />
-              </NavIconButton>
-              <div aria-hidden className="h-5 w-px bg-border" />
-            </>
+            <NavIconButton
+              label="Show sidebar"
+              className="hidden md:inline-flex"
+              onClick={() => setMode("open")}
+            >
+              <PanelLeft />
+            </NavIconButton>
+          ) : null}
+
+          <div aria-hidden className="h-5 w-px bg-border md:hidden" />
+          {mode === "hidden" ? (
+            <div aria-hidden className="hidden h-5 w-px bg-border md:block" />
           ) : null}
 
           {/* Where you are, rather than a fixed page title. */}

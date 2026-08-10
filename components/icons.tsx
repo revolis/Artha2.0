@@ -55,6 +55,7 @@ import {
   Loading03Icon,
   Logout01Icon,
   Mail01Icon,
+  Menu01Icon,
   Megaphone01Icon,
   Message01Icon,
   Moon02Icon,
@@ -155,6 +156,7 @@ export const ListChecks = makeIcon(CheckListIcon)
 export const LogOut = makeIcon(Logout01Icon)
 export const Mail = makeIcon(Mail01Icon)
 export const Megaphone = makeIcon(Megaphone01Icon)
+export const Menu = makeIcon(Menu01Icon)
 export const MessageSquare = makeIcon(Message01Icon)
 export const Monitor = makeIcon(ComputerIcon)
 export const Moon = makeIcon(Moon02Icon)
