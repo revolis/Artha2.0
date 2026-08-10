@@ -180,6 +180,13 @@
      background, these land where the dark theme's values already land. */
   --demo-glow: oklch(0.6 0.16 62 / 0.55);
   --demo-ring: oklch(0.6 0.16 62 / 0.8);
+  /* The travelling highlight on the Log in button, and the hairline it runs
+     along. Same deep amber as the demo button, for the same reason: the arc
+     is one pixel wide, so on white it needs a colour with some weight to it.
+     --chart-2 is a light gold and scored 2.51 against this background where
+     the dark theme scores 9.79. */
+  --glow-sweep: oklch(0.6 0.16 62);
+  --glow-edge: oklch(0.87 0 0);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -250,6 +257,9 @@
      still read as light, so here it is --chart-2 itself. */
   --demo-glow: oklch(0.78 0.13 85 / 0.3);
   --demo-ring: oklch(0.78 0.13 85 / 0.55);
+  /* Unchanged from what the accent gold already gave here. */
+  --glow-sweep: oklch(0.78 0.13 85);
+  --glow-edge: oklch(1 0 0 / 10%);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
