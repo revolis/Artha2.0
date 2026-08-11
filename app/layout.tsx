@@ -20,7 +20,11 @@ export const metadata: Metadata = {
     template: "%s — ARTHA",
   },
   description: "Take Control of Your Financial Future",
-  icons: { icon: "/favicon.ico" },
+  // No `icons` here on purpose. Naming one file overrode the rest, which is
+  // how the tab kept showing an icon.ico left over from the first week while
+  // the app itself drew a different mark everywhere else. Next picks up
+  // app/icon.svg, app/favicon.ico and app/apple-icon.png from their filenames
+  // and emits a link for each, so the three cannot drift apart again.
 }
 
 export default function RootLayout({

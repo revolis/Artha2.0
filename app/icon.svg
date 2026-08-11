@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Artha">
+  <!--
+    The same mark the app draws (components/layout/artha-mark.tsx), fixed for
+    standalone use.
+
+    The component takes its colour from the theme: the columns are
+    currentColor and the rise uses the warm chart token. A favicon has no
+    theme to inherit from, and a tab strip is light or dark depending on the
+    reader's system, so an unbacked mark disappears against one or the other.
+    It carries its own near-black tile here, which reads on both, and the gold
+    is the dark theme value because that is what now sits behind it.
+  -->
+  <rect width="32" height="32" rx="7" fill="#0F0F0F"/>
+
+  <!-- Columns, tallest in the middle, each chamfered at the top. -->
+  <path d="M4 27V15.5L7.5 12l3.5 3.5V27z" fill="#FAFAFA" fill-opacity="0.55"/>
+  <path d="M13 27V9l3.5-3.5L20 9v18z" fill="#FAFAFA"/>
+  <path d="M22 27v-8.5l3.5-3.5 3.5 3.5V27z" fill="#FAFAFA" fill-opacity="0.75"/>
+
+  <!-- The rise across them. -->
+  <path d="M3 21.5 10.5 14l5.5 5.5L28 8"
+        stroke="#DDB049" stroke-width="2.4"
+        stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
