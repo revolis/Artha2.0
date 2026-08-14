@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import {
+  ArrowUpDown,
   ChevronDown,
   Copy,
   FilterX,
@@ -117,6 +118,35 @@ function rangeBounds(
   }
 }
 
+type SortKey = "newest" | "oldest" | "largest" | "smallest"
+
+const sortItems: { value: SortKey; label: string }[] = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "largest", label: "Largest first" },
+  { value: "smallest", label: "Smallest first" },
+]
+
+/**
+ * Date sorts compare the datetime string directly — it is fixed-width and
+ * already in year-month-day order, so it sorts correctly as text without
+ * parsing anything.
+ *
+ * Amount sorts fall back to the date so two entries of the same size keep a
+ * stable, meaningful order rather than whichever the engine happened to hold.
+ */
+const comparators: Record<SortKey, (a: Entry, b: Entry) => number> = {
+  newest: (a, b) => b.datetime.localeCompare(a.datetime),
+  oldest: (a, b) => a.datetime.localeCompare(b.datetime),
+  largest: (a, b) =>
+    b.amount - a.amount || b.datetime.localeCompare(a.datetime),
+  smallest: (a, b) =>
+    a.amount - b.amount || b.datetime.localeCompare(a.datetime),
+}
+
+/** Entries filed under nothing, which is worth being able to find. */
+const NO_CATEGORY = "__none__"
+
 function formatEntryDate(datetime: string): { date: string; time: string } {
   const d = new Date(datetime)
   return {
@@ -168,6 +198,8 @@ export function EntriesPage() {
   const [typeFilter, setTypeFilter] = React.useState<string>("all")
   const [sourceFilter, setSourceFilter] = React.useState<string>("all")
   const [tagFilter, setTagFilter] = React.useState<string>("all")
+  const [categoryFilter, setCategoryFilter] = React.useState<string>("all")
+  const [sort, setSort] = React.useState<SortKey>("newest")
   const [selectedYear] = useSelectedYear()
   const [range, setRange] = React.useState<RangePreset>("all")
   const [customFrom, setCustomFrom] = React.useState("")
@@ -194,6 +226,7 @@ export function EntriesPage() {
     typeFilter !== "all" ||
     sourceFilter !== "all" ||
     tagFilter !== "all" ||
+    categoryFilter !== "all" ||
     effectiveRange !== "all"
 
   const filtered = React.useMemo(() => {
@@ -210,6 +243,14 @@ export function EntriesPage() {
         if (sourceFilter !== "all" && entry.sourceId !== sourceFilter)
           return false
         if (tagFilter !== "all" && !entry.tags.includes(tagFilter)) return false
+        if (categoryFilter === NO_CATEGORY) {
+          if (entry.category) return false
+        } else if (
+          categoryFilter !== "all" &&
+          entry.category !== categoryFilter
+        ) {
+          return false
+        }
         const when = new Date(entry.datetime)
         if (from && when < from) return false
         if (to && when > to) return false
@@ -230,13 +271,15 @@ export function EntriesPage() {
         }
         return true
       })
-      .sort((a, b) => b.datetime.localeCompare(a.datetime))
+      .sort(comparators[sort])
   }, [
     entries,
     search,
     typeFilter,
     sourceFilter,
     tagFilter,
+    categoryFilter,
+    sort,
     effectiveRange,
     customFrom,
     customTo,
@@ -251,6 +294,7 @@ export function EntriesPage() {
     setTypeFilter("all")
     setSourceFilter("all")
     setTagFilter("all")
+    setCategoryFilter("all")
     setRange("all")
     setCustomFrom("")
     setCustomTo("")
@@ -284,6 +328,11 @@ export function EntriesPage() {
   const sourceFilterItems = [
     { value: "all", label: "All sources" },
     ...sources.map((s) => ({ value: s.id, label: s.name })),
+  ]
+  const categoryFilterItems = [
+    { value: "all", label: "All categories" },
+    { value: NO_CATEGORY, label: "No category" },
+    ...categoryOptions.map((c) => ({ value: c, label: c })),
   ]
   const tagFilterItems = [
     { value: "all", label: "All tags" },
@@ -358,6 +407,24 @@ export function EntriesPage() {
           </SelectContent>
         </Select>
         <Select
+          items={categoryFilterItems}
+          value={categoryFilter}
+          onValueChange={(v) => setCategoryFilter(v as string)}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {categoryFilterItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Select
           items={tagFilterItems}
           value={tagFilter}
           onValueChange={(v) => setTagFilter(v as string)}
@@ -386,6 +453,27 @@ export function EntriesPage() {
           <SelectContent>
             <SelectGroup>
               {rangeItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        {/* Not a filter: it changes the order, never the contents, which is
+            why it sits apart from them and Clear leaves it alone. */}
+        <Select
+          items={sortItems}
+          value={sort}
+          onValueChange={(v) => setSort(v as SortKey)}
+        >
+          <SelectTrigger className="w-36" aria-label="Sort entries">
+            <ArrowUpDown className="size-3.5 opacity-60" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {sortItems.map((item) => (
                 <SelectItem key={item.value} value={item.value}>
                   {item.label}
                 </SelectItem>
