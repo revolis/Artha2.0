@@ -20,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { getPerformanceBreakdown } from "@/lib/analytics"
+import { getEntryYear, getNetAmount } from "@/lib/mock-data"
 import { CURRENCY_SYMBOLS } from "@/lib/rate-data"
 import { PRIVACY_MASK } from "@/lib/money"
 import { useMoney } from "@/lib/use-money"
@@ -45,6 +46,9 @@ const SLICE_COLORS = [
 // so a long tail of 1% earners doesn't turn the legend into a wall of text.
 const MAX_SLICES = 9
 
+// Same idea for the list of what finished behind.
+const MAX_BEHIND = 5
+
 export function CategoryContribution({
   entries,
   year,
@@ -54,7 +58,7 @@ export function CategoryContribution({
 }) {
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null)
 
-  const { convert, displayCurrency, privacyMode } = useMoney()
+  const { convert, displayCurrency, privacyMode, formatMoney } = useMoney()
 
   // Net, not gross. Gross flattered any category that earned a lot and gave
   // most of it back in losses, fees and tax — it read as the biggest earner
@@ -69,13 +73,36 @@ export function CategoryContribution({
     [breakdown]
   )
 
-  // A category can earn and still finish behind. It cannot be drawn as a share
-  // of a positive total, so it is named underneath rather than dropped in
-  // silence — a category you know made money simply vanishing is worse than a
-  // sentence explaining it.
-  const netNegative = React.useMemo(
-    () => breakdown.filter((row) => row.income > 0 && row.net <= 0),
+  // Everything that finished behind — a category that earned and gave more
+  // back, and the pure costs like tax and fees, which never earn at all. None
+  // of them can be a slice of a positive total, so they are listed with their
+  // figures underneath instead. Naming one without its number, as this did at
+  // first, is the worst of both: you are told something is missing and not
+  // what it was.
+  const behind = React.useMemo(
+    () => breakdown.filter((row) => row.net < 0).sort((a, b) => a.net - b.net),
     [breakdown]
+  )
+
+  // The costliest few by name, the rest as one row. A ledger with a category
+  // per fee can put a dozen small ones here, and a list that long buries the
+  // chart it is meant to be a footnote to. The rolled-up row still carries its
+  // total, so the figures on screen continue to add up to the net below.
+  const behindShown = behind.slice(0, MAX_BEHIND)
+  const behindRest = behind.slice(MAX_BEHIND)
+  const behindRestTotal = behindRest.reduce((sum, row) => sum + row.net, 0)
+
+  // The year's actual net, straight off the entries — the same sum the Net P/L
+  // card shows. The donut cannot equal this and should not pretend to: it
+  // holds only the categories that came out ahead, so it reads high by
+  // whatever the rest cost. Stating both, and the sentence that connects them,
+  // is what stops the two cards looking like they disagree.
+  const yearNet = React.useMemo(
+    () =>
+      entries
+        .filter((entry) => getEntryYear(entry) === year)
+        .reduce((sum, entry) => sum + getNetAmount(entry), 0),
+    [entries, year]
   )
 
   const pieData = React.useMemo(() => {
@@ -112,8 +139,8 @@ export function CategoryContribution({
           {/* share on the row is a share of gross, so the net share is
               worked out here rather than reused. */}
           {leader && totalNet > 0
-            ? `${leader.name} · ${((leader.net / totalNet) * 100).toFixed(0)}% of net income for ${year}`
-            : `No net income recorded for ${year}`}
+            ? `${leader.name} · ${((leader.net / totalNet) * 100).toFixed(0)}% of what ${year} contributed`
+            : `Nothing contributed in ${year} yet`}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
@@ -138,7 +165,7 @@ export function CategoryContribution({
                 <PieSlice index={index} key={slice.label} />
               ))}
               <PieCenter
-                defaultLabel="Net income"
+                defaultLabel="Contributed"
                 // The symbol follows the currency the reader picked; the
                 // values arriving here were converted to match. Under privacy
                 // the figure is replaced rather than shown, since this centre
@@ -185,17 +212,48 @@ export function CategoryContribution({
               </LegendItem>
             </Legend>
 
-            {/* Named rather than dropped in silence: a category you know
-                earned this year, absent from the chart with no explanation,
-                reads as the chart being wrong. */}
-            {netNegative.length > 0 ? (
-              <p className="self-start text-xs text-muted-foreground">
-                {netNegative.map((row) => row.name).join(", ")}{" "}
-                {netNegative.length === 1 ? "earned but" : "earned but each"}{" "}
-                finished the year behind, so{" "}
-                {netNegative.length === 1 ? "it is" : "they are"} not shown.
-              </p>
+            {/* The other half of the year. A donut can only draw what is
+                positive, so these are given as a list with their figures
+                rather than left out — they are where the difference between
+                this chart and the Net P/L card comes from. */}
+            {behind.length > 0 ? (
+              <div className="flex w-full flex-col gap-1 border-t pt-3">
+                <span className="text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                  Finished behind
+                </span>
+                {behindShown.map((row) => (
+                  <div
+                    key={row.name}
+                    className="flex items-center justify-between gap-3 px-1.5 text-xs"
+                  >
+                    <span className="min-w-0 truncate">{row.name}</span>
+                    <span className="shrink-0 text-destructive tabular-nums">
+                      {formatMoney(row.net, "USD")}
+                    </span>
+                  </div>
+                ))}
+                {behindRest.length > 0 ? (
+                  <div className="flex items-center justify-between gap-3 px-1.5 text-xs text-muted-foreground">
+                    <span>Other ({behindRest.length})</span>
+                    <span className="shrink-0 tabular-nums">
+                      {formatMoney(behindRestTotal, "USD")}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
             ) : null}
+
+            {/* Says out loud why the number in the middle is not the number on
+                the Net P/L card. Without this the two look like they
+                disagree, which is the first thing anyone notices. */}
+            <p className="w-full border-t pt-3 text-xs text-muted-foreground">
+              Net P/L for {year} is{" "}
+              <span className="font-medium text-foreground tabular-nums">
+                {formatMoney(yearNet, "USD")}
+              </span>
+              : what the categories above contributed, less what those behind
+              cost, plus anything recorded without a category.
+            </p>
           </>
         )}
       </CardContent>
