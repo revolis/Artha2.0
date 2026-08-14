@@ -9,6 +9,7 @@ import {
   navIconClass,
   NavIconButton,
 } from "@/components/layout/nav-icon-button"
+import { CurrencySwitcher } from "@/components/layout/currency-switcher"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { NavSearch } from "@/components/layout/nav-search"
 import { NotificationsMenu } from "@/components/layout/notifications-menu"
@@ -90,6 +91,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="ml-auto flex items-center gap-1">
             <NavSearch />
+            {/* Directly after search, as the currency is a way of reading the
+                page rather than a setting to go and find. */}
+            <CurrencySwitcher />
             <NotificationsMenu />
             <PrivacyToggle />
             <ThemeToggler className={navIconClass} />
