@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import {
-  ArrowUpDown,
   ChevronDown,
   Copy,
   FilterX,
@@ -359,8 +358,17 @@ export function EntriesPage() {
         </InteractiveHoverButton>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <InputGroup className="w-full sm:max-w-56">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {/* Takes whatever the controls leave and gives it back when Clear
+            appears. Its minimum is what decides whether the row wraps, so it
+            is set low enough that the search box yields first — a slightly
+            short search field costs less than a second row.
+
+            The basis matters more than the minimum: a wrapping flex container
+            decides where to break from each item's base size, before any
+            shrinking happens, so a generous basis wraps the row and then grows
+            to fill the gap it just made. */}
+        <InputGroup className="w-full sm:w-auto sm:min-w-32 sm:flex-1 sm:basis-32 lg:max-w-56">
           <InputGroupAddon>
             <Search />
           </InputGroupAddon>
@@ -375,7 +383,7 @@ export function EntriesPage() {
           value={typeFilter}
           onValueChange={(v) => setTypeFilter(v as string)}
         >
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-auto max-w-36 min-w-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -393,7 +401,7 @@ export function EntriesPage() {
           value={sourceFilter}
           onValueChange={(v) => setSourceFilter(v as string)}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-auto max-w-36 min-w-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -411,7 +419,7 @@ export function EntriesPage() {
           value={categoryFilter}
           onValueChange={(v) => setCategoryFilter(v as string)}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-auto max-w-36 min-w-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -429,7 +437,7 @@ export function EntriesPage() {
           value={tagFilter}
           onValueChange={(v) => setTagFilter(v as string)}
         >
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-auto max-w-36 min-w-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -447,7 +455,7 @@ export function EntriesPage() {
           value={effectiveRange}
           onValueChange={(v) => setRange(v as RangePreset)}
         >
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-auto max-w-36 min-w-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -467,8 +475,13 @@ export function EntriesPage() {
           value={sort}
           onValueChange={(v) => setSort(v as SortKey)}
         >
-          <SelectTrigger className="w-36" aria-label="Sort entries">
-            <ArrowUpDown className="size-3.5 opacity-60" />
+          {/* No icon in the trigger. It cost about twenty pixels and pushed
+              "Newest first" into "Newest firs" — a label that cannot finish
+              its own word is worse than no decoration. */}
+          <SelectTrigger
+            className="w-auto max-w-36 min-w-0"
+            aria-label="Sort entries"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
