@@ -28,6 +28,7 @@ import {
 import { getNetAmount } from "@/lib/mock-data"
 import { useMoney } from "@/lib/use-money"
 import { StatCard } from "@/components/stats/stat-card"
+import { ChartValueHelp } from "@/components/portfolio/value-help"
 import {
   buildDualDailySeries,
   getContributors,
@@ -211,14 +212,32 @@ export function PortfolioPage() {
 
       <Card>
         <CardContent className="flex flex-col gap-5">
-          {/* The portfolio's size, in the chart's own line colour rather than
-              a profit-or-loss green. */}
-          <div className="flex flex-wrap items-baseline gap-3">
-            <span
-              className="text-4xl font-semibold tabular-nums"
-              style={{ color: PORTFOLIO_COLOR }}
-            >
-              {formatMoney(last ? last.portfolio : 0, "USD")}
+          {/* Both figures, each in its own line colour rather than a
+              profit-or-loss green. Gross was drawn on the chart and named in
+              the legend but never stated as a number, so the page showed a
+              line whose value you could only read by hovering it. */}
+          <div className="flex flex-wrap items-baseline gap-x-8 gap-y-3">
+            <span className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                Net Portfolio Value
+              </span>
+              <span
+                className="text-4xl font-semibold tabular-nums"
+                style={{ color: PORTFOLIO_COLOR }}
+              >
+                {formatMoney(last ? last.portfolio : 0, "USD")}
+              </span>
+            </span>
+            <span className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                Gross Portfolio Value
+              </span>
+              <span
+                className="text-4xl font-semibold tabular-nums"
+                style={{ color: INCOME_COLOR }}
+              >
+                {formatMoney(last ? last.netIncome : 0, "USD")}
+              </span>
             </span>
             <Tooltip>
               <TooltipTrigger
@@ -232,9 +251,8 @@ export function PortfolioPage() {
               >
                 <Info className="size-4" />
               </TooltipTrigger>
-              <TooltipContent>
-                Running USD balance: profit adds; loss, fees and tax subtract;
-                selling USD for cash removes it; buying USD adds it back.
+              <TooltipContent side="bottom" className="max-w-80">
+                <ChartValueHelp />
               </TooltipContent>
             </Tooltip>
           </div>
@@ -309,20 +327,41 @@ export function PortfolioPage() {
               </div>
               <Separator />
               <div className="flex items-end justify-between gap-4">
+                {/* Where each line started and where it finished. Net alone
+                    left the reader to guess what gross had done over the same
+                    stretch, which is the comparison the chart exists for. */}
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs tracking-wider text-muted-foreground uppercase">
                     {formatDay(first.date)}
                   </span>
-                  <span className="font-medium tabular-nums">
+                  <span
+                    className="font-medium tabular-nums"
+                    style={{ color: PORTFOLIO_COLOR }}
+                  >
                     {formatMoney(first.portfolio, "USD")}
+                  </span>
+                  <span
+                    className="text-xs tabular-nums"
+                    style={{ color: INCOME_COLOR }}
+                  >
+                    {formatMoney(first.netIncome, "USD")}
                   </span>
                 </div>
                 <div className="flex flex-col items-end gap-0.5">
                   <span className="text-xs tracking-wider text-muted-foreground uppercase">
                     {formatDay(last.date)}
                   </span>
-                  <span className="font-medium tabular-nums">
+                  <span
+                    className="font-medium tabular-nums"
+                    style={{ color: PORTFOLIO_COLOR }}
+                  >
                     {formatMoney(last.portfolio, "USD")}
+                  </span>
+                  <span
+                    className="text-xs tabular-nums"
+                    style={{ color: INCOME_COLOR }}
+                  >
+                    {formatMoney(last.netIncome, "USD")}
                   </span>
                 </div>
               </div>

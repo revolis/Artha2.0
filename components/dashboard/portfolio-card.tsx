@@ -7,6 +7,7 @@ import { ArrowRight, TrendingDown, TrendingUp } from "@/components/icons"
 import { Area, AreaChart } from "@/components/charts/area-chart"
 import { Grid } from "@/components/charts/grid"
 import { ChartTooltip } from "@/components/charts/tooltip"
+import { PORTFOLIO_HELP } from "@/components/portfolio/value-help"
 import { XAxis } from "@/components/charts/x-axis"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -117,7 +118,7 @@ function ValueStat({
         >
           {formatMoney(value, "USD")}
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="max-w-64">
+        <TooltipContent side="bottom" className="max-w-72">
           <span className="flex flex-col gap-1">
             <span>{explanation}</span>
             <span className="tabular-nums">
@@ -159,7 +160,7 @@ export function PortfolioCard({
             value={momentum.current}
             cashOut={cashOut}
             cashIn={cashIn}
-            explanation="What you hold after money moved to and from cash."
+            explanation={PORTFOLIO_HELP.net}
           >
             <Momentum momentum={momentum} />
           </ValueStat>
@@ -172,7 +173,7 @@ export function PortfolioCard({
             muted
             cashOut={cashOut}
             cashIn={cashIn}
-            explanation="Profit minus loss, fees and tax — before any cash moved."
+            explanation={PORTFOLIO_HELP.gross}
           >
             <Momentum momentum={grossMomentum} />
           </ValueStat>

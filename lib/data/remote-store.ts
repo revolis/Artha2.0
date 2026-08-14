@@ -15,6 +15,8 @@
 
 import * as React from "react"
 
+import { sessionReady } from "@/lib/supabase/client"
+
 export type Status = "idle" | "loading" | "ready" | "error"
 
 interface StoreState<T> {
@@ -80,6 +82,9 @@ export function createRemoteStore<T extends { id: string }>(options: {
 
     inFlight = (async () => {
       try {
+        // Never race the session. An unauthenticated read returns no rows
+        // rather than failing, and this store would file that as a good load.
+        await sessionReady()
         items = await options.fetchAll()
         status = "ready"
       } catch (cause) {
